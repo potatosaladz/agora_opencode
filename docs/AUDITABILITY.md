@@ -1,8 +1,8 @@
 # Auditability
 
-**Version:** 1.3 · **Status:** design; ledger, retrieval and T5-08 memory-history subsets implemented
+**Version:** 1.4 · **Status:** design; ledger, retrieval, T5-08 memory-history and Phase 13 audit subsets implemented
 **Storage:** `reasoning_events` (append-only ledger), `retrieval_attempts` and memory promotion/lifecycle
-facts (implemented subsets), `access_log` (design)
+facts, `access_log` and `audit_anchors` (implemented subsets)
 ([DATA_MODEL.md §11](DATA_MODEL.md)) · **Requirements:** FR-301 … FR-305, NFR-006, NFR-010 ·
 **ADR:** [ADR-019](adr/ADR-019-append-only-event-ledger.md)
 
@@ -16,6 +16,7 @@ An auditable system answers these without reconstruction or guesswork:
 
 A design that answers only (1) is a log, not an audit trail. Most systems stop there.
 
+<!-- trace: NFR-006 -->
 ## 2. The ledger
 
 | Property | Mechanism |
@@ -53,14 +54,20 @@ Every event carries `actor = {id, class}` where class ∈ `HUMAN`, `AGENT`, `SER
 inference. A blocked action is an event too: audits of suppression matter more than audits of
 action.
 
+<!-- trace: FR-807 -->
 ## 4. Access logging
 
 Reads are logged when they touch artifacts outside the reader's own session, knowledge entries,
 audit exports, agent definitions with prompts, or cross-namespace retrieval results.
 
-`access_log` records `principal`, `actor_class`, `resource`, `action`, `scope_ids`, `result`,
-`ts`, `source_ip`, `trace_id`. Retrieval results are logged at chunk level, so "did this person
-see this document" is answerable ([RAG_ARCHITECTURE.md §9](RAG_ARCHITECTURE.md)).
+`access_log` records `principal_class`, `principal_id`, `actor_class`, `resource_kind`,
+`resource_id`, `action`, `result`, `scope_ids`, `source_ip`, `trace_id`, `recorded_at`
+([DATA_MODEL.md §11.1](DATA_MODEL.md)). Retrieval results are logged at chunk level, so "did this
+person see this document" is answerable ([RAG_ARCHITECTURE.md §9](RAG_ARCHITECTURE.md)).
+
+T13-02 implements the Phase 13 `access_log` substrate that answers Q7: caller-scoped, append-only,
+forced-RLS rows for reads of `RECOMMENDATION` resources (`AuditResourceKind` / `AuditAction`).
+Other kinds and actions are added by wiring without schema change.
 
 Volume control: reads inside a session the principal participates in are sampled at a configured
 rate, and the rate itself is recorded. Sampling never applies to writes, denials, exports or
@@ -83,21 +90,23 @@ access logging remains API/composition work.
 <!-- trace: FR-903 -->
 ## 5. The eight questions
 
-The audit API must answer each of these in one query, for any session:
+The audit application services (`app.application.audit`) answer each of these in one typed query,
+for any session (Phase 14 exposes them over HTTP):
 
 | # | Question | Path |
 | --- | --- | --- |
 | Q1 | Why is this claim in the record? | `ARTIFACT_COMMITTED` → `causation_id` → turn |
-| Q2 | Who changed this epistemic status, and on what warrant? | `STATUS_CHANGED` with `actor` + `reason_artifact_ids` |
-| Q3 | What did the agents see at round *n*? | `CONTEXT_ASSEMBLED` events, by context hash |
-| Q4 | Was a dissent suppressed? | every `ConsensusResult` carries all positions; absence is impossible |
-| Q5 | Why did the session end? | `ROUND_TERMINATED` / `BUDGET_EXCEEDED` / `CONSENSUS_REACHED` / `HUMAN_TERMINATED` / `ACTIVITY_DEAD_LETTERED` |
+| Q2 | Who changed this epistemic status, and on what warrant? | revision writes (`ARTIFACT_COMMITTED` / `ARTIFACT_REVISED` / `ARTIFACT_WITHDRAWN`) with `actor`, `supersedes_id`, `warrant_artifact_ids` |
+| Q3 | What did the agents see at round *n*? | lifecycle projection + bound agent definitions + round-filtered `AGENT_TURN_COMPLETED` |
+| Q4 | Was a dissent suppressed? | every `consensus_results` round row carries all positions; absence is impossible |
+| Q5 | Why did the session end? | terminal `session_lifecycles` state + last ledger event |
 | Q6 | Which strategy and parameters produced this ranking? | `consensus_results.strategy_version` + `input_hash` |
-| Q7 | Who accessed this recommendation before it was accepted? | `access_log` filtered by resource |
-| Q8 | Has anything been altered since it was written? | chain verification job, `audit_anchors` diff |
+| Q7 | Who accessed this recommendation before it was accepted? | `access_log` filtered by resource, bounded strictly before `recommendations.created_at` |
+| Q8 | Has anything been altered since it was written? | `ChainVerificationService`: recompute each `audit_anchors` day-head from the ledger + `reasoning_ledger.verify` |
 
-Q8 is what separates an audit trail from a history table, so the verification job runs nightly
-and its result is itself an event.
+Q8 is what separates an audit trail from a history table, so verification is exposed on demand
+through `ChainVerificationService.chain_integrity`; a nightly job that runs it and anchors each
+session-day is infra follow-up.
 
 ## 6. Export bundle
 

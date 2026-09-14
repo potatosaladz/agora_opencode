@@ -78,6 +78,8 @@ erDiagram
     SESSIONS ||--o{ METRIC_VALUES : measured_by
     EXPERIMENTS ||--o{ EXPERIMENT_RUNS : repeats
     SESSIONS ||--o{ AUDIT_RECORDS : audited_by
+    SESSIONS ||--o{ ACCESS_LOG : access_logged
+    SESSIONS ||--o{ AUDIT_ANCHORS : anchored_by
     SESSIONS ||--o{ REPRODUCIBILITY_MANIFESTS : pinned_by
     KNOWLEDGE_NAMESPACES ||--o{ SEMANTIC_MEMORY_ENTRIES : contains
 ```
@@ -1046,6 +1048,70 @@ CREATE TABLE audit_records (
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX ix_audit_lookup ON audit_records (workspace_id, created_at DESC, action);
+
+### 11.1 Phase 13 audit substrate (T13-02): `access_log`, `audit_anchors` — implemented
+
+Two tenant-safe, forced-RLS, caller-append-only tables back the §4 and Q7/Q8 contracts
+([AUDITABILITY.md](AUDITABILITY.md)). Migration `20260912_0025`. The `audit_records` sketch above
+remains the later broader contract; for the two Phase 13 jobs it is superseded by these tables, as
+`retrieval_attempts` and `session_agent_interventions` are for retrieval and membership evidence.
+
+`access_log` records reads that touch artifacts outside the reader's own session. One
+`CHECK (action = 'READ')` row per call, `result ∈ ALLOWED|DENIED|FAILED` (denials are appended
+before raising); `scope_ids` is a JSON array of scopes it was resolved under; `trace_id` ties the
+call to observability. `resource_kind`/`action` are free text so `AuditResourceKind` /
+`AuditAction` enums can grow without migration. The trigger raises `sqlstate 27000` for any
+`UPDATE`/`DELETE`; `UPDATE, DELETE` are revoked from `PUBLIC`.
+
+`audit_anchors` stores, per session and UTC day, the ledger head at the end of that day:
+`anchor_hash = sha256(JCS({anchored_at, day, head_hash, head_seq, prev_head_hash, session_id}))`
+via shared application code (`app.domain.audit._anchor_facts`), so both reproduction and detection
+need the same function. `prev_head_hash` of the first anchored day is the ledger genesis hash
+(`sha256:` + 64 zeroes).
+
+```sql
+CREATE TABLE access_log (
+  id             UUID PRIMARY KEY,
+  workspace_id   UUID NOT NULL,
+  session_id     UUID NOT NULL,
+  principal_class TEXT NOT NULL CHECK (principal_class IN ('HUMAN','AGENT','SERVICE','POLICY')),
+  principal_id   UUID NOT NULL,
+  resource_kind  TEXT NOT NULL CHECK (length(btrim(resource_kind)) > 0),
+  resource_id    UUID NOT NULL,
+  action         TEXT NOT NULL CHECK (action = 'READ'),
+  result         TEXT NOT NULL CHECK (result IN ('ALLOWED','DENIED','FAILED')),
+  scope_ids      JSONB NOT NULL DEFAULT '[]'::jsonb CHECK (jsonb_typeof(scope_ids) = 'array'),
+  source_ip      INET,
+  trace_id       TEXT NOT NULL CHECK (length(btrim(trace_id)) > 0),
+  recorded_at    TIMESTAMPTZ NOT NULL,
+  UNIQUE (workspace_id, id),
+  FOREIGN KEY (workspace_id, session_id) REFERENCES sessions(workspace_id, id) ON DELETE RESTRICT
+);
+CREATE INDEX ix_access_log_resource
+  ON access_log (workspace_id, resource_kind, resource_id, recorded_at, id);
+
+CREATE TABLE audit_anchors (
+  id             UUID PRIMARY KEY,
+  workspace_id   UUID NOT NULL,
+  session_id     UUID NOT NULL,
+  anchor_day     DATE NOT NULL,
+  head_seq       BIGINT NOT NULL CHECK (head_seq > 0),
+  head_hash      TEXT NOT NULL CHECK (head_hash ~ '^sha256:[0-9a-f]{64}$'),
+  prev_head_hash TEXT NOT NULL CHECK (prev_head_hash ~ '^sha256:[0-9a-f]{64}$'),
+  anchor_hash    TEXT NOT NULL CHECK (anchor_hash ~ '^sha256:[0-9a-f]{64}$'),
+  anchored_at    TIMESTAMPTZ NOT NULL,
+  UNIQUE (workspace_id, session_id, anchor_day),
+  UNIQUE (workspace_id, id),
+  FOREIGN KEY (workspace_id, session_id) REFERENCES sessions(workspace_id, id) ON DELETE RESTRICT
+);
+```
+
+Both tables are forced-RLS with `USING`/`WITH CHECK` tied to
+`current_setting('app.workspace_id', true)` — the same isolation applied to
+`reasoning_events` and `retrieval_attempts` — and carry the composite
+`(workspace_id, session_id) → sessions(workspace_id, id)` tenant-safe foreign key. Append-only is
+enforced by a shared `BEFORE UPDATE OR DELETE` trigger (`reject_audit_mutation`) raising
+`sqlstate 27000`, plus `REVOKE UPDATE, DELETE ... FROM PUBLIC`.
 
 CREATE TABLE metric_definitions (
   name           TEXT NOT NULL,

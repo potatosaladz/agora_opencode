@@ -375,9 +375,9 @@
     "last_verified": ""
   },
   "FR-807": {
-    "status": "planned",
+    "status": "implemented",
     "phase": "13",
-    "last_verified": ""
+    "last_verified": "local-phase13-2026-09-14"
   },
   "FR-808": {
     "status": "planned",
@@ -445,9 +445,9 @@
     "last_verified": ""
   },
   "NFR-006": {
-    "last_verified": "",
-    "phase": "10",
-    "status": "planned"
+    "last_verified": "local-phase13-2026-09-14",
+    "phase": "13",
+    "status": "implemented"
   },
   "NFR-007": {
     "last_verified": "",

@@ -1,6 +1,6 @@
 # Active Context
 
-**Snapshot taken:** 2026-09-14 · **Phase:** 13 in progress · **Active task:** T13-01 complete; T13-02 next
+**Snapshot taken:** 2026-09-14 · **Phase:** 13 in progress · **Active task:** T13-01, T13-02 complete; T13-03 next
 This is the "what is happening right now" file. Rewrite it at the end of every
 significant unit of work.
 
@@ -16,9 +16,25 @@ tests transcribe METRICS.md field-by-field, cover the FR-901 profile rule and pi
 metrics (`ep-02`, `dh-03`, `dh-02`, `cq-03`, `ce-03`) at version "1". Traceability moves FR-901 and
 NFR-019 to partial and FR-902 to implemented (`last_verified: local-phase13-2026-09-14`); the generated
 CSV holds 104 rows with no drift. No metric engine, `metric_values` storage, API, UI, replay or
-migration was added; Alembic head stays `20260912_0024`. The Compose stack is isolated under project
+migration was added; Alembic head had stayed `20260912_0024`. The Compose stack is isolated under project
 name `agora_opencode` (env-parameterized loopback ports, dedicated volumes/networks, renamed images)
 so it cannot collide with the old `agora` stack.
+
+Phase 13 T13-02 is complete. Migration `20260912_0025` adds forced-RLS, caller-append-only `access_log`
+and `audit_anchors` (shared `BEFORE UPDATE OR DELETE` trigger raising sqlstate 27000, `REVOKE UPDATE,
+DELETE`, composite `(workspace_id, session_id)` FK). Typed contracts live in `app/domain/audit.py`
+(access-log entries, `AuditAnchor.publish` over the shared pure `_anchor_facts`, chain/append/reports);
+adapters in `app/db/audit.py` (`SqlAlchemyAccessLogRepository`, `SqlAlchemyAuditAnchorRepository`,
+`SqlAlchemySessionParticipantReader`) plus `ConsensusResultStore.get_round_result`; and
+`app/application/audit.py` answers the eight audit questions (Q1–Q8 in AUDITABILITY.md) as typed
+services. Invariants held: Q1 originates via `causation_id` (≤32 hops), Q7 strictly before
+`recommendations.created_at`, `ChainVerificationService.chain_integrity` recomputes each day-head from
+the ledger and uses `reasoning_ledger.verify`. Evidence: 21 focused unit tests and 7 live PostgreSQL
+acceptance tests (append-only 27000, RLS 42501, FK 23503, Q7-before-acceptance, same-day conflict,
+two-day chain, tamper detection); census test extended with Phase 13 tables. Docs AUDITABILITY.md 1.4
+and DATA_MODEL.md §11.1 describe the implemented tables; FR-807/NFR-006 flip to implemented
+(`last_verified: local-phase13-2026-09-14`). No HTTP/OpenAPI (Phase 14), nightly anchor job, or Q2/Q3/Q5 doc-fiction
+events.
 
 Phase 12 T12-01 through T12-05 are complete. Deterministic MARL observations, advisory actions, coordinator decisions,
 five exact metric-linked reward components, conserved provenance credit, lifecycle persistence, canonical
@@ -49,8 +65,9 @@ formalisation plus symbolic-evidence persistence tests, with strict static, trac
 
 ## 2. Currently active task
 
-Phase 13 T13-01 is closed (metric catalogue). T13-02 (audit record generation and the eight audit
-queries per AUDITABILITY.md) is next and has not started. Phase 12 T12-01 through T12-05 and Phase 11
+Phase 13 T13-01 and T13-02 are closed (metric catalogue; audit persistence + the eight audit queries).
+T13-03 (`STRICT`/`TOLERANT`/`LIVE` replay modes) is next and has not started. Phase 12 T12-01 through
+T12-05 and Phase 11
 are closed. Phases 0–4 and 6–10 have exact-SHA
 remote evidence. Phase 5 remote evidence remains tracked
 independently. T7-08 and Phase 7 are complete at exact SHA
@@ -58,6 +75,18 @@ independently. T7-08 and Phase 7 are complete at exact SHA
 
 ## 3. Completed in this session so far
 
+- `T13-02` Audit record generation and the eight audit queries implemented:
+  `alembic/versions/20260912_0025_audit_tables.py`, `app/db/models/audit.py`,
+  `app/domain/audit.py`, `app/db/audit.py`, `app/application/audit.py`,
+  `ConsensusResultStore.get_round_result` (`app/domain/consensus.py`, `app/db/consensus.py`,
+  fake in `tests/unit/test_consensus.py`), `app/composition/container.py` wiring, and
+  `tests/unit/test_audit_queries.py` (21 green) plus `tests/integration/test_audit_persistence.py`
+  (7 live PostgreSQL acceptance tests green against the local `agora-postgres-1` container on
+  127.0.0.1:5432). Docs AUDITABILITY.md v1.4 + DATA_MODEL.md §11.1; census test
+  `test_reasoning_revision_downgrades_reupgrades_and_has_no_drift` extended with Phase 13 tables.
+  Traceability FR-807/NFR-006 implemented; 104 rows no drift. Full gate green: unit 698 passed,
+  PostgreSQL integration 55 passed / 8 infra-gated skipped, strict mypy 305 files, `alembic check` drift-free
+  at head `20260912_0025`, links green, Compose config valid, backend image builds.
 - `T13-01` Metric catalogue implemented: `app/ports/metrics.py` (`MetricPlugin` + value objects),
   `app/domain/metrics.py` (`MetricCatalogue`), `app/application/metrics.py` (43 shipped definitions),
   and `tests/unit/test_metric_catalogue.py` (13 green tests). Traceability: FR-901 partial,
@@ -410,13 +439,14 @@ widened graph matrix plus commit/rollback, exact retry, forced RLS and append-on
 
 ## 9. Next recommended action
 
-Phase 13 T13-01 is complete: the METRICS.md catalogue ships as 43 immutable `MetricDefinition`s with an
-exact-lookup `MetricCatalogue` and 13 green tests; FR-902 is implemented and FR-901/NFR-019 partial in
-the generated 104-row traceability. T13-02 (audit record generation and the eight audit queries per
-[AUDITABILITY.md](../docs/AUDITABILITY.md)) is next and must be verified from
-[project/TASKS.md](../project/TASKS.md) before starting; do not begin it automatically. The Compose stack
-is isolated under `agora_opencode`; run frontend format and the integration gate before committing.
-Keep Phase 5 commit `45253c8b91c103e9632554de8b31d55a5a5281c4` remote evidence tracked independently.
+Phase 13 T13-01 and T13-02 are complete: the METRICS.md catalogue ships as 43 immutable
+`MetricDefinition`s with an exact-lookup `MetricCatalogue` and 13 green tests, and migration
+`20260912_0025` plus `app/application/audit.py` answer the eight audit questions with 21 unit + 7 live
+PostgreSQL tests, FR-807/NFR-006 implemented in the generated 104-row traceability. T13-03
+(`STRICT`/`TOLERANT`/`LIVE` replay modes) is next and must be verified from
+[project/TASKS.md](../project/TASKS.md) before starting; do not begin it automatically. Phase 13 audit
+HTTP (Phase 14), the nightly anchor job, and external WORM anchor storage remain deferred. Keep Phase 5
+commit `45253c8b91c103e9632554de8b31d55a5a5281c4` remote evidence tracked independently.
 
 ## 10. How to resume this project cold
 

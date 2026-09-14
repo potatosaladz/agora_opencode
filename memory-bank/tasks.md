@@ -98,8 +98,11 @@ Legend: `[ ]` open · `[~]` in progress · `[x]` done · `[!]` blocked · `[-]` 
 Broken out with acceptance criteria in [../project/TASKS.md](../project/TASKS.md).
 Phase 12 T12-01 through T12-05 `[x]`; deterministic MARL trajectory capture/export/replay foundation
 complete, with no training. Phase 13 (Trustworthiness): T13-01 metric catalogue `[x]` (43
-`MetricDefinition`s, exact-lookup `MetricCatalogue`, 13 tests); T13-02 audit records + eight queries,
-T13-03 `STRICT`/`TOLERANT`/`LIVE` replay, T13-04 run manifests remain `[ ]`.
+`MetricDefinition`s, exact-lookup `MetricCatalogue`, 13 tests); T13-02 audit records + eight queries
+`[x]` (migration `20260912_0025` `access_log`/`audit_anchors`, `app/domain/audit.py`,
+`app/db/audit.py`, `app/application/audit.py` answering Q1–Q8, 21 unit + 7 live PostgreSQL tests,
+FR-807/NFR-006 implemented); T13-03 `STRICT`/`TOLERANT`/`LIVE` replay and T13-04 run manifests
+remain `[ ]`.
 Phase 5 T5-00 through T5-09 are committed locally at
 `45253c8b91c103e9632554de8b31d55a5a5281c4`; its exact-SHA remote CI remains pending independently.
 Phase 6 T6-00 through T6-09 are complete on `phase6-domain-reasoning`; final commit

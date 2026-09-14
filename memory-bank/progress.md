@@ -1,6 +1,7 @@
 # Progress
 
-**Overall completion:** Phases 0–12 complete; Phase 13 T13-01 done (catalogue only); Phase 5 remote
+**Overall completion:** Phases 0–12 complete; Phase 13 T13-01 + T13-02 done (catalogue; audit persistence
+and the eight audit queries); Phase 5 remote
 evidence remains separate. Phase-0 architecture baseline: **approved by the project owner (D-13)**.
 
 ---
@@ -22,7 +23,7 @@ evidence remains separate. Phase-0 architecture baseline: **approved by the proj
 | 10 | Reasoning graph & traceability | Not started | — |
 | 11 | Neuro-symbolic | **Complete** | T11-01…04 complete: immutable formalisation lifecycle, bounded Z3, exact-revision evidence, and conservative `UNKNOWN → DEFER` consensus policy |
 | 12 | MARL environment | **Complete** | T12-01…05: exact trajectory domain, reward/credit accounting, canonical export, hermetic replay, in-memory/PostgreSQL stores and migration 0024 |
-| 13 | Trustworthiness | **In progress** | T13-01 catalogue complete (43 immutable `MetricDefinition`s, 13 tests); T13-02 audit records + eight queries, T13-03 replay modes, T13-04 run manifests open |
+| 13 | Trustworthiness | **In progress** | T13-01 catalogue complete (43 immutable `MetricDefinition`s, 13 tests); T13-02 audit records + eight queries complete (migration 0025, 21 unit + 7 live PostgreSQL tests); T13-03 replay modes, T13-04 run manifests open |
 | 14 | Full UI | Not started | — |
 | 15 | MCP | Not started | — |
 | 16 | Research extensions | Not started | — |
@@ -31,6 +32,44 @@ evidence remains separate. Phase-0 architecture baseline: **approved by the proj
 ---
 
 ## Detailed log
+
+### 2026-09-14 — Phase 13 T13-02 audit persistence + the eight audit queries
+
+- Migration `backend/alembic/versions/20260912_0025_audit_tables.py` (down `20260912_0024`, expand,
+  single head) adds forced-RLS (`app.workspace_id` policy), caller-append-only `access_log` and
+  `audit_anchors`: `BEFORE UPDATE OR DELETE` trigger `reject_audit_mutation` raises sqlstate 27000,
+  `REVOKE UPDATE, DELETE` from PUBLIC, composite `(workspace_id, session_id)` FK to `sessions`,
+  CHECKs (principal class, action=READ, result enum, sha256 hash shapes, day head_seq). Upgrade and
+  downgrade both pass live; `alembic check` reports no drift.
+- `backend/app/db/models/audit.py` + `models/__init__.py` export the two rows; `app/domain/audit.py`
+  provides `AccessLogEntry`, `LedgerVerificationSummary`, `AuditAppendReport`, `ChainIntegrityReport`,
+  `AuditAnchor`/`AuditAnchorVerification` and the `AuditAnchorRepository` protocol, with `publish`
+  over the shared pure `_anchor_facts(actor, day, head_seq, head_hash, prev_head_hash, anchored_at,
+  session_id)` so reproduction and detection use the same hash.
+- `app/db/audit.py`: `SqlAlchemyAccessLogRepository` (cursor pagination), `SqlAlchemyAuditAnchorRepository`
+  (publish/latest/`chain_integrity` recomputing day-heads from a bounded `ledger.read` +
+  `_last_event_at_or_before`), `SqlAlchemySessionParticipantReader`; `app/db/consensus.py` gains
+  `ConsensusResultStore.get_round_result`.
+- `app/application/audit.py` answers Q1–Q8 as typed services: `AuditQueryService`
+  (artifacts_rationale/claimed_objectives/agent_round_context settlement/dissent/termination/strategy
+  provenance), `AccessAuditService` (Q7 strictly before `recommendations.created_at`, cursor
+  pagination, `why_incomplete`), `ChainVerificationService` (chain_integrity + ledger verify). No HTTP
+  (Phase 14). `app/composition/container.py` wires the new adapters.
+- Tests: 21 unit (`tests/unit/test_audit_queries.py`) and 7 live PostgreSQL acceptance
+  (`tests/integration/test_audit_persistence.py`) covering append-only (27000), forced-RLS cross-tenant
+  42501, unknown-session FK 23503, Q7 complete-timeline + before-acceptance bound, same-day anchor
+  conflict, two-day chain with genesis prev-hash, and tamper detection (disabled trigger). Census test
+  `test_reasoning_revision_downgrades_reupgrades_and_has_no_drift` extended with `_PHASE_13_TABLES`.
+- Docs: AUDITABILITY.md v1.4 (storage header, implemented access-log schema paragraph, Q2/Q3/Q5 paths
+  reflect real durable facts; nightly job + WORM anchor noted as follow-up) and DATA_MODEL.md §11.1
+  (implemented DDL, `audit_records` supersede note, ER relationships). Traceability FR-807/NFR-006 →
+  implemented (`local-phase13-2026-09-14`), 104 generated rows no drift.
+- Validation: unit `698 passed`; PostgreSQL integration green after the census fix (`55 passed, 8
+  skipped` infra-gated); strict mypy 305 files; ruff
+  check clean (ruff format applied to the four new/touched source files; historical migration 0021 left
+  as-is as a pre-existing format waiver); `alembic heads` = single `20260912_0025`; links green 90
+  files; `git diff --check` clean; Compose config valid; backend image builds. `check_contracts.py` still
+  reports the pre-existing `POST /api/v1/formalizations` route drift (out of Phase 13 scope).
 
 ### 2026-09-14 — Phase 13 T13-01 metric catalogue + Compose isolation
 

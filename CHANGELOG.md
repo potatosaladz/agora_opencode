@@ -8,6 +8,32 @@ uses semantic versioning once it ships a release. Phase 0 is pre-release.
 
 ## [Unreleased]
 
+### Added — Phase 13 T13-02 (audit record generation and the eight audit queries)
+
+- Added migration `20260912_0025` with tenant-safe forced-RLS, caller-append-only `access_log` and
+  `audit_anchors` (shared `BEFORE UPDATE OR DELETE` trigger raising sqlstate 27000, `REVOKE UPDATE,
+  DELETE`, composite `(workspace_id, session_id)` FK into `sessions`).
+- Added typed audit contracts (`app/domain/audit.py`: access-log entries, anchor publishing via the
+  shared deterministic `_anchor_facts`, chain/append reports), DB adapters (`app/db/audit.py`:
+  `SqlAlchemyAccessLogRepository`, `SqlAlchemyAuditAnchorRepository`,
+  `SqlAlchemySessionParticipantReader`) and `ConsensusResultStore.get_round_result`.
+- Added `app/application/audit.py` answering the eight audit questions (Q1–Q8) as typed services —
+  `AuditQueryService` (originating-turn rationale, sealed claims, round context, dissent, termination,
+  strategy provenance), `AccessAuditService` (Q7 bounded strictly before `recommendations.created_at`,
+  cursor pagination) and `ChainVerificationService` (per-day head recomputation + ledger `verify`).
+- Added 21 focused unit tests and 7 live PostgreSQL acceptance tests (append-only, RLS 42501
+  isolation, FK 23503, Q7-before-acceptance, same-day anchor conflict, two-day chain verification,
+  tamper detection). No HTTP/OpenAPI added (Phase 14).
+- Reconciled AUDITABILITY.md (v1.4: implemented storage + per-question real paths) and DATA_MODEL.md
+  (§11.1 with implemented DDL); FR-807/NFR-006 flipped to implemented
+  (`last_verified: local-phase13-2026-09-14`).
+
+### Fixed — Phase 13 census acceptance
+
+- Extended the head-tables census in `test_reasoning_revision_downgrades_reupgrades_and_has_no_drift`
+  with the Phase 13 table set (`access_log`, `audit_anchors`) so the migration-drift test passes at
+  head `20260912_0025`.
+
 ### Added — Phase 13 T13-01 (metric catalogue)
 
 - Added the `MetricPlugin` port, immutable six-field `MetricDefinition` value objects, the

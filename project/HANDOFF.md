@@ -1,7 +1,7 @@
 # Handoff
 
 **For:** whoever continues this work, probably with no memory of the session that produced it.
-**As of:** 2026-09-14 · **Phase:** 13 in progress · **Active task:** T13-01 complete; T13-02 next
+**As of:** 2026-09-14 · **Phase:** 13 in progress · **Active task:** T13-01, T13-02 complete; T13-03 next
 
 ## Read these five, in this order
 
@@ -32,14 +32,18 @@ A change that breaks any of these is not a refactor. It is a different project.
 
 ## Immediate next action
 
-Phase 13 T13-01 is complete. The [METRICS.md](../docs/METRICS.md) catalogue is shipped as 43 immutable
-`MetricDefinition`s across `app/ports/metrics.py`, `app/domain/metrics.py` and
-`app/application/metrics.py`, with an exact-lookup `MetricCatalogue` and 13 focused tests transcribing
-the document field-by-field and pinning the Phase 12 reward metrics at version "1". Still absent by
-design: a metric engine, `metric_values` storage, replay, UI, or API — Alembic stays at
-`20260912_0024`. T13-02 (audit record generation and the eight audit queries per
-[AUDITABILITY.md](../docs/AUDITABILITY.md), built on Phase 10 provenance) is the next authoritative
-task; do not start it automatically.
+Phase 13 T13-01 and T13-02 are complete. T13-02 ships the Phase 13 audit substrate: migration
+`20260912_0025` adds forced-RLS, caller-append-only `access_log` and `audit_anchors`, and
+`app/application/audit.py` answers the eight audit questions (Q1–Q8 in
+[AUDITABILITY.md](../docs/AUDITABILITY.md)) as typed services over `app/domain/audit.py`,
+`app/db/audit.py`, and `ConsensusResultStore.get_round_result`. Appended append-only (sqlstate
+27000), RLS 42501 isolation, FK 23503, Q7-before-acceptance, same-day anchor conflict, two-day chain
+verification and tamper detection are proven by 21 focused unit tests and 7 live PostgreSQL tests;
+`alembic check` is drift-free at head `20260912_0025`. By design still absent: any HTTP/OpenAPI for
+the audit queries (Phase 14), the nightly anchor job, WORM external anchor storage, and the Q2/Q3/Q5
+doc-fiction events (`STATUS_CHANGED`, `CONTEXT_ASSEMBLED`, `ROUND_TERMINATED`/`CONSENSUS_REACHED`/
+`HUMAN_TERMINATED`) — those questions are answered from real durable facts instead. T13-03 (replay
+modes STRICT/TOLERANT/LIVE) is the next authoritative task; do not start it automatically.
 
 Phase 11 is complete through T11-04. `SymbolicUnknownPolicy` keeps solver facts separate from
 application action: `SAT → PROCEED`, `UNSAT → BLOCK`, `UNKNOWN → DEFER`. The persisted evaluation remains

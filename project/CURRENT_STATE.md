@@ -1,7 +1,30 @@
 # Current State
 
-**As of:** 2026-09-14 · **Phase:** 13 in progress · **Active task:** T13-01 complete; T13-02 next
-**Track:** MVP · **Confidence:** Phases 0–4, 6–10 exact-SHA remote evidence; Phase 5 local gates green
+**As of:** 2026-09-14 · **Phase:** 13 in progress · **Active task:** T13-01, T13-02 complete; T13-03 next
+**Track:** MVP · **Confidence:** Phases 0–4, 6–10 exact-SHA remote evidence; Phase 5 local gates green; Phase 13 local gates green
+
+Phase 13 T13-01 and T13-02 are complete locally. T13-02 ships the Phase 13 audit substrate: migration
+`20260912_0025` adds tenant-safe forced-RLS, caller-append-only `access_log` and `audit_anchors`
+(shared `BEFORE UPDATE OR DELETE` trigger raising sqlstate 27000, `REVOKE UPDATE, DELETE`,
+`(workspace_id, session_id)` FK into `sessions`), and the eight audit queries (Q1–Q8 of
+[AUDITABILITY.md](../docs/AUDITABILITY.md)) as typed application services
+(`backend/app/application/audit.py`) over new domain contracts (`backend/app/domain/audit.py`),
+DB adapters (`backend/app/db/audit.py`), and `ConsensusResultStore.get_round_result`
+(`backend/app/db/consensus.py`). Design invariants kept: Q1 origin walks `causation_id` (≤32 hops),
+Q7 is bounded strictly before `recommendations.created_at`, all helper logic is pure
+(`_anchor_facts` shared module function makes anchor hashes deterministic and documentable), and
+verification (`ChainVerificationService.chain_integrity`) recomputes each day-head from the ledger
+with `reasoning_ledger.verify`. No HTTP/OpenAPI added (Phase 14); no event emit for
+status/context/round-terminal events (they remain doc fiction). Evidence: 21 focused unit tests and
+7 live PostgreSQL acceptance tests (append-only, RLS 42501 isolation, FK 23503, same-day anchor
+conflict, two-day chain, tamper detection) plus the census test
+`test_reasoning_revision_downgrades_reupgrades_and_has_no_drift` extended with the Phase 13 table
+set. Docs: AUDITABILITY.md 1.4 and DATA_MODEL.md §11.1 now describe the implemented tables.
+Traceability FR-807/NFR-006 flipped to implemented (`last_verified: local-phase13-2026-09-14`), 104 generated rows
+with no drift. Full local validation: unit `698 passed`, PostgreSQL integration `55 passed, 8 skipped`,
+strict mypy over 305 files, `alembic check` reports no
+new upgrade operations, links green over 90 Markdown files, `git diff --check` clean, Compose config
+valid, and the backend image builds.
 
 Phase 13 T13-01 is complete locally. The [METRICS.md](../docs/METRICS.md) catalogue is now shipped as 43
 immutable `MetricDefinition` value objects behind the new `MetricPlugin` port

@@ -393,6 +393,22 @@ instead of a literal, and the census gained `_PHASE_11_TABLES` (`formalizations`
 ScriptDirectory at runtime, never hardcode it, so future chain growth cannot reintroduce stale literals.
 
 
+## E-23 · 2026-09-14 · Head-tables census did not anticipate the Phase 13 tables · **minor**
+
+**Symptom** The live PostgreSQL suite failed exactly one test —
+`test_reasoning_revision_downgrades_reupgrades_and_has_no_drift` — after `20260912_0025` because the
+head-tables census set did not yet include `access_log` and `audit_anchors`.
+
+**Root cause** The E-22 fix extended the census through Phase 12, so the pattern was correct; the census
+is inherently owned by whichever phase adds the next tables and must be extended in that phase.
+
+**Fix** Added `_PHASE_13_TABLES = ("access_log", "audit_anchors")` and spread it into the census set; the
+suite is green and `alembic check` reports no drift at head.
+
+**Prevention** Whenever a migration adds tables, extend the census in the same change — the integration
+gate already enforces this by failing, so it cannot silently rot.
+
+
 ---
 
 ## Watch list (not errors yet)
