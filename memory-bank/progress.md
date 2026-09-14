@@ -1,7 +1,7 @@
 # Progress
 
-**Overall completion:** Phases 0–12 complete; Phase 13 T13-01 + T13-02 done (catalogue; audit persistence
-and the eight audit queries); Phase 5 remote
+**Overall completion:** Phases 0–12 complete; Phase 13 T13-01 through T13-03 done (catalogue; audit
+persistence and eight queries; replay modes); Phase 5 remote
 evidence remains separate. Phase-0 architecture baseline: **approved by the project owner (D-13)**.
 
 ---
@@ -23,7 +23,7 @@ evidence remains separate. Phase-0 architecture baseline: **approved by the proj
 | 10 | Reasoning graph & traceability | Not started | — |
 | 11 | Neuro-symbolic | **Complete** | T11-01…04 complete: immutable formalisation lifecycle, bounded Z3, exact-revision evidence, and conservative `UNKNOWN → DEFER` consensus policy |
 | 12 | MARL environment | **Complete** | T12-01…05: exact trajectory domain, reward/credit accounting, canonical export, hermetic replay, in-memory/PostgreSQL stores and migration 0024 |
-| 13 | Trustworthiness | **In progress** | T13-01 catalogue complete (43 immutable `MetricDefinition`s, 13 tests); T13-02 audit records + eight queries complete (migration 0025, 21 unit + 7 live PostgreSQL tests); T13-03 replay modes, T13-04 run manifests open |
+| 13 | Trustworthiness | **In progress** | T13-01 catalogue complete; T13-02 audit records + eight queries complete; T13-03 replay modes complete (11 focused tests); T13-04 run manifests open |
 | 14 | Full UI | Not started | — |
 | 15 | MCP | Not started | — |
 | 16 | Research extensions | Not started | — |
@@ -32,6 +32,27 @@ evidence remains separate. Phase-0 architecture baseline: **approved by the proj
 ---
 
 ## Detailed log
+
+### 2026-09-14 — Phase 13 T13-03 replay modes
+
+- Added `backend/app/domain/replay.py`: closed `REPLAY_STRICT`, `REPLAY_TOLERANT`, `REPLAY_LIVE`
+  enum plus immutable exact manifest/implementation identities, historical steps, requests, executions,
+  first mismatches, structured diffs, live launch and result contracts.
+- Added `backend/app/application/replay.py`: exact-version `ReplayImplementationRegistry` and
+  exhaustive `SessionReplayService`. Every mode validates caller-scoped source/manifest identity,
+  verifies the PostgreSQL-authoritative ledger chain and exact event sequence, and can nest the existing
+  Phase 12 MARL `verify_bundle()` without altering its semantics.
+- STRICT permits recorded reconstruction and deterministic non-external implementations only; missing or
+  substituted versions fail closed, external implementations are rejected before invocation, and the first
+  output/status mismatch terminates verification. TOLERANT re-executes only explicitly permitted steps and
+  emits deterministic implementation/provider/model/configuration/output/status/timing-sensitive diffs;
+  it returns MATCHED/DIFFERENT, never VERIFIED. LIVE delegates new execution and rejects any reuse of the
+  source session, manifest, event or result identities.
+- Added 11 focused tests for mode closure, strict success/integrity/unavailable/mismatch/no-external/no-
+  mutation behavior, tolerant structured differences and no false VERIFIED result, LIVE fresh linked
+  identities, cross-workspace denial, and recorded-step reconstruction.
+- No migration or API was added. T13-04 remains the owner of durable run-manifest creation/finalization and
+  database-backed live replay lineage.
 
 ### 2026-09-14 — Phase 13 T13-02 audit persistence + the eight audit queries
 

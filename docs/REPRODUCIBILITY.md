@@ -1,6 +1,6 @@
 # Reproducibility
 
-**Version:** 1.0 · **Status:** design
+**Version:** 1.1 · **Status:** design; T13-03 replay-mode contracts and orchestration implemented
 **Requirements:** NFR-003, NFR-014, FR-905, FR-906 · **ADR:**
 [ADR-001](adr/ADR-001-postgres-source-of-truth.md),
 [ADR-019](adr/ADR-019-append-only-event-ledger.md)
@@ -55,7 +55,7 @@ is closed by the port registry: every port adapter declares its own manifest fie
 | Solver timeouts | timeout in the manifest; `UNKNOWN` is a recorded result | a faster machine may return `SAT` where the original said `UNKNOWN` — flagged `TIMING_SENSITIVE` |
 | Migration order | schema head recorded; migrations are append-only | none |
 
-<!-- trace: FR-901 -->
+<!-- trace: NFR-003, NFR-014 -->
 ## 4. Replay modes
 
 | Mode | What it does | Use |
@@ -66,6 +66,29 @@ is closed by the port registry: every port adapter declares its own manifest fie
 
 A result produced in `REPLAY_LIVE` is a new session with a new id that links to the old one. It
 does not overwrite, and it is never described as "the same experiment".
+
+T13-03 implements these three modes as the closed `ReplayMode` enum and
+`SessionReplayService` (`app.domain.replay`, `app.application.replay`). `REPLAY_STRICT` first
+verifies the authoritative ledger and exact recorded event set, verifies any nested Phase 12 MARL
+bundles with their existing hermetic verifier, resolves exact implementation id/version pairs, rejects
+external or nondeterministic implementations before invocation, and stops at the first output/status
+mismatch. Recorded provider and retrieval outputs are reconstruction inputs, not calls.
+
+`REPLAY_TOLERANT` re-executes only steps whose captured policy explicitly permits it. It never reports
+`VERIFIED`: a matching comparison is `MATCHED`, while implementation, provider, model, configuration,
+output, status and timing-sensitive `UNKNOWN` changes produce an ordered structured diff and
+`DIFFERENT`. Missing selected versions fail closed instead of silently falling back.
+
+`REPLAY_LIVE` delegates to a `LiveReplayLauncher` that must return a new source-linked session,
+manifest, event and result identity set. The service rejects any historical identity reuse and labels
+the result `LIVE_STARTED`, never byte-identical. T13-03 itself writes no replay record and never mutates
+the historical session; durable manifest creation/finalization and database-backed live lineage remain
+T13-04. This boundary allows T13-03 to consume a `ReplaySource` now without inventing the manifest
+schema owned by the next task.
+
+Phase 12 `verify_bundle()` remains the narrower MARL trajectory proof. Full-session replay may invoke
+it for captured MARL bundles, but does not rename its outcomes, replace its two-file format, or treat it
+as proof of the rest of a session.
 
 ## 5. Content addressing and digests
 
@@ -118,4 +141,3 @@ document or in the manifest, and is recorded in [../project/ERRORS.md](../projec
 [EXPERIMENTATION.md](EXPERIMENTATION.md) · [AUDITABILITY.md](AUDITABILITY.md) ·
 [SIMULATION_ARCHITECTURE.md §10](SIMULATION_ARCHITECTURE.md) · [METRICS.md](METRICS.md) ·
 [ARCHITECTURE.md §3](ARCHITECTURE.md)
-

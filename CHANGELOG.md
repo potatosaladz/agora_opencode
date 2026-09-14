@@ -8,6 +8,20 @@ uses semantic versioning once it ships a release. Phase 0 is pre-release.
 
 ## [Unreleased]
 
+### Added — Phase 13 T13-03 (full-session replay modes)
+
+- Added closed, typed `REPLAY_STRICT`, `REPLAY_TOLERANT`, and `REPLAY_LIVE` contracts and exhaustive
+  `SessionReplayService` orchestration. All modes bind an exact caller-scoped historical source and verify
+  the authoritative ledger chain/event set before replay.
+- STRICT reconstructs recorded external outputs, invokes only exact-version deterministic local
+  implementations, reuses Phase 12 MARL bundle verification, stops at the first mismatch, and never writes
+  historical data. TOLERANT re-executes only explicitly permitted steps and returns ordered structured
+  implementation/provider/model/configuration/output/status/timing-sensitive differences without claiming
+  strict verification. LIVE requires a source-linked new execution with fresh session, manifest, event and
+  result identities.
+- Added 11 focused tests. No migration or HTTP endpoint was added; durable run manifests and database-backed
+  live replay lineage remain T13-04.
+
 ### Added — Phase 13 T13-02 (audit record generation and the eight audit queries)
 
 - Added migration `20260912_0025` with tenant-safe forced-RLS, caller-append-only `access_log` and

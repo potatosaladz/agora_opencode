@@ -1,12 +1,22 @@
 # Active Context
 
-**Snapshot taken:** 2026-09-14 · **Phase:** 13 in progress · **Active task:** T13-01, T13-02 complete; T13-03 next
+**Snapshot taken:** 2026-09-14 · **Phase:** 13 in progress · **Active task:** T13-01 through T13-03 complete; T13-04 next
 This is the "what is happening right now" file. Rewrite it at the end of every
 significant unit of work.
 
 ---
 
 ## 1. Focus of the current session
+
+Phase 13 T13-03 is complete. `app/domain/replay.py` owns the closed three-mode contract and immutable
+manifest reference, historical replay, step, exact implementation, execution, structured diff, first
+mismatch and result values. `app/application/replay.py` verifies caller-scoped source identity, ledger
+integrity and exact event history before exhaustive mode dispatch. STRICT reconstructs recorded inputs,
+allows only exact-version deterministic non-external execution, reuses Phase 12 MARL `verify_bundle`, and
+stops at the first mismatch. TOLERANT executes only explicitly permitted steps and records ordered
+implementation/provider/model/configuration/output/status/timing-sensitive differences without claiming
+VERIFIED. LIVE delegates creation and requires fresh source-linked session/manifest/event/result IDs. No
+HTTP or persistence was added because T13-04 owns durable run manifests and database-backed linkage.
 
 Phase 13 T13-01 is complete. The METRICS.md catalogue is shipped as 43 immutable `MetricDefinition`s
 (EP-01…06, RR-01…07, DH-01…07, CQ-01…06, RB-01…05, CE-01…05, HO-01…04, CA-01…03) behind the new
@@ -65,8 +75,9 @@ formalisation plus symbolic-evidence persistence tests, with strict static, trac
 
 ## 2. Currently active task
 
-Phase 13 T13-01 and T13-02 are closed (metric catalogue; audit persistence + the eight audit queries).
-T13-03 (`STRICT`/`TOLERANT`/`LIVE` replay modes) is next and has not started. Phase 12 T12-01 through
+Phase 13 T13-01 through T13-03 are closed (metric catalogue; audit persistence + the eight audit
+queries; STRICT/TOLERANT/LIVE replay modes). T13-04 (run manifests with pinning) is next and has not
+started. Phase 12 T12-01 through
 T12-05 and Phase 11
 are closed. Phases 0–4 and 6–10 have exact-SHA
 remote evidence. Phase 5 remote evidence remains tracked
@@ -75,6 +86,11 @@ independently. T7-08 and Phase 7 are complete at exact SHA
 
 ## 3. Completed in this session so far
 
+- `T13-03` Full-session replay modes implemented in `app/domain/replay.py` and
+  `app/application/replay.py`, with 11 focused tests in `tests/unit/test_replay.py`. STRICT verifies
+  ledger/event identity and deterministic exact-version outputs without external calls; TOLERANT reports
+  explicit ordered diffs; LIVE requires fresh linked identities. Phase 12 MARL verification remains
+  distinct and reusable. No migration/API; T13-04 retains manifest persistence ownership.
 - `T13-02` Audit record generation and the eight audit queries implemented:
   `alembic/versions/20260912_0025_audit_tables.py`, `app/db/models/audit.py`,
   `app/domain/audit.py`, `app/db/audit.py`, `app/application/audit.py`,
@@ -439,12 +455,13 @@ widened graph matrix plus commit/rollback, exact retry, forced RLS and append-on
 
 ## 9. Next recommended action
 
-Phase 13 T13-01 and T13-02 are complete: the METRICS.md catalogue ships as 43 immutable
+Phase 13 T13-01 through T13-03 are complete: the METRICS.md catalogue ships as 43 immutable
 `MetricDefinition`s with an exact-lookup `MetricCatalogue` and 13 green tests, and migration
 `20260912_0025` plus `app/application/audit.py` answer the eight audit questions with 21 unit + 7 live
-PostgreSQL tests, FR-807/NFR-006 implemented in the generated 104-row traceability. T13-03
-(`STRICT`/`TOLERANT`/`LIVE` replay modes) is next and must be verified from
-[project/TASKS.md](../project/TASKS.md) before starting; do not begin it automatically. Phase 13 audit
+PostgreSQL tests, FR-807/NFR-006 implemented in the generated 104-row traceability. T13-03 adds
+STRICT/TOLERANT/LIVE replay orchestration and 11 focused tests. T13-04 (run manifests with pinning) is
+next and must be verified from [project/TASKS.md](../project/TASKS.md) before starting; do not begin it
+automatically. Phase 13 audit
 HTTP (Phase 14), the nightly anchor job, and external WORM anchor storage remain deferred. Keep Phase 5
 commit `45253c8b91c103e9632554de8b31d55a5a5281c4` remote evidence tracked independently.
 

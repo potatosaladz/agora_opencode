@@ -1,7 +1,24 @@
 # Current State
 
-**As of:** 2026-09-14 · **Phase:** 13 in progress · **Active task:** T13-01, T13-02 complete; T13-03 next
+**As of:** 2026-09-14 · **Phase:** 13 in progress · **Active task:** T13-01 through T13-03 complete; T13-04 next
 **Track:** MVP · **Confidence:** Phases 0–4, 6–10 exact-SHA remote evidence; Phase 5 local gates green; Phase 13 local gates green
+
+Phase 13 T13-03 is complete locally. `backend/app/domain/replay.py` defines the closed
+`REPLAY_STRICT` / `REPLAY_TOLERANT` / `REPLAY_LIVE` modes and immutable manifest references,
+historical inputs, exact implementation identities, replay steps, executions, first mismatches,
+structured differences and results. `backend/app/application/replay.py` provides exact-version
+`ReplayImplementationRegistry` and exhaustive `SessionReplayService` orchestration. All modes first
+bind the request to a caller-scoped `ReplaySource`, verify the authoritative ledger chain and exact
+recorded event sequence, and reuse Phase 12 `verify_bundle()` for captured MARL trajectories without
+changing MARL semantics. STRICT reconstructs recorded provider/retrieval steps without calls, invokes
+only deterministic non-external exact-version implementations, and fails on the first output/status
+divergence. TOLERANT re-executes only explicitly allowed steps and reports ordered implementation,
+provider, model, configuration, output, status and timing-sensitive differences; it returns `MATCHED`
+or `DIFFERENT`, never `VERIFIED`. LIVE delegates new execution to `LiveReplayLauncher`, requires source
+linkage plus fresh session/manifest/event/result identities, and returns `LIVE_STARTED`, never a
+reproduction claim. T13-03 adds no API or persistence: durable run manifests and database-backed live
+lineage remain T13-04. Eleven focused tests cover all stated boundaries, including no external strict
+calls, historical immutability, cross-workspace denial and deterministic ordering.
 
 Phase 13 T13-01 and T13-02 are complete locally. T13-02 ships the Phase 13 audit substrate: migration
 `20260912_0025` adds tenant-safe forced-RLS, caller-append-only `access_log` and `audit_anchors`

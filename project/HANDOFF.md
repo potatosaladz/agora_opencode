@@ -1,7 +1,7 @@
 # Handoff
 
 **For:** whoever continues this work, probably with no memory of the session that produced it.
-**As of:** 2026-09-14 · **Phase:** 13 in progress · **Active task:** T13-01, T13-02 complete; T13-03 next
+**As of:** 2026-09-14 · **Phase:** 13 in progress · **Active task:** T13-01 through T13-03 complete; T13-04 next
 
 ## Read these five, in this order
 
@@ -32,7 +32,7 @@ A change that breaks any of these is not a refactor. It is a different project.
 
 ## Immediate next action
 
-Phase 13 T13-01 and T13-02 are complete. T13-02 ships the Phase 13 audit substrate: migration
+Phase 13 T13-01 through T13-03 are complete. T13-02 ships the Phase 13 audit substrate: migration
 `20260912_0025` adds forced-RLS, caller-append-only `access_log` and `audit_anchors`, and
 `app/application/audit.py` answers the eight audit questions (Q1–Q8 in
 [AUDITABILITY.md](../docs/AUDITABILITY.md)) as typed services over `app/domain/audit.py`,
@@ -42,8 +42,14 @@ verification and tamper detection are proven by 21 focused unit tests and 7 live
 `alembic check` is drift-free at head `20260912_0025`. By design still absent: any HTTP/OpenAPI for
 the audit queries (Phase 14), the nightly anchor job, WORM external anchor storage, and the Q2/Q3/Q5
 doc-fiction events (`STATUS_CHANGED`, `CONTEXT_ASSEMBLED`, `ROUND_TERMINATED`/`CONSENSUS_REACHED`/
-`HUMAN_TERMINATED`) — those questions are answered from real durable facts instead. T13-03 (replay
-modes STRICT/TOLERANT/LIVE) is the next authoritative task; do not start it automatically.
+`HUMAN_TERMINATED`) — those questions are answered from real durable facts instead. T13-03 adds the
+closed STRICT/TOLERANT/LIVE contracts and `SessionReplayService`: STRICT is historical deterministic
+verification with exact versions and no external calls; TOLERANT is controlled re-execution with an
+ordered structured diff and no false VERIFIED claim; LIVE is a source-linked new execution whose
+session/manifest/event/result identities must all be fresh. The service verifies ledger integrity and
+exact event history first and reuses Phase 12 MARL `verify_bundle()` without changing it. No HTTP or
+persistence was added: T13-04 owns durable run manifests and database-backed live lineage and is the
+next authoritative task; do not start it automatically.
 
 Phase 11 is complete through T11-04. `SymbolicUnknownPolicy` keeps solver facts separate from
 application action: `SAT → PROCEED`, `UNSAT → BLOCK`, `UNKNOWN → DEFER`. The persisted evaluation remains
