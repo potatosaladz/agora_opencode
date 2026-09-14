@@ -7,6 +7,7 @@ from app.db.models.agents import (
     LLMCredentialEnvelopeRow,
 )
 from app.db.models.api import IdempotencyRecordRow
+from app.db.models.audit import AccessLogRow, AuditAnchorRow
 from app.db.models.citations import EvidenceCitationRow, SourceRetractionRow
 from app.db.models.critique_response import CritiqueResponseRequestRow, CritiqueResponseResultRow
 from app.db.models.formalization import (
@@ -55,7 +56,9 @@ from app.db.models.symbolic_evaluation import SymbolicEvaluationRow
 from app.db.models.tenancy import TenantRecord, Workspace
 
 __all__ = [
+    "AccessLogRow",
     "AgentDefinitionRow",
+    "AuditAnchorRow",
     "ConsensusExplanationRow",
     "ConsensusResultRow",
     "CritiqueResponseRequestRow",

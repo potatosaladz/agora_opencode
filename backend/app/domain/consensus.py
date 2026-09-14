@@ -199,6 +199,7 @@ class ConsensusRunRecord(_Frozen):
 
 
 @runtime_checkable
+# trace: FR-807, NFR-006
 class ConsensusResultStore(Protocol):
     """Caller-transaction-scoped persistence."""
 
@@ -220,6 +221,14 @@ class ConsensusResultStore(Protocol):
         *,
         strategy: str | None = None,
     ) -> tuple[ConsensusRunRecord, ...]: ...
+
+    async def get_round_result(
+        self,
+        workspace_id: UUID,
+        session_id: UUID,
+        *,
+        round: int,
+    ) -> ConsensusRunRecord | None: ...
 
     async def add_explanation(
         self,

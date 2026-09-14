@@ -26,6 +26,11 @@ from app.adapters.z3_symbolic import Z3SymbolicReasoner
 from app.common.errors import ValidationFailed
 from app.config.settings import Settings
 from app.db import Database, create_database
+from app.db.audit import (
+    SqlAlchemyAccessLogRepository,
+    SqlAlchemyAuditAnchorRepository,
+    SqlAlchemySessionParticipantReader,
+)
 from app.db.citations import SqlAlchemyCitationRepository
 from app.db.consensus import SqlAlchemyConsensusResultStore
 from app.db.coordinator_policy import SqlAlchemyCoordinatorPolicyStore
@@ -41,6 +46,11 @@ from app.db.reasoning_ledger import SqlAlchemyReasoningLedger
 from app.db.session_lifecycle import SqlAlchemySessionLifecycleStore
 from app.db.source_impact import SqlAlchemySourceImpactRepository
 from app.db.symbolic_evaluation import SqlAlchemySymbolicEvaluationRepository
+from app.domain.audit import (
+    AccessLogRepository,
+    AuditAnchorRepository,
+    SessionParticipantReader,
+)
 from app.domain.citations import CitationRepository
 from app.domain.consensus import ConsensusResultStore
 from app.domain.coordinator_policy import CoordinatorPolicyStore
@@ -86,6 +96,9 @@ class ReasoningTransaction:
     consensus_results: ConsensusResultStore
     formalizations: FormalizationRepository
     symbolic_evaluations: SymbolicEvaluationRepository
+    access_logs: AccessLogRepository
+    audit_anchors: AuditAnchorRepository
+    session_participants: SessionParticipantReader
 
 
 class StartupConfigurationError(ValueError):
@@ -137,6 +150,9 @@ class Container:
                     consensus_results=SqlAlchemyConsensusResultStore(session),
                     formalizations=SqlAlchemyFormalizationRepository(session),
                     symbolic_evaluations=SqlAlchemySymbolicEvaluationRepository(session),
+                    access_logs=SqlAlchemyAccessLogRepository(session),
+                    audit_anchors=SqlAlchemyAuditAnchorRepository(session),
+                    session_participants=SqlAlchemySessionParticipantReader(session),
                 )
         except IntegrityError as exc:
             raise ValidationFailed("request conflicts with persisted tenant state") from exc

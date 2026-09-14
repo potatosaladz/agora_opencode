@@ -66,6 +66,18 @@ class FakeConsensusResultStore:
     ) -> tuple[ConsensusRunRecord, ...]:
         return tuple(self.results.values())
 
+    async def get_round_result(
+        self,
+        workspace_id: UUID,
+        session_id: UUID,
+        *,
+        round: int,
+    ) -> ConsensusRunRecord | None:
+        for record in self.results.values():
+            if record.session_id == session_id and record.round == round:
+                return record
+        return None
+
     async def add_explanation(
         self, workspace_id: UUID, result_id: UUID, explanation: ConsensusExplanation
     ) -> None:

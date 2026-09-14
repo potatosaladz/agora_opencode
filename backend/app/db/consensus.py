@@ -18,7 +18,7 @@ from app.domain.consensus import (
 
 __all__ = ["SqlAlchemyConsensusResultStore"]
 
-
+# trace: FR-807, NFR-006
 class SqlAlchemyConsensusResultStore:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
@@ -75,6 +75,27 @@ class SqlAlchemyConsensusResultStore:
             )
         ).all()
         return tuple(_result(row) for row in rows)
+
+    async def get_round_result(
+        self,
+        workspace_id: UUID,
+        session_id: UUID,
+        *,
+        round: int,
+    ) -> ConsensusRunRecord | None:
+        if round < 1:
+            raise ValueError("round must be a positive number")
+        row = await self._session.scalar(
+            select(ConsensusResultRow)
+            .where(
+                ConsensusResultRow.workspace_id == workspace_id,
+                ConsensusResultRow.session_id == session_id,
+                ConsensusResultRow.round == round,
+            )
+            .order_by(ConsensusResultRow.id)
+            .limit(1)
+        )
+        return _result(row) if row is not None else None
 
     async def add_explanation(
         self,
