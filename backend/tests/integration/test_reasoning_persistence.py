@@ -18,6 +18,7 @@ from uuid import UUID, uuid4
 import pytest
 from alembic import command
 from alembic.config import Config
+from alembic.script import ScriptDirectory
 from sqlalchemy import text
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.asyncio import (
@@ -260,6 +261,13 @@ _PHASE_10_TABLES = (
     "impact_report_dependencies",
     "workspace_event_outbox",
 )
+_PHASE_11_TABLES = (
+    "formalizations",
+    "formalization_validations",
+    "formalization_decisions",
+    "symbolic_evaluations",
+)
+_PHASE_12_TABLES = ("marl_episodes", "marl_trajectory_records")
 _ALL_PHASE_3_TABLES = tuple(
     table for revision in _PHASE_3_REVISIONS for table in _PHASE_3_SCHEMA[revision]
 )
@@ -3036,7 +3044,7 @@ async def test_reasoning_revision_downgrades_reupgrades_and_has_no_drift() -> No
         await asyncio.to_thread(command.upgrade, config, "head")
         async with engine.connect() as connection:
             assert await connection.scalar(text("SELECT version_num FROM alembic_version")) == (
-                "20260911_0021"
+                ScriptDirectory.from_config(config).get_current_head()
             )
             for table in _GRAPH_TABLES:
                 assert (
@@ -3095,6 +3103,8 @@ async def test_reasoning_revision_downgrades_reupgrades_and_has_no_drift() -> No
                 *_PHASE_7_TABLES,
                 *_PHASE_8_TABLES,
                 *_PHASE_10_TABLES,
+                *_PHASE_11_TABLES,
+                *_PHASE_12_TABLES,
             }
         await asyncio.to_thread(command.check, config)
 

@@ -27,6 +27,13 @@ class MarlEpisodeRow(Base):
         CheckConstraint("status IN ('OPEN','COMPLETE','INCOMPLETE')", name="status"),
         CheckConstraint("schema_version = 1", name="schema_version"),
         CheckConstraint("code_identity ~ '^sha256:[0-9a-f]{64}$'", name="code_identity"),
+        CheckConstraint(
+            "(status='OPEN' AND incomplete_marker IS NULL AND incomplete_hash IS NULL) OR "
+            "(status='COMPLETE' AND incomplete_marker IS NULL AND incomplete_hash IS NULL) OR "
+            "(status='INCOMPLETE' AND jsonb_typeof(incomplete_marker)='object' AND "
+            "incomplete_hash ~ '^sha256:[0-9a-f]{64}$')",
+            name="status_shape",
+        ),
         UniqueConstraint("workspace_id", "id", name="uq_marl_episodes_workspace_id"),
         UniqueConstraint(
             "workspace_id", "session_id", "id", name="uq_marl_episodes_workspace_session_id"
