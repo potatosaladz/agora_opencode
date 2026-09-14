@@ -1,9 +1,10 @@
 # Metrics
 
-**Version:** 1.0 · **Status:** design
+**Version:** 1.0 · **Status:** design · catalogue implemented (T13-01)
 **Port:** `MetricPlugin` ([PORTS.md §10](PORTS.md)) · **Storage:** `metric_values`
 ([DATA_MODEL.md §11](DATA_MODEL.md)) · **Requirements:** FR-901, FR-902, NFR-019, NFR-005
 
+<!-- trace: FR-901 -->
 ## 1. The no-single-score rule
 
 **FR-901:** a single aggregate quality score MUST NOT exist. There is no "session score", no
@@ -16,6 +17,7 @@ rises when agents herd, evidence coverage rises when agents attach weak citation
 density falls when dissent is suppressed. A composite would hide exactly the trade-offs that
 constitute the research contribution.
 
+<!-- trace: FR-902, NFR-019 -->
 ## 2. Admission rules for a metric
 
 A metric is admissible only if its `MetricDefinition` states all six, and the definition is
@@ -60,6 +62,13 @@ compute a mean across dimensions ([EXPLAINABILITY.md](EXPLAINABILITY.md) §4).
 
 Identifier pattern: `<dimension>-<nn>`. `dir` = direction. All formulas are over the artifact
 sets of a single session unless stated.
+
+> **Executable authority.** The catalogue is shipped as `MetricDefinition`s in
+> `backend/app/application/metrics.py`, registered immutably via `MetricCatalogue`
+> (`backend/app/domain/metrics.py`). Each definition carries `inputs` and `interpretation`
+> in full — the two fields the tables below abbreviate — and the registered definitions are
+> checked field-by-field against this catalogue by `backend/tests/unit/test_metric_catalogue.py`
+> (T13-01). Computation and storage remain design (METRICS.md §6).
 
 ### 4.1 Evidence and provenance
 

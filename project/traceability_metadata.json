@@ -387,12 +387,12 @@
   "FR-901": {
     "last_verified": "",
     "phase": "13",
-    "status": "planned"
+    "status": "partial"
   },
   "FR-902": {
-    "status": "planned",
+    "status": "implemented",
     "phase": "13",
-    "last_verified": ""
+    "last_verified": "local-phase13-2026-09-14"
   },
   "FR-903": {
     "last_verified": "",
@@ -510,7 +510,7 @@
     "last_verified": ""
   },
   "NFR-019": {
-    "status": "planned",
+    "status": "partial",
     "phase": "13",
     "last_verified": ""
   },
