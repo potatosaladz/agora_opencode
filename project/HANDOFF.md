@@ -1,7 +1,7 @@
 # Handoff
 
 **For:** whoever continues this work, probably with no memory of the session that produced it.
-**As of:** 2026-09-14 · **Phase:** 14 complete · **Active task:** Phase 14 exit complete
+**As of:** 2026-09-15 · **Phase:** 15 contract frozen · **Active task:** T15-00 complete
 
 ## Read these five, in this order
 
@@ -32,6 +32,12 @@ A change that breaks any of these is not a refactor. It is a different project.
 
 ## Immediate next action
 
+Read [PHASE15_ACCEPTANCE.md](../docs/PHASE15_ACCEPTANCE.md) and ADR-021. T15-00 is complete; implement only
+T15-01 Gateway as Sole Tool Egress when authorized. It owns the stateless Streamable HTTP gateway, frozen
+typed port, deterministic read-only fixture tool, lifecycle/error/cancel/restart behavior and network bypass
+proof. It does not own registry persistence, production allowlists, approvals/limits/audit, quarantine or
+SSRF controls. T15-02…04 remain open. Do not start T15-02 or Phase 16.
+
 Read [PHASE14_ACCEPTANCE.md](../docs/PHASE14_ACCEPTANCE.md) before continuing Phase 14. T14-01 is complete.
 `POST /api/v1/graph/subgraph` delegates to the existing graph store with public-ID,
 scope, radius/filter/page/cursor validation, and the code-split Graph View renders its authoritative pages
@@ -57,13 +63,12 @@ T14-05 is complete. Authenticated finalized-manifest reads and exact source/mani
 delegate to existing replay services. STRICT remains provider-free verification, TOLERANT preserves ordered
 MATCHED/DIFFERENT semantics, and LIVE requires write authorization plus confirmation and exposes fresh
 lineage or a typed unavailable result. The code-split UI is accessible and responsive; no migration or
-persistence was added. T14-06 Audit Search is next; do not start it automatically.
+persistence was added.
 
 T14-06 and Phase 14 are complete. Scoped authenticated Q1–Q8 Audit Search delegates to the existing audit
 services, records successful reads, and presents ordered evidence with independent completeness/integrity.
 The frozen usability script passes for visible minority and weakest-evidence discovery plus required
-navigation. No migration or replacement audit subsystem was added. Phase 15 is next; do not start it
-automatically.
+navigation. No migration or replacement audit subsystem was added.
 
 Phase 13 T13-01 through T13-04 are complete. T13-02 ships the Phase 13 audit substrate: migration
 `20260912_0025` adds forced-RLS, caller-append-only `access_log` and `audit_anchors`, and

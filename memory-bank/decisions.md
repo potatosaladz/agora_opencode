@@ -1,6 +1,6 @@
 # Decisions (memory bank)
 
-**Last updated:** 2026-09-06
+**Last updated:** 2026-09-15
 Condensed decision register. Full text with options and rejected alternatives lives in
 [../docs/adr/](../docs/adr/). New decisions get the next free number; superseded
 decisions are marked, never deleted.
@@ -31,6 +31,7 @@ decisions are marked, never deleted.
 | A-018 | `SandboxExecutionProvider` for isolated execution; raw Docker socket never exposed | Accepted | [ADR-018](../docs/adr/ADR-018-sandbox-execution-boundary.md) |
 | A-019 | Append-only event ledger with sequence numbers; optional hash chaining, claims limited to what is implemented | Accepted | [ADR-019](../docs/adr/ADR-019-append-only-event-ledger.md) |
 | A-020 | Local single-instance stateful services are explicitly **not** HA; production HA documented separately | Accepted | [ADR-020](../docs/adr/ADR-020-stateful-ha-boundary.md) |
+| A-021 | MCP is outbound-only through a stateless `2025-06-18` Streamable HTTP gateway with workload identity and gateway-only MCP egress | Accepted | [ADR-021](../docs/adr/ADR-021-mcp-streamable-http-gateway.md) |
 
 ## Accepted design decisions (below ADR threshold)
 

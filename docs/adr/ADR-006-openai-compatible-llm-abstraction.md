@@ -1,7 +1,7 @@
 # ADR-006: OpenAI-compatible LLM abstraction
 
 **Status:** accepted · **Date:** 2026-09-04 · **Phase:** 1
-**Requirements:** FR-206, NFR-014, NFR-011
+**Requirements:** FR-1005, FR-206, NFR-014, NFR-011
 
 ## Context
 
@@ -9,6 +9,7 @@ The platform must run heterogeneous agents across different models, and must not
 provider changes, prices up, or disappears. Vendor SDKs leak their own types, retry semantics and
 streaming shapes into application code, which is precisely how lock-in becomes architectural.
 
+<!-- trace: FR-1005 -->
 ## Decision
 
 One internal `LLMProvider` port with an OpenAI-compatible chat-completions shape as the lingua franca.

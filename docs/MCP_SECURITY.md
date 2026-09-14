@@ -1,9 +1,10 @@
 # MCP Security
 
 **Version:** 1.0 · **Status:** design
-**Service:** `mcp-gateway` ([ARCHITECTURE.md §2](ARCHITECTURE.md)) · **Port:** `ToolProvider`
-([PORTS.md §10](PORTS.md)) · **Requirements:** FR-1001 … FR-1007 · **ADR:**
-[ADR-018](adr/ADR-018-sandbox-execution-boundary.md)
+**Service:** `mcp-gateway` ([ARCHITECTURE.md §2](ARCHITECTURE.md)) · **Port:** `MCPToolProvider`
+([PORTS.md §11](PORTS.md)) · **Requirements:** FR-1001 … FR-1004 · **ADRs:**
+[ADR-018](adr/ADR-018-sandbox-execution-boundary.md),
+[ADR-021](adr/ADR-021-mcp-streamable-http-gateway.md)
 
 ## 1. Why this is a separate document
 
@@ -15,6 +16,11 @@ amount of care on one side compensates for the other.
 The gateway is therefore the sole egress for tool calls. An agent-worker that could call an MCP
 server directly is a design defect, and the network policy makes it impossible rather than
 improbable.
+
+Agora is an outbound MCP tool consumer: reasoning worker → internal gateway → registered external server.
+It is not a general inbound MCP server for internal Agora resources, prompts or services. Protocol
+`2025-06-18`, Streamable HTTP, identity, retry and task ownership are frozen in
+[PHASE15_ACCEPTANCE.md](PHASE15_ACCEPTANCE.md) and ADR-021.
 
 ## 2. Server registry
 
@@ -44,11 +50,16 @@ improbable.
 | `READ_SANE` | search, fetch document, read issue | allow, logged |
 | `READ_RISKY` | query an internal DB, read a private repo | allow within scope, logged, size-capped |
 | `WRITE` | create issue, post comment, update record | **require human approval** |
-| `EXECUTE` | run code, deploy, send money, delete | denied in MVP; per-workspace opt-in with approval |
+| `EXECUTE` | run code, deploy, send money, delete | denied in MVP; future enablement requires a new decision |
 | `EXTERNAL_NET` | arbitrary URL fetch | denied; only allowlisted hosts (§7) |
 
-Classification is per tool, not per server, and is stored in the registry. An unclassified tool is
-`WRITE` by default — the pessimistic assumption is the safe one.
+Classification is per tool, not per server, and is stored in the registry. An unclassified tool is treated
+as `WRITE` for pessimistic analysis but cannot enter a production allowlist before explicit classification.
+
+`ToolClass` above is the registry-owned risk vocabulary. Runtime `ToolPermission` is only `NONE | READ |
+APPROVAL_REQUIRED`: `READ_SANE`/`READ_RISKY → READ`, `WRITE → APPROVAL_REQUIRED`, and
+`EXECUTE`/`EXTERNAL_NET → NONE` in the MVP. `SANDBOXED_WRITE` is not a permission; sandboxing is a separate
+execution boundary. T15-02 owns classifications and T15-03 owns permission enforcement.
 
 ## 4. Policy evaluation
 
@@ -70,12 +81,14 @@ failed. "Denied" without a reason is useless for both audit and debugging.
 - JSON Schema validation against the tool's declared schema; unknown parameters rejected.
 - **Resource scoping:** identifiers must belong to the caller's workspace. A `project_key` or
   `document_id` supplied as free text by the model is checked against the registry, not trusted.
-- **No secrets in arguments.** The gateway holds credentials and injects them at the transport
-  layer; a model that could pass a header could pass someone else's (FR-1005).
+- **No secrets in arguments.** The gateway holds credentials referenced as
+  `secret://mcp/<server_id>/<credential_name>` and T15-03 injects them at the transport layer; a model that
+  could pass a header could pass someone else's (NFR-010).
 - Size and depth caps on every argument; a 2 MB string in a `query` field is a bug or an attack.
 - Destructive verbs (`delete`, `retract`, `close`) require an explicit `reason` and map to `WRITE`
   or above regardless of what the server declares.
 
+<!-- trace: FR-1002, FR-1003 -->
 ## 6. Prompt-injection handling
 
 Two-channel discipline: **instructions come from the platform, data comes from everywhere.**
@@ -116,13 +129,15 @@ DNS rebinding is closed by connecting to the validated IP.
 | Tokens per result | ≤ 8 k, truncation flagged |
 | Concurrency per server | capped, so one slow server cannot stall a round |
 | Wall-clock per call | ≤ 30 s, then `TOOL_TIMEOUT` |
-| Cost | charged to the session budget; `BUDGET_EXCEEDED` stops further calls |
+| Cost | gateway returns `BUDGET_EXCEEDED`; coordinator commits one `BUDGET_EXHAUSTED` termination |
 | Repeated identical call | deduplicated within a round by `args_hash` |
 
+<!-- trace: FR-1004 -->
 ## 10. Audit
 
-Every call emits `TOOL_INVOKED` with principal, server, tool, class, args hash, decision and — for
-denials — the failing conjunct. Approvals emit `TOOL_APPROVED` with the approver and the exact
+Every call emits `TOOL_INVOKED` with principal, server, tool, class, safely redacted canonical arguments,
+args hash, result hash, latency, decision and — for denials — the failing conjunct. Approvals emit
+`TOOL_APPROVED` with the approver and the exact
 rendered call. `audit:read` answers "what did this session do outside the platform" for any
 session, which is the question an incident always starts with ([AUDITABILITY.md §5](AUDITABILITY.md)).
 
@@ -138,6 +153,5 @@ session, which is the question an incident always starts with ([AUDITABILITY.md 
 
 ## 12. Related
 
-[SECURITY.md](SECURITY.md) · [THREAT_MODEL.md](THREAT_MODEL.md) · [PORTS.md §10](PORTS.md) ·
+[SECURITY.md](SECURITY.md) · [THREAT_MODEL.md](THREAT_MODEL.md) · [PORTS.md §11](PORTS.md) ·
 [AGENT_PROTOCOLS.md](AGENT_PROTOCOLS.md) · [RAG_ARCHITECTURE.md](RAG_ARCHITECTURE.md)
-

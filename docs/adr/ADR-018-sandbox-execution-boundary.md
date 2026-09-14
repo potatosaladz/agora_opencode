@@ -2,7 +2,7 @@
 # ADR-018: Sandbox execution boundary for generated and third-party code
 
 **Status:** accepted · **Date:** 2026-09-04 · **Phase:** 8
-**Requirements:** FR-801 … FR-806, FR-1001 … FR-1007, NFR-010
+**Requirements:** FR-801 … FR-806, FR-1001 … FR-1004, NFR-010
 
 ## Context
 

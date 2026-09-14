@@ -66,7 +66,7 @@ Full breakdown in [PLAN.md](PLAN.md). Estimates are per phase, not per task, unt
 | 12 MARL environment | `[ ]` | M | trajectories replay deterministically; reward components map to metric ids |
 | 13 Trustworthiness | `[~]` | L | T13-01 complete; everything else open — a past session answers "why did it say that"; manifest replays in `TOLERANT` mode |
 | 14 Full UI | `[x]` | XL | a naive reviewer finds the minority position and the weakest evidence from the UI alone |
-| 15 MCP gateway | `[ ]` | L | workers have no internet route; hostile tool output does not widen agent scope |
+| 15 MCP gateway | `[~]` | L | workers cannot directly reach external MCP servers; gateway reaches only authorized destinations; tool results cannot write artifacts; hostile output does not widen scope |
 | 16 Research extensions | `[ ]` | XL | three research strategies each beat or lose to `constraint_aware` on measured terms |
 | 17 Swarm + hardening | `[ ]` | L | restore drill succeeds; every threat has a control with a test id |
 
@@ -107,6 +107,23 @@ UI/API exposure of earlier-phase capabilities and do not reassign their implemen
 internals can identify “Prefer the rail alternative” with its author/warrant and “Winter range degradation
 report” with its visible DISPUTED/OPPOSES weakest-evidence rationale from the UI alone. Required links,
 UNKNOWN → DEFER, replay/audit visibility, accessibility, responsive, contract and Compose gates pass.
+
+## Phase 15 — MCP gateway · **contract frozen; T15-01 next**
+
+Normative detail: [PHASE15_ACCEPTANCE.md](../docs/PHASE15_ACCEPTANCE.md). MCP is outbound-only:
+reasoning worker → internal gateway → registered external server. Requirement ownership remains in the
+phases recorded in [REQUIREMENTS.md](../docs/REQUIREMENTS.md).
+
+| ID | Task | Status | Est | Acceptance |
+| --- | --- | --- | --- | --- |
+| T15-00 | Reconcile and Freeze MCP Authority | `[x]` | M | protocol `2025-06-18`, Streamable HTTP, workload identity/call context, permission mapping, retry/cancellation, network topology, persistence ownership and T15-01…04 acceptance are frozen in Phase 15 contract + ADR-021; requirement references reconciled; docs/traceability/links green; no runtime code |
+| T15-01 | Gateway as Sole Tool Egress | `[ ]` | L | stateless gateway and typed MCP port; real initialize/discovery/read-only fixture invocation; timeout/cancel/error/restart; worker cannot reach fixture server while gateway can; untrusted hash result cannot commit artifacts; no migration/registry/policy/quarantine |
+| T15-02 | Versioned Server Registry and Explicit Allowlist | `[ ]` | L | durable versioned registry, workspace grants, decision refs, signed manifest/hash, namespacing, classifications, data ceilings and drift/reapproval fail closed |
+| T15-03 | Tool Policy, Approvals, Limits, and Audit | `[ ]` | L | full tool authorization, exact-call approval, rate/concurrency/cost/call budgets, durable retry/dedup, secret injection and complete invocation/approval audit |
+| T15-04 | Untrusted Result and Injection Containment | `[ ]` | L | result envelope/provenance/quarantine/synthetic restrictions, context exclusion, hostile corpus, SSRF/redirect/DNS controls and complete Phase 15 exit proof |
+
+**Exit gate:** worker direct MCP-server access fails; gateway authorized access succeeds; tool results cannot
+directly write artifacts; hostile output cannot expand scope. T15-00 is complete; T15-01…04 remain open.
 
 ## Phase 3 — detailed execution plan
 

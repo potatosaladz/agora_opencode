@@ -161,12 +161,19 @@ deferrable · `R` research track, explicitly outside MVP.
 
 ## 10. External integration
 
+Phase 15 ownership and verification are frozen in
+[PHASE15_ACCEPTANCE.md](PHASE15_ACCEPTANCE.md). FR-1005 remains the Phase 2 LLM-provider portability
+requirement; MCP credential isolation is enforced under NFR-010 and is not a reinterpretation of FR-1005.
+FR-1003 distinguishes write-tool approval from containment of untrusted tool output; READ tools still require
+the complete authorization conjunction but not per-call human approval. FR-1004 retains safely redacted
+canonical arguments so incident review is possible without persisting secret fields.
+
 | ID | Requirement | P | Ph | V |
 | --- | --- | --- | --- | --- |
 | FR-1001 | MCP tools MUST be reachable only through `mcp-gateway` with an explicit allowlist | P0 | 15 | T |
 | FR-1002 | Tool output MUST be treated as untrusted data with provenance, never as instructions | P0 | 15 | T |
-| FR-1003 | Write-capable or untrusted tools MUST sit behind an approval gate | P0 | 15 | T |
-| FR-1004 | Every tool call MUST be audited with arguments, result hash, latency and actor | P0 | 15 | A |
+| FR-1003 | Write-capable tools MUST sit behind an approval gate; untrusted tool output MUST be contained as data and cannot authorize or widen a call | P0 | 15 | T |
+| FR-1004 | Every tool call MUST be audited with safely redacted canonical arguments, arguments hash, result hash, latency and actor | P0 | 15 | A |
 | FR-1005 | LLM providers MUST be swappable through configuration without domain-code changes | P0 | 2 | T |
 
 ## 11. Non-functional requirements
@@ -233,5 +240,3 @@ deferrable · `R` research track, explicitly outside MVP.
 Any `P0` requirement that cannot be met is a **stop condition** for the phase, recorded in
 [../project/ERRORS.md](../project/ERRORS.md) with a proposed scope or design change — never
 silently dropped.
-
-

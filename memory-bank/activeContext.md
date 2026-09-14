@@ -1,6 +1,6 @@
 # Active Context
 
-**Snapshot taken:** 2026-09-14 · **Phase:** 14 complete · **Active task:** Phase 14 exit complete
+**Snapshot taken:** 2026-09-15 · **Phase:** 15 in progress · **Active task:** T15-00 complete
 This is the "what is happening right now" file. Rewrite it at the end of every
 significant unit of work.
 
@@ -8,17 +8,22 @@ significant unit of work.
 
 ## 1. Focus of the current session
 
+T15-00 is complete. `docs/PHASE15_ACCEPTANCE.md` and ADR-021 freeze outbound-only MCP protocol
+`2025-06-18` over Streamable HTTP, workload identity/context, typed port/result/failure contracts,
+ToolClass → ToolPermission mapping, retry/cancellation, gateway-only MCP egress, secrets and non-overlapping
+T15-01…04 ownership. No runtime code, dependency, migration or service was added. T15-01 is next and open.
+
 T14-06 Audit Search and Phase 14 are complete. Scoped authenticated Q1–Q8 requests delegate to existing
 audit services and append successful reads to `access_log`; the code-split UI keeps evidence order,
 completeness and integrity distinct. The frozen usability script identifies the minority position/author/
 warrant and weakest evidence/recorded reason directly from visible UI facts, with working Graph,
-provenance, Assumption, Replay and Audit navigation. No migration was added. Do not start Phase 15.
+provenance, Assumption, Replay and Audit navigation. No migration was added.
 
 T14-05 Replay Controls is complete. Authenticated finalized-manifest reads and replay requests bind the
 public source session to exact id/version/hash pins and delegate to existing replay services. STRICT remains
 read-only and provider-free, TOLERANT preserves MATCHED/DIFFERENT ordered diffs, and LIVE requires write role
 plus confirmation and exposes fresh lineage or a typed unavailable result. The code-split UI is accessible
-and responsive. No persistence or migration changed. T14-06 Audit Search is next and has not started.
+and responsive. No persistence or migration changed.
 
 T14-04 Explanation Panel is complete. The authenticated read composes only persisted consensus,
 recommendation, evidence/provenance, dissent, assumption, Critique, risk/uncertainty and symbolic facts. All

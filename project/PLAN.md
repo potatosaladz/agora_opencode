@@ -225,11 +225,14 @@ weakest evidence in a session from the UI alone (a scripted usability test, not 
 
 ## Phase 15 — MCP gateway
 
-T15-01 gateway as the sole tool egress · T15-02 server registry with allowlist and a recorded decision
-per server · T15-03 tool-level authz, approval gates, rate limits · T15-04 injection containment for tool
-output ([MCP_SECURITY.md](../docs/MCP_SECURITY.md)).
-**Exit gate:** a worker container has no route to the internet; a tool result cannot write artifacts
-directly; a hostile tool-output fixture does not change agent behaviour outside its declared scope.
+T15-00 reconcile and freeze MCP authority · T15-01 Gateway as Sole Tool Egress · T15-02 Versioned Server
+Registry and Explicit Allowlist · T15-03 Tool Policy, Approvals, Limits, and Audit · T15-04 Untrusted Result
+and Injection Containment. Normative protocol, identity, network, persistence and task ownership are frozen
+in [PHASE15_ACCEPTANCE.md](../docs/PHASE15_ACCEPTANCE.md); [ADR-021](../docs/adr/ADR-021-mcp-streamable-http-gateway.md)
+fixes outbound-only MCP `2025-06-18` over Streamable HTTP.
+**Exit gate:** a worker container cannot directly reach external MCP servers; the gateway reaches only
+authorized MCP destinations; a tool result cannot write artifacts directly; a hostile tool-output fixture
+does not change agent behaviour outside its declared scope.
 
 ## Phase 16 — Research extensions
 

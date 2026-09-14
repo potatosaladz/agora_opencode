@@ -2,7 +2,7 @@
 
 **Version:** 1.0 · **Status:** design · **Base path:** `/api/v1`
 **Service:** `api-gateway` ([ARCHITECTURE.md §2](ARCHITECTURE.md)) ·
-**Boundary contract:** [API_CONTRACTS.md](API_CONTRACTS.md) · **Requirements:** FR-101 … FR-110,
+**Boundary contract:** [API_CONTRACTS.md](API_CONTRACTS.md) · **Requirements:** FR-101 … FR-109,
 NFR-007, NFR-010
 
 ## 1. Conventions

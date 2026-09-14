@@ -355,16 +355,17 @@ admissible. No plugin may emit a single aggregate "quality score"
 ```python
 @runtime_checkable
 class MCPToolProvider(Protocol):
-    async def list_tools(self, server_ref: str) -> Sequence[ToolDescriptor]: ...
-    async def invoke(self, call: ToolCall, *, principal: Principal,
-                     timeout_s: float) -> ToolResult: ...
-    def permission_for(self, tool: ToolDescriptor) -> ToolPermission: ...
+    async def initialize(self, server: UpstreamServerRef) -> MCPServerCapabilities: ...
+    async def list_tools(self, server: UpstreamServerRef) -> tuple[ToolDescriptor, ...]: ...
+    async def invoke(self, call: ToolCall) -> ToolResult: ...
+    async def cancel(self, operation_id: UUID) -> None: ...
 ```
 
-`ToolPermission` ∈ `NONE | READ | SANDBOXED_WRITE | APPROVAL_REQUIRED`. `ToolResult`
-carries sanitized output, `content_hash`, `source_uri`, `retrieved_at`, `trust_level`,
-`raw_artifact_ref`. Output is **untrusted data**: never concatenated into a prompt without
-framing, and instruction-like content triggers quarantine
+The exact `2025-06-18` Streamable HTTP protocol, call context, descriptor/call/result/failure shapes and
+retry/cancellation semantics are frozen in [PHASE15_ACCEPTANCE.md](PHASE15_ACCEPTANCE.md). `ToolClass` is
+`READ_SANE | READ_RISKY | WRITE | EXECUTE | EXTERNAL_NET`; derived `ToolPermission` is
+`NONE | READ | APPROVAL_REQUIRED`. Sandboxing is not a permission. `ToolResult` is content-hashed untrusted
+data and never a committed artifact. Instruction-like content is quarantined in T15-04
 ([MCP_SECURITY.md](MCP_SECURITY.md)).
 
 ## 12. Infrastructure ports
@@ -608,6 +609,5 @@ a `CONDITIONAL_CONSENSUS` cap.
 6. If the port changes externally visible payloads, update
    [API_CONTRACTS.md](API_CONTRACTS.md) and
    [../memory-bank/api-contracts.md](../memory-bank/api-contracts.md) in the same commit.
-
 
 

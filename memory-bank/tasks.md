@@ -108,8 +108,11 @@ migration `20260914_0026`, forced RLS, one manifest/session, source lineage, exa
 Phase 14 contract `[x]`; implementation tasks are T14-01 Graph View `[x]`, T14-02 Dissent View `[x]`,
 T14-03 Assumption Register `[x]`, T14-04 Explanation Panel `[x]`, T14-05 Replay Controls `[x]`, and
 T14-06 Audit Search `[x]`. The frozen scripted usability fixture passes: minority and weakest-evidence facts
-are identifiable from the initial UI with working cross-view navigation. Phase 14 is complete; do not start
-Phase 15 automatically.
+are identifiable from the initial UI with working cross-view navigation. Phase 14 is complete.
+Phase 15 contract T15-00 `[x]`; T15-01 Gateway as Sole Tool Egress `[ ]`; T15-02 Versioned Server Registry
+and Explicit Allowlist `[ ]`; T15-03 Tool Policy, Approvals, Limits, and Audit `[ ]`; T15-04 Untrusted Result
+and Injection Containment `[ ]`. Exact authority is frozen in
+[../docs/PHASE15_ACCEPTANCE.md](../docs/PHASE15_ACCEPTANCE.md). T15-01 is next.
 Phase 5 T5-00 through T5-09 are committed locally at
 `45253c8b91c103e9632554de8b31d55a5a5281c4`; its exact-SHA remote CI remains pending independently.
 Phase 6 T6-00 through T6-09 are complete on `phase6-domain-reasoning`; final commit

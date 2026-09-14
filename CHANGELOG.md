@@ -8,6 +8,14 @@ uses semantic versioning once it ships a release. Phase 0 is pre-release.
 
 ## [Unreleased]
 
+### Added — Phase 15 T15-00 (MCP Authority Freeze)
+
+- Added the frozen Phase 15 T15-00…04 acceptance contract and ADR-021 for outbound-only MCP
+  `2025-06-18` over Streamable HTTP.
+- Reconciled workload identity, typed MCP contracts, permission mapping, retry/cancellation, gateway-only MCP
+  egress, secret references, persistence ownership, task boundaries and requirement mappings.
+- Added no runtime code, dependency, service, persistence or migration; T15-01 remains open.
+
 ### Added — Phase 14 T14-06 (Audit Search and Phase Exit)
 
 - Added scoped, authenticated Q1–Q8 Audit Search over the existing Phase 13 audit query, access-log and

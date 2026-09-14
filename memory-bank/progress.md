@@ -24,13 +24,21 @@ evidence remains separate. Phase-0 architecture baseline: **approved by the proj
 | 12 | MARL environment | **Complete** | T12-01…05: exact trajectory domain, reward/credit accounting, canonical export, hermetic replay, in-memory/PostgreSQL stores and migration 0024 |
 | 13 | Trustworthiness | **Complete** | T13-01 catalogue; T13-02 audit records + eight queries; T13-03 replay modes; T13-04 canonical durable pinned run manifests |
 | 14 | Full UI | **Complete** | T14-01…06 complete; frozen usability fixture identifies minority position and weakest evidence from initial UI; full local/Compose gates green |
-| 15 | MCP | Not started | — |
+| 15 | MCP gateway | **In progress** | T15-00 contract/ADR complete; T15-01…04 frozen and open; no runtime implementation yet |
 | 16 | Research extensions | Not started | — |
 | 17 | Swarm & hardening | Not started | — |
 
 ---
 
 ## Detailed log
+
+### 2026-09-15 — Phase 15 T15-00 MCP authority freeze
+
+- Froze outbound-only MCP `2025-06-18` over Streamable HTTP, workload identity/context, typed MCP values,
+  permission mapping, timeout/cancellation/retry semantics, gateway-only network topology and secret refs.
+- Assigned distinct protocol/network, registry, authorization/audit and containment ownership to T15-01…04;
+  fixed nonexistent/misused MCP requirement references and added ADR-021.
+- No runtime code, dependency, persistence or migration was added. T15-01 remains open.
 
 ### 2026-09-14 — Phase 14 T14-06 Audit Search and phase exit
 
@@ -837,8 +845,8 @@ Phase 0 by design and become applicable in Phase 1.
 | M11 Z3 rejects infeasible alternative | Phase 11 | **Complete** — T11-01…04 complete; UNSAT alternatives are blocked and UNKNOWN remains unresolved |
 | M12 Trajectories recorded | Phase 12 | not started |
 | M13 Manifest + replay modes | Phase 13 | not started |
-| M14 Full UI | Phase 14 | T14-01…04 complete; T14-05…06 open |
-| M15 MCP gateway enforced | Phase 15 | not started |
+| M14 Full UI | Phase 14 | complete; T14-01…06 and scripted usability gate pass |
+| M15 MCP gateway enforced | Phase 15 | T15-00 complete; T15-01…04 open |
 | M16 Research extensions demonstrated | Phase 16 | not started |
 | M17 Swarm stack hardened | Phase 17 | not started |
 | **MVP demo: 18 success criteria** | end of Phase 14 core | not started |

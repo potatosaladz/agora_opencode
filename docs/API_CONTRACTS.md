@@ -3,7 +3,7 @@
 **Version:** 1.2 · **Status:** design; Phase 7 through T7-04 internal Critic subset implemented
 **Services:** `web-ui` ↔ `api-gateway` ([ADR-010](adr/ADR-010-react-vite-frontend.md),
 [ADR-012](adr/ADR-012-clean-architecture-ports-adapters.md)) · **Endpoints:** [API.md](API.md)
-**Requirements:** NFR-014, NFR-010, FR-101 … FR-110
+**Requirements:** NFR-014, NFR-010, FR-101 … FR-109
 
 ## 1. What the boundary is for
 
@@ -446,7 +446,7 @@ makes an unknown field a compile error, which is what keeps §7 meaningful.
 | Never | Because |
 | --- | --- |
 | Model chain-of-thought or raw completions | NFR-011; also unaccountable |
-| Provider credentials, API keys, internal connection strings | FR-1005 |
+| Provider credentials, API keys, internal connection strings | NFR-010 |
 | Database row shapes, foreign keys, internal ids that are not resources | B-1 |
 | A composite quality score | FR-901 — there is no such field to send |
 | A number without its `meta` (type, version, inputs, caveats) | NFR-019 |

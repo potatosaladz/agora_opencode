@@ -1,10 +1,11 @@
 # Security
 
 **Version:** 1.0 · **Status:** design
-**Requirements:** FR-101 … FR-110, FR-1001 … FR-1007, NFR-010 · **Companion:**
+**Requirements:** FR-101 … FR-109, FR-1001 … FR-1004, NFR-010 · **Companion:**
 [THREAT_MODEL.md](THREAT_MODEL.md), [MCP_SECURITY.md](MCP_SECURITY.md) · **ADR:**
 [ADR-017](adr/ADR-017-secret-provider-docker-secrets.md),
-[ADR-018](adr/ADR-018-sandbox-execution-boundary.md)
+[ADR-018](adr/ADR-018-sandbox-execution-boundary.md),
+[ADR-021](adr/ADR-021-mcp-streamable-http-gateway.md)
 
 ## 1. Trust boundaries
 
@@ -31,6 +32,8 @@ Four boundaries, each with its own assumption:
 | Anything → sandbox | **hostile payload inside** | no network, read-only inputs, caps, digest-only egress |
 
 The MCP boundary is the one most likely to be gotten wrong, so it has its own document.
+MCP service calls use workload bearer identity with audience `mcp-gateway`; browser/human tokens are not
+service credentials. The trusted MCP call context binds workspace, session and exact agent definition/version.
 
 ## 2. Identity and access
 
@@ -62,14 +65,14 @@ reads return `404`, indistinguishable from absence
 ([API_CONTRACTS.md §6](API_CONTRACTS.md)). Vector namespaces and object-storage prefixes carry the
 same key, so isolation is not a database-only property.
 
-<!-- trace: FR-1005 -->
+<!-- trace: NFR-010 -->
 ## 4. Secrets
 
 Per [ADR-017](adr/ADR-017-secret-provider-docker-secrets.md):
 
 - Secrets live in the Swarm secret store, mounted read-only at `/run/secrets`.
 - No secret is ever in an image, a compose environment value, a log line, a trace attribute or a
-  prompt. A CI grep plus a runtime redaction filter enforce this (FR-1005).
+  prompt. A CI grep plus a runtime redaction filter enforce this (NFR-010).
 - Rotation is a secret update plus a service restart; no rebuild. Rotation events are audited.
 - Provider keys are scoped per workspace where the provider supports it, so a leak has a blast
   radius and a bill.
@@ -155,4 +158,3 @@ communicates only through the provider interface.
 [THREAT_MODEL.md](THREAT_MODEL.md) · [MCP_SECURITY.md](MCP_SECURITY.md) ·
 [AUDITABILITY.md](AUDITABILITY.md) · [DOCKER_SWARM.md](DOCKER_SWARM.md) ·
 [API_CONTRACTS.md](API_CONTRACTS.md)
-

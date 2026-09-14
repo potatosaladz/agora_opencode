@@ -1,7 +1,13 @@
 # Current State
 
-**As of:** 2026-09-14 · **Phase:** 14 complete · **Active task:** Phase 14 exit complete
+**As of:** 2026-09-15 · **Phase:** 15 contract frozen · **Active task:** T15-00 complete
 **Track:** MVP · **Confidence:** Phases 0–4, 6–10 exact-SHA remote evidence; Phase 5 local gates green; Phase 13 local gates green
+
+Phase 15 T15-00 is complete. [PHASE15_ACCEPTANCE.md](../docs/PHASE15_ACCEPTANCE.md) freezes outbound-only
+MCP protocol `2025-06-18` over Streamable HTTP, workload identity and trusted call context, typed domain/port
+results, ToolClass → ToolPermission mapping, operation retry/cancellation, gateway-only MCP egress, secret
+references and non-overlapping T15-01…04 ownership. ADR-021 records the trust-boundary/transport decision.
+No runtime code, dependency, migration or service was added. T15-01 is next and remains open.
 
 Phase 14 T14-06 Audit Search and the phase exit are complete. Scoped authenticated
 `POST /api/v1/sessions/{session_id}/audit/query` exposes all eight exact audit questions through the
@@ -19,7 +25,7 @@ persisted replay source and replay service. STRICT has no external-call path and
 mismatch; TOLERANT preserves MATCHED/DIFFERENT and ordered diffs; LIVE is write-role protected, explicitly
 confirmed and returns fresh lineage when a launcher exists or typed `LIVE_LAUNCH_UNAVAILABLE` otherwise.
 The code-split accessible responsive UI preserves these semantics. No migration or persistence was added;
-Alembic remains `20260914_0026`. T14-06 Audit Search is next and has not started.
+Alembic remains `20260914_0026`.
 
 Phase 14 T14-04 Explanation Panel is complete. Authenticated
 `GET /api/v1/sessions/{session_id}/explanation` composes the latest persisted consensus result and exact

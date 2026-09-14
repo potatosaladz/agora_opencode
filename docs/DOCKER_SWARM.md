@@ -56,12 +56,21 @@ with a readiness wait, not a `sleep`.
 | Network | Driver | Attached to |
 | --- | --- | --- |
 | `edge` | overlay, `attachable: false` | api-gateway, realtime-gateway, web-ui |
-| `internal` | overlay | all platform services |
+| `application_internal` | overlay, `internal: true` | platform services including reasoning-worker and mcp-gateway |
 | `data` | overlay, encrypted | services plus data nodes only |
 | `sandbox` | overlay, `internal: true`, no route to `data` | simulation-service, sandbox tasks |
+| `mcp_egress` | overlay; no published ports | `mcp-gateway` plus approved MCP fixture/self-hosted servers only |
 
 Published ports exist only on `edge`; the full table is [PORTS.md](PORTS.md), and CI asserts that
 no stack file publishes a port absent from it.
+
+Reasoning workers and `mcp-gateway` share `application_internal`, but workers do not attach to `mcp_egress`.
+Existing approved LLM-provider egress is a separate path; Phase 15 proves only that workers cannot directly
+reach MCP servers. Remote third-party servers do not attach to the overlay: the gateway's workload/network
+policy is the only allowed outbound MCP path, while self-hosted/test servers share `mcp_egress` for executable
+segmentation proof.
+The deterministic fixture MCP server has no host-published port. See ADR-021 and
+[PHASE15_ACCEPTANCE.md](PHASE15_ACCEPTANCE.md).
 
 ## 5. Secrets and config
 
@@ -171,4 +180,3 @@ Provider rate limits, not CPU, are the usual ceiling — the budget guard
 
 [DEPLOYMENT.md](DEPLOYMENT.md) · [ARCHITECTURE.md §1](ARCHITECTURE.md) · [PORTS.md](PORTS.md) ·
 [SECURITY.md](SECURITY.md) · [adr/ADR-011](adr/ADR-011-docker-swarm-deployment.md)
-

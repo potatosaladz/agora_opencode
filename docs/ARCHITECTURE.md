@@ -63,12 +63,15 @@ flowchart TB
             API["api - FastAPI, N replicas, also serves SSE and WS"]
         end
 
-        subgraph NW_INT["overlay network internal - no external route"]
+        subgraph NW_INT["overlay network application_internal - no published ports"]
             WFW["workflow-worker - Temporal worker, deterministic"]
             RSW["reasoning-worker - replicated stateless agent pool"]
             RGW["rag-worker - ingestion and retrieval"]
             SIM["simulation-worker - engine execution"]
             MCPGW["mcp-gateway - tool allowlist and audit"]
+        end
+        subgraph NW_MCP["overlay network mcp_egress - gateway only"]
+            MCPFIX["self-hosted / test MCP servers"]
         end
 
         subgraph NW_STATE["overlay network stateful - pinned placement"]
@@ -111,6 +114,7 @@ flowchart TB
     RSW --> PG
     RSW --> NATS
     RSW --> MCPGW
+    MCPGW --> MCPFIX
     MCPGW --> EXT
     RGW --> PG
     RGW --> MINIO
@@ -124,7 +128,7 @@ flowchart TB
     PG --> VOL
     MINIO --> VOL
     SECRETS -.-> API
-    SECRETS -.-> RSW
+    SECRETS -.-> MCPGW
     SECRETS -.-> SBROKER
 ```
 
@@ -141,7 +145,11 @@ flowchart TB
   ([ADR-018](adr/ADR-018-sandbox-execution-boundary.md)).
 - Secrets are Docker Secrets in Swarm and `.env` in development, always resolved through
   the `SecretProvider` port ([ADR-017](adr/ADR-017-secret-provider-docker-secrets.md)).
-- `internal` and `stateful` networks publish no ports; only `edge` is exposed.
+- `application_internal`, `mcp_egress` and `stateful` networks publish no ports; only `edge` is exposed.
+- `application_internal` carries service traffic. Reasoning workers retain the separately controlled
+  model-provider egress path but never attach to `mcp_egress`; only `mcp-gateway` reaches self-hosted/test
+  servers on that overlay and external registered MCP endpoints through a gateway-only outbound policy.
+  T15-04 adds destination/redirect/DNS containment. See ADR-021.
 
 ---
 
@@ -869,6 +877,7 @@ Full context, options, rationale and rejected alternatives: [adr/](adr/).
 | 018 | Sandbox execution boundary, no raw socket |
 | 019 | Append-only event ledger, honest integrity claims |
 | 020 | Stateful HA is a separate architecture, not a replica count |
+| 021 | MCP is outbound-only over Streamable HTTP through a gateway-only egress path |
 
 ---
 
@@ -877,10 +886,6 @@ Full context, options, rationale and rejected alternatives: [adr/](adr/).
 Phase 0 ends here. Phase 1 (foundation code) begins only after architecture approval.
 Open questions that could still change the architecture are listed in
 [../project/DECISIONS.md](../project/DECISIONS.md).
-
-
-
-
 
 
 

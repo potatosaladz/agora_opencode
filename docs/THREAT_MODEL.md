@@ -3,7 +3,7 @@
 **Version:** 1.0 · **Status:** design
 **Method:** STRIDE over the trust boundaries in [SECURITY.md §1](SECURITY.md), extended with
 LLM-system threats (injection, tool abuse, model-mediated laundering) and deliberation-integrity
-threats specific to this platform · **Requirements:** FR-1001 … FR-1007, NFR-010
+threats specific to this platform · **Requirements:** FR-1001 … FR-1004, NFR-010
 
 ## 1. Assets
 
@@ -32,6 +32,11 @@ threats specific to this platform · **Requirements:** FR-1001 … FR-1007, NFR-
 The last row deserves emphasis: in a system that reasons over documents, **the corpus is an attack
 surface**, and its authors are adversaries whether or not they intend to be.
 
+Phase 15 adds a workload-token boundary between reasoning workers and `mcp-gateway`. Forged/replayed
+workload JWTs, wrong audience, substituted workspace/session/agent context and gateway compromise are
+covered by T-2/T-3/T-9; T15-01 verifies token issuer/signature/audience/expiry and context affinity, while
+T15-02…04 complete registry, policy and containment controls.
+
 ## 3. Register
 
 Likelihood and impact are `L/M/H` for the MVP deployment. "Residual" is what remains after the
@@ -43,9 +48,9 @@ listed controls; a blank residual would be a claim nobody should make.
 | --- | --- | --- | --- | --- | --- | --- |
 | T-1 | Cross-tenant read | id enumeration, missing RLS, cache key collision | H | M | RLS on every table, `404` indistinguishability, per-connection workspace setting, CI cross-tenant suite | application bugs until the suite covers every new table |
 | T-2 | Privilege escalation via token | over-scoped token, missing check on a new endpoint | H | M | narrow scopes per screen, deny-by-default routing, scope matrix test in CI | human error in a new route; caught by the matrix |
-| T-3 | Prompt injection → exfiltration | crafted document or tool result instructs the model to leak context | H | H | two-channel framing, quarantine, no secrets in prompts, egress allowlist, data-class gate | slow multi-turn extraction across sessions; detection is heuristic |
+| T-3 | Prompt injection → exfiltration | crafted document or tool result instructs the model to leak context | H | H | planned Phase 15 two-channel framing, quarantine, no secrets in prompts, egress allowlist, data-class gate | slow multi-turn extraction across sessions; detection is heuristic |
 | T-4 | Poisoned corpus | attacker authors a document that becomes evidence | H | M | trust levels, `SOURCE_VERIFIED` requirement, independence test (EP-04), retraction plus impact traversal | plausible, well-cited disinformation still passes |
-| T-5 | SSRF via fetch tool | URL to a metadata endpoint or internal service | H | M | connect-time deny list, redirect re-validation, DNS-rebinding closure | IPv6 or resolver edge cases |
+| T-5 | SSRF via fetch tool | URL to a metadata endpoint or internal service | H | M | planned T15-04 connect-time deny list, redirect re-validation, DNS-rebinding closure | IPv6 or resolver edge cases |
 | T-6 | Supply chain | malicious dependency or base-image change | H | L | digests pinned, lockfiles, SBOM, Trivy, signed images verified at deploy | a compromised maintainer of a pinned dependency |
 | T-7 | Secret leakage | env var, log line, trace attribute, prompt | H | M | Swarm secrets, redaction filter, gitleaks, no secrets in tool arguments | a log written before the filter is installed |
 | T-8 | Ledger tampering | direct DB write by a compromised service account | H | L | `REVOKE UPDATE/DELETE`, hash chain, daily external anchors, nightly verification | a DB superuser who also controls both anchor stores |
@@ -54,7 +59,7 @@ listed controls; a blank residual would be a claim nobody should make.
 
 | ID | Threat | Vector | I | L | Controls | Residual |
 | --- | --- | --- | --- | --- | --- | --- |
-| T-9 | Unauthorised tool action | model calls a `WRITE` tool | H | M | classification, human approval bound to the rendered call, fail-closed manifest drift | approval fatigue — see T-13 |
+| T-9 | Unauthorised tool action | model calls a `WRITE` tool | H | M | planned T15-02/03 classification, exact-call human approval, fail-closed manifest drift | approval fatigue — see T-13 |
 | T-10 | Hallucinated citation | model invents a source and asserts it | M | H | provenance required at commit, `HALLUCINATED_SOURCE` critique type, EP-05 with a blocking threshold | a real source cited for a claim it does not support |
 | T-11 | Provider retains prompt data | content leaves the perimeter | M | M | data-class gate, per-workspace keys, provider DPA, PII redaction | contractual, not technical |
 | T-12 | Model version drift | silent provider update changes behaviour | M | H | `model_version` pinned in the manifest, per-version experiment reporting, tolerant replay diff | drift between pinned versions remains possible |
@@ -99,5 +104,6 @@ These are the threats a generic security review misses and that this project can
 
 [SECURITY.md](SECURITY.md) · [MCP_SECURITY.md](MCP_SECURITY.md) ·
 [REPRODUCIBILITY.md](REPRODUCIBILITY.md) · [METRICS.md](METRICS.md) ·
-[ARCHITECTURE.md §9](ARCHITECTURE.md) · [adr/ADR-018](adr/ADR-018-sandbox-execution-boundary.md)
+[ARCHITECTURE.md §9](ARCHITECTURE.md) · [adr/ADR-018](adr/ADR-018-sandbox-execution-boundary.md) ·
+[adr/ADR-021](adr/ADR-021-mcp-streamable-http-gateway.md)
 

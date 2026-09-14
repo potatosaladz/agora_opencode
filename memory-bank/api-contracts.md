@@ -80,6 +80,7 @@ in the same commit.
 | `AuditRecord` | 21 | 13 |
 | `ReplayRequest`, `ReplayResult`, `ReplayManifestRef` | API_CONTRACTS T14-05 | 13–14 |
 | `AuditQueryRequest`, `AuditResponse`, Q1…Q8 answers | API_CONTRACTS T14-06 | 13–14 |
+| `MCPCallContext`, `ToolDescriptor`, `ToolCall`, `ToolResult`, `ToolFailureCode` | PHASE15_ACCEPTANCE §4 | 15 |
 | `ReproducibilityManifest` | 22 | 13 |
 | `LearningEvent`, `KnowledgePromotion` | 23 | 5, 16 |
 
@@ -103,7 +104,7 @@ consensus: CONSENSUS_CALCULATED CONSENSUS_REACHED PARTIAL_CONSENSUS NO_CONSENSUS
 human:     HUMAN_EVIDENCE_INJECTED HUMAN_CONSTRAINT_ADDED HUMAN_OBJECTIVE_MODIFIED
            HUMAN_OVERRIDE HUMAN_APPROVAL_GRANTED HUMAN_APPROVAL_DENIED
 resource:  BUDGET_EXHAUSTED ROUND_LIMIT_REACHED TIMEOUT_EXCEEDED
-mcp:       TOOL_CALLED TOOL_CALL_FAILED TOOL_APPROVAL_REQUIRED
+mcp:       TOOL_INVOKED TOOL_APPROVED INJECTION_SUSPECTED
 memory:    KNOWLEDGE_CANDIDATED KNOWLEDGE_VALIDATED KNOWLEDGE_PUBLISHED KNOWLEDGE_DEPRECATED
 ```
 
@@ -199,7 +200,7 @@ legacy constraint payload `formal_status` is non-authoritative, and no solver ou
 | `VectorStore` | `upsert`, `query`, `delete_namespace` | 1, 5 |
 | `MemoryProvider` | `read`, `write`, `promote`, `expire` | 5 |
 | `MetricPlugin` | `compute` | 13 |
-| `MCPToolProvider` | `list_tools`, `invoke` | 15 |
+| `MCPToolProvider` | `initialize`, `list_tools`, `invoke`, `cancel` | 15 |
 | `ObjectStore` | `put`, `get`, `presign`, `delete` | 1 |
 | `SecretProvider` | `resolve`, `store`, `redact` | 1, 2 |
 | `AccessTokenVerifier` | `verify` → trusted workspace principal | 1 |

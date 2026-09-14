@@ -46,6 +46,7 @@ artifact, adds a stateful service, or moves a trust boundary must be cross-linke
 | [018](ADR-018-sandbox-execution-boundary.md) | Sandbox execution boundary | accepted | 8 |
 | [019](ADR-019-append-only-event-ledger.md) | Append-only hash-chained event ledger | accepted | 3 |
 | [020](ADR-020-stateful-ha-boundary.md) | Manual HA boundary for stateful services | accepted | 1 |
+| [021](ADR-021-mcp-streamable-http-gateway.md) | MCP Streamable HTTP outbound gateway | accepted | 15 |
 
 ## Decision dependencies
 
@@ -58,6 +59,7 @@ artifact, adds a stateful service, or moves a trust boundary must be cross-linke
 011 swarm ── 017 secrets ── 018 sandbox ── 020 manual HA
 012 ports/adapters ── 005 logical agents ── 006 llm abstraction
 010 react/vite ── 016 sse-first
+011 swarm ── 021 mcp outbound gateway; 012 ports/adapters ── 021
 ```
 
 If 001, 012, 013 or 019 is revisited, every dependent must be re-read: they are load-bearing.

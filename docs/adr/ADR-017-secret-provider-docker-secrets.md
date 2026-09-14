@@ -1,8 +1,8 @@
-<!-- trace: FR-1005 -->
+<!-- trace: NFR-010, NFR-012 -->
 # ADR-017: Docker/Swarm secrets as the secret provider
 
 **Status:** accepted · **Date:** 2026-09-04 · **Phase:** 1
-**Requirements:** FR-1005, NFR-010, NFR-012
+**Requirements:** NFR-010, NFR-012
 
 ## Context
 

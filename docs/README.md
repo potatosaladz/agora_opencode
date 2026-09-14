@@ -51,7 +51,7 @@ recorded in [ANTI_PATTERNS.md](ANTI_PATTERNS.md) with the document that forbids 
 **Security and operations**
 
 [SECURITY.md](SECURITY.md) → [THREAT_MODEL.md](THREAT_MODEL.md) →
-[MCP_SECURITY.md](MCP_SECURITY.md) → [DEPLOYMENT.md](DEPLOYMENT.md) →
+[MCP_SECURITY.md](MCP_SECURITY.md) → [PHASE15_ACCEPTANCE.md](PHASE15_ACCEPTANCE.md) → [DEPLOYMENT.md](DEPLOYMENT.md) →
 [DOCKER_SWARM.md](DOCKER_SWARM.md) → [OBSERVABILITY.md](OBSERVABILITY.md)
 
 ## Inventory
@@ -107,6 +107,7 @@ recorded in [ANTI_PATTERNS.md](ANTI_PATTERNS.md) with the document that forbids 
 | [SECURITY.md](SECURITY.md) | authN/authZ, secrets, data protection, SDLC controls |
 | [THREAT_MODEL.md](THREAT_MODEL.md) | assets, trust boundaries, STRIDE, mitigations |
 | [MCP_SECURITY.md](MCP_SECURITY.md) | tool allowlists, injection, approval gates |
+| [PHASE15_ACCEPTANCE.md](PHASE15_ACCEPTANCE.md) | frozen outbound MCP protocol, identity, task and exit contract |
 | [DEPLOYMENT.md](DEPLOYMENT.md) | environments, configuration, migration, backup |
 | [DOCKER_SWARM.md](DOCKER_SWARM.md) | stacks, networks, secrets, scaling, HA limits |
 | [OBSERVABILITY.md](OBSERVABILITY.md) | secure logs, Prometheus metrics, OpenTelemetry lifecycle and verification |
