@@ -1,0 +1,111 @@
+# ---------------------------------------------------------------------------
+# Python
+# ---------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+.venv/
+venv/
+env/
+ENV/
+.python-version
+.pytest_cache/
+.mypy_cache/
+.dmypy.json
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+*.cover
+.hypothesis/
+
+# ---------------------------------------------------------------------------
+# Node / frontend
+# ---------------------------------------------------------------------------
+node_modules/
+.pnp
+.pnp.js
+coverage/
+.turbo/
+.vite/
+*.local
+dist-ssr/
+storybook-static/
+frontend/src/api/types.check.ts
+
+# ---------------------------------------------------------------------------
+# Secrets and local configuration — never commit
+# ---------------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+/secrets/
+/docker-secrets/
+!**/secrets/*.example
+credentials.json
+service-account*.json
+*.p12
+*.pfx
+
+# ---------------------------------------------------------------------------
+# Local data / runtime artifacts
+# ---------------------------------------------------------------------------
+data/
+pgdata/
+miniodata/
+redisdata/
+natsdata/
+tmp/
+temp/
+.cache/
+.artifacts/
+logs/
+*.log
+*.sqlite
+*.db
+exports/
+artifacts/
+trajectories/
+reproducibility/
+
+# ---------------------------------------------------------------------------
+# Editors / OS
+# ---------------------------------------------------------------------------
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.sample.json
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ---------------------------------------------------------------------------
+# Research scratch space (kept local; promoted outputs are documented)
+# ---------------------------------------------------------------------------
+scratch/
+notebooks/.ipynb_checkpoints/
+*.tmp.md

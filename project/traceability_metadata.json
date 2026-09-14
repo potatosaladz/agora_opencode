@@ -1,0 +1,522 @@
+{
+  "FR-1001": {
+    "last_verified": "",
+    "phase": "15",
+    "status": "planned"
+  },
+  "FR-1002": {
+    "status": "planned",
+    "phase": "15",
+    "last_verified": ""
+  },
+  "FR-1003": {
+    "status": "planned",
+    "phase": "15",
+    "last_verified": ""
+  },
+  "FR-1004": {
+    "status": "planned",
+    "phase": "15",
+    "last_verified": ""
+  },
+  "FR-1005": {
+    "last_verified": "",
+    "phase": "1",
+    "status": "planned"
+  },
+  "FR-101": {
+    "last_verified": "local-2026-09-05",
+    "phase": "3",
+    "status": "implemented"
+  },
+  "FR-102": {
+    "last_verified": "local-2026-09-05",
+    "phase": "3",
+    "status": "implemented"
+  },
+  "FR-103": {
+    "last_verified": "local-2026-09-06",
+    "phase": "3",
+    "status": "implemented"
+  },
+  "FR-104": {
+    "status": "planned",
+    "phase": "4",
+    "last_verified": ""
+  },
+  "FR-105": {
+    "status": "planned",
+    "phase": "4",
+    "last_verified": ""
+  },
+  "FR-106": {
+    "status": "planned",
+    "phase": "4",
+    "last_verified": ""
+  },
+  "FR-107": {
+    "status": "planned",
+    "phase": "4",
+    "last_verified": ""
+  },
+  "FR-108": {
+    "last_verified": "",
+    "phase": "6",
+    "status": "planned"
+  },
+  "FR-109": {
+    "status": "planned",
+    "phase": "1",
+    "last_verified": ""
+  },
+  "FR-201": {
+    "last_verified": "",
+    "phase": "4",
+    "status": "planned"
+  },
+  "FR-202": {
+    "status": "planned",
+    "phase": "2",
+    "last_verified": ""
+  },
+  "FR-203": {
+    "last_verified": "local-t6-06-2026-09-07",
+    "phase": "6",
+    "status": "partial"
+  },
+  "FR-204": {
+    "last_verified": "local-2026-09-06",
+    "phase": "6",
+    "status": "implemented"
+  },
+  "FR-205": {
+    "last_verified": "local-t7-04-2026-09-07",
+    "phase": "7",
+    "status": "implemented"
+  },
+  "FR-206": {
+    "last_verified": "local-t6-07-2026-09-07",
+    "phase": "6",
+    "status": "implemented"
+  },
+  "FR-207": {
+    "status": "planned",
+    "phase": "4",
+    "last_verified": ""
+  },
+  "FR-208": {
+    "last_verified": "local-t6-06-2026-09-07",
+    "phase": "6",
+    "status": "implemented"
+  },
+  "FR-209": {
+    "last_verified": "local-t6-06-2026-09-07",
+    "phase": "6",
+    "status": "implemented"
+  },
+  "FR-210": {
+    "last_verified": "local-2026-09-06",
+    "phase": "6",
+    "status": "implemented"
+  },
+  "FR-211": {
+    "last_verified": "",
+    "phase": "6",
+    "status": "planned"
+  },
+  "FR-301": {
+    "last_verified": "local-2026-09-05",
+    "phase": "3",
+    "status": "implemented"
+  },
+  "FR-302": {
+    "last_verified": "local-2026-09-05",
+    "phase": "3",
+    "status": "implemented"
+  },
+  "FR-303": {
+    "last_verified": "local-2026-09-05",
+    "phase": "3",
+    "status": "implemented"
+  },
+  "FR-304": {
+    "last_verified": "local-2026-09-05",
+    "phase": "3",
+    "status": "implemented"
+  },
+  "FR-305": {
+    "last_verified": "local-2026-09-05",
+    "phase": "3",
+    "status": "implemented"
+  },
+  "FR-306": {
+    "last_verified": "local-2026-09-05",
+    "phase": "3",
+    "status": "implemented"
+  },
+  "FR-307": {
+    "last_verified": "local-2026-09-05",
+    "phase": "3",
+    "status": "implemented"
+  },
+  "FR-308": {
+    "last_verified": "local-2026-09-05",
+    "phase": "3",
+    "status": "implemented"
+  },
+  "FR-309": {
+    "last_verified": "local-2026-09-05",
+    "phase": "3",
+    "status": "implemented"
+  },
+  "FR-310": {
+    "last_verified": "local-2026-09-05",
+    "phase": "3",
+    "status": "implemented"
+  },
+  "FR-311": {
+    "last_verified": "local-2026-09-05",
+    "phase": "3",
+    "status": "implemented"
+  },
+  "FR-312": {
+    "last_verified": "local-2026-09-05",
+    "phase": "3",
+    "status": "implemented"
+  },
+  "FR-401": {
+    "last_verified": "local-2026-09-06",
+    "phase": "5",
+    "status": "implemented"
+  },
+  "FR-402": {
+    "last_verified": "local-2026-09-06",
+    "phase": "5",
+    "status": "implemented"
+  },
+  "FR-403": {
+    "last_verified": "local-2026-09-06",
+    "phase": "5",
+    "status": "implemented"
+  },
+  "FR-404": {
+    "last_verified": "local-2026-09-06",
+    "phase": "5",
+    "status": "implemented"
+  },
+  "FR-405": {
+    "last_verified": "local-2026-09-06",
+    "phase": "5",
+    "status": "implemented"
+  },
+  "FR-406": {
+    "last_verified": "local-2026-09-06",
+    "phase": "5",
+    "status": "implemented"
+  },
+  "FR-407": {
+    "last_verified": "local-2026-09-06",
+    "phase": "5",
+    "status": "implemented"
+  },
+  "FR-408": {
+    "last_verified": "local-t10-04-2026-09-11",
+    "phase": "10",
+    "status": "implemented"
+  },
+  "FR-409": {
+    "last_verified": "local-2026-09-06",
+    "phase": "5",
+    "status": "implemented"
+  },
+  "FR-501": {
+    "last_verified": "local-t7-04-2026-09-07",
+    "phase": "7",
+    "status": "implemented"
+  },
+  "FR-502": {
+    "last_verified": "local-t7-04-2026-09-07",
+    "phase": "7",
+    "status": "implemented"
+  },
+  "FR-503": {
+    "last_verified": "local-t7-06-2026-09-07",
+    "phase": "7",
+    "status": "implemented"
+  },
+  "FR-504": {
+    "last_verified": "local-t7-07-2026-09-07",
+    "phase": "7",
+    "status": "implemented"
+  },
+  "FR-505": {
+    "last_verified": "local-t9-2026-09-10",
+    "phase": "9",
+    "status": "implemented"
+  },
+  "FR-506": {
+    "last_verified": "local-t9-2026-09-10",
+    "phase": "9",
+    "status": "implemented"
+  },
+  "FR-601": {
+    "last_verified": "local-t9-2026-09-10",
+    "phase": "9",
+    "status": "implemented"
+  },
+  "FR-602": {
+    "last_verified": "local-t9-2026-09-10",
+    "phase": "9",
+    "status": "implemented"
+  },
+  "FR-603": {
+    "last_verified": "local-t9-2026-09-10",
+    "phase": "9",
+    "status": "implemented"
+  },
+  "FR-604": {
+    "last_verified": "local-t9-2026-09-10",
+    "phase": "9",
+    "status": "implemented"
+  },
+  "FR-605": {
+    "last_verified": "local-t9-2026-09-10",
+    "phase": "9",
+    "status": "implemented"
+  },
+  "FR-606": {
+    "last_verified": "local-t9-2026-09-10",
+    "phase": "9",
+    "status": "implemented"
+  },
+  "FR-607": {
+    "last_verified": "local-t9-2026-09-10",
+    "phase": "9",
+    "status": "implemented"
+  },
+  "FR-608": {
+    "last_verified": "local-t9-2026-09-10",
+    "phase": "9",
+    "status": "implemented"
+  },
+  "FR-609": {
+    "last_verified": "",
+    "phase": "13",
+    "status": "planned"
+  },
+  "FR-701": {
+    "last_verified": "",
+    "phase": "11",
+    "status": "planned"
+  },
+  "FR-702": {
+    "status": "planned",
+    "phase": "8",
+    "last_verified": ""
+  },
+  "FR-703": {
+    "status": "planned",
+    "phase": "8",
+    "last_verified": ""
+  },
+  "FR-704": {
+    "last_verified": "",
+    "phase": "11",
+    "status": "planned"
+  },
+  "FR-705": {
+    "status": "implemented",
+    "phase": "11",
+    "last_verified": "2026-09-12"
+  },
+  "FR-706": {
+    "status": "partial",
+    "phase": "11",
+    "last_verified": "2026-09-12"
+  },
+  "FR-707": {
+    "status": "implemented",
+    "phase": "11",
+    "last_verified": "2026-09-12"
+  },
+  "FR-708": {
+    "status": "implemented",
+    "phase": "11",
+    "last_verified": "2026-09-12"
+  },
+  "FR-801": {
+    "last_verified": "",
+    "phase": "8",
+    "status": "planned"
+  },
+  "FR-802": {
+    "status": "planned",
+    "phase": "10",
+    "last_verified": ""
+  },
+  "FR-803": {
+    "status": "planned",
+    "phase": "10",
+    "last_verified": ""
+  },
+  "FR-804": {
+    "status": "planned",
+    "phase": "10",
+    "last_verified": ""
+  },
+  "FR-805": {
+    "status": "planned",
+    "phase": "10",
+    "last_verified": ""
+  },
+  "FR-806": {
+    "status": "planned",
+    "phase": "10",
+    "last_verified": ""
+  },
+  "FR-807": {
+    "status": "planned",
+    "phase": "13",
+    "last_verified": ""
+  },
+  "FR-808": {
+    "status": "planned",
+    "phase": "13",
+    "last_verified": ""
+  },
+  "FR-901": {
+    "last_verified": "",
+    "phase": "13",
+    "status": "planned"
+  },
+  "FR-902": {
+    "status": "planned",
+    "phase": "13",
+    "last_verified": ""
+  },
+  "FR-903": {
+    "last_verified": "",
+    "phase": "13",
+    "status": "planned"
+  },
+  "FR-904": {
+    "status": "planned",
+    "phase": "16",
+    "last_verified": ""
+  },
+  "FR-905": {
+    "status": "planned",
+    "phase": "16",
+    "last_verified": ""
+  },
+  "FR-906": {
+    "status": "implemented",
+    "phase": "12",
+    "last_verified": "local-phase12-2026-09-13"
+  },
+  "FR-907": {
+    "status": "planned",
+    "phase": "16",
+    "last_verified": ""
+  },
+  "NFR-001": {
+    "status": "planned",
+    "phase": "4",
+    "last_verified": ""
+  },
+  "NFR-002": {
+    "status": "planned",
+    "phase": "17",
+    "last_verified": ""
+  },
+  "NFR-003": {
+    "last_verified": "",
+    "phase": "1",
+    "status": "planned"
+  },
+  "NFR-004": {
+    "last_verified": "",
+    "phase": "17",
+    "status": "planned"
+  },
+  "NFR-005": {
+    "status": "planned",
+    "phase": "10",
+    "last_verified": ""
+  },
+  "NFR-006": {
+    "last_verified": "",
+    "phase": "10",
+    "status": "planned"
+  },
+  "NFR-007": {
+    "last_verified": "",
+    "phase": "4",
+    "status": "planned"
+  },
+  "NFR-008": {
+    "status": "planned",
+    "phase": "17",
+    "last_verified": ""
+  },
+  "NFR-009": {
+    "last_verified": "",
+    "phase": "6",
+    "status": "planned"
+  },
+  "NFR-010": {
+    "last_verified": "",
+    "phase": "1",
+    "status": "planned"
+  },
+  "NFR-011": {
+    "status": "planned",
+    "phase": "3",
+    "last_verified": ""
+  },
+  "NFR-012": {
+    "last_verified": "",
+    "phase": "1",
+    "status": "planned"
+  },
+  "NFR-013": {
+    "last_verified": "",
+    "phase": "1",
+    "status": "planned"
+  },
+  "NFR-014": {
+    "last_verified": "",
+    "phase": "1",
+    "status": "planned"
+  },
+  "NFR-015": {
+    "status": "planned",
+    "phase": "1",
+    "last_verified": ""
+  },
+  "NFR-016": {
+    "status": "planned",
+    "phase": "1",
+    "last_verified": ""
+  },
+  "NFR-017": {
+    "status": "planned",
+    "phase": "19",
+    "last_verified": ""
+  },
+  "NFR-018": {
+    "status": "planned",
+    "phase": "all",
+    "last_verified": ""
+  },
+  "NFR-019": {
+    "status": "planned",
+    "phase": "13",
+    "last_verified": ""
+  },
+  "NFR-020": {
+    "status": "planned",
+    "phase": "4",
+    "last_verified": ""
+  }
+}

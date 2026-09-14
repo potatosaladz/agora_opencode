@@ -1,0 +1,15 @@
+[
+  {
+    "event_id": "019c0000-0000-7000-8000-000000000001",
+    "ledger_seq": 1,
+    "type": "SESSION_CREATED",
+    "ts": "2026-09-05T00:00:00Z",
+    "session_id": "session-empty",
+    "actor_id": "user-empty",
+    "actor_class": "HUMAN",
+    "round": null,
+    "payload": {},
+    "schema_version": 1,
+    "code_version": "phase-1"
+  }
+]

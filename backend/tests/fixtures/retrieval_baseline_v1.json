@@ -1,0 +1,119 @@
+{
+  "corpus_version": "mechanics-synthetic-v1",
+  "label_version": "mechanics-labels-v1",
+  "parser_version": "fixture-json-v1",
+  "chunker_version": "agora-whitespace-v1",
+  "index_version": "fixture-index-v1",
+  "embedding_model": "fixture-embed",
+  "embedding_version": "1",
+  "reranker_version": "noop-v1",
+  "final_k": 2,
+  "caveats": [
+    "Synthetic reviewed labels test retrieval mechanics, not scientific correctness or open-world recall.",
+    "Recall proxy covers only committed relevant labels; unlabeled relevant passages may exist.",
+    "Precision at k uses a fixed denominator, so fewer than k returned hits count as non-relevant slots.",
+    "Latency depends on host, database state, and load; local observations are not a service-level claim.",
+    "This corpus does not select or represent any Phase 16 experimental domain."
+  ],
+  "sources": [
+    {
+      "id": "018f5000-0000-7000-8000-000000000201",
+      "document_id": "018f5000-0000-7000-8000-000000000301",
+      "namespace": "AUTHORIZED",
+      "status": "READY",
+      "title": "Synthetic rotational mechanics",
+      "content_hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "chunks": [
+        {
+          "id": "018f5000-0000-7000-8000-000000000101",
+          "text": "MX-104 torque specification is 42 newton metres.",
+          "content_hash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+          "vector_axis": 0
+        },
+        {
+          "id": "018f5000-0000-7000-8000-000000000102",
+          "text": "Rotational inertia describes resistance to changing rotational speed.",
+          "content_hash": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+          "vector_axis": 1
+        },
+        {
+          "id": "018f5000-0000-7000-8000-000000000103",
+          "text": "Flywheel data\nPart | Inertia\nJ-88 | 7.5 kilogram square metres",
+          "content_hash": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+          "vector_axis": 2
+        }
+      ]
+    },
+    {
+      "id": "018f5000-0000-7000-8000-000000000202",
+      "document_id": "018f5000-0000-7000-8000-000000000302",
+      "namespace": "AUTHORIZED",
+      "status": "READY",
+      "title": "Synthetic duplicate bulletin",
+      "content_hash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "chunks": [
+        {
+          "id": "018f5000-0000-7000-8000-000000000104",
+          "text": "MX-104 torque specification is 42 newton metres.",
+          "content_hash": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+          "vector_axis": 0
+        }
+      ]
+    },
+    {
+      "id": "018f5000-0000-7000-8000-000000000203",
+      "document_id": "018f5000-0000-7000-8000-000000000303",
+      "namespace": "AUTHORIZED",
+      "status": "RETRACTED",
+      "title": "Retracted synthetic mechanics note",
+      "content_hash": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "chunks": [
+        {
+          "id": "018f5000-0000-7000-8000-000000000105",
+          "text": "Rotational inertia describes resistance to changing rotational speed.",
+          "content_hash": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+          "vector_axis": 1
+        }
+      ]
+    },
+    {
+      "id": "018f5000-0000-7000-8000-000000000204",
+      "document_id": "018f5000-0000-7000-8000-000000000304",
+      "namespace": "UNAUTHORIZED",
+      "status": "READY",
+      "title": "Unauthorized same-looking mechanics",
+      "content_hash": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "chunks": [
+        {
+          "id": "018f5000-0000-7000-8000-000000000106",
+          "text": "Flywheel data\nPart | Inertia\nJ-88 | 7.5 kilogram square metres",
+          "content_hash": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+          "vector_axis": 2
+        }
+      ]
+    }
+  ],
+  "queries": [
+    {
+      "id": "q-exact-lexical",
+      "text": "MX-104 torque",
+      "relevant_chunk_ids": ["018f5000-0000-7000-8000-000000000101"],
+      "expected_retrieved_chunk_ids": [
+        "018f5000-0000-7000-8000-000000000101",
+        "018f5000-0000-7000-8000-000000000104"
+      ]
+    },
+    {
+      "id": "q-vector-paraphrase",
+      "text": "resistance to changing rotational speed",
+      "relevant_chunk_ids": ["018f5000-0000-7000-8000-000000000102"],
+      "expected_retrieved_chunk_ids": ["018f5000-0000-7000-8000-000000000102"]
+    },
+    {
+      "id": "q-table-heading",
+      "text": "flywheel inertia J-88",
+      "relevant_chunk_ids": ["018f5000-0000-7000-8000-000000000103"],
+      "expected_retrieved_chunk_ids": ["018f5000-0000-7000-8000-000000000103"]
+    }
+  ]
+}

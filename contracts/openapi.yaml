@@ -1,0 +1,1913 @@
+openapi: 3.1.0
+info:
+  title: Agora API
+  version: 0.1.0
+  description: >-
+    Authored public contract for the implemented Phase 1 API. Runtime OpenAPI routes
+    remain disabled so this reviewed document is the only public API description.
+servers:
+  - url: http://127.0.0.1:8000
+    description: Local development
+tags:
+  - name: health
+    description: Unauthenticated liveness and readiness probes.
+  - name: operations
+    description: Authenticated operational endpoints.
+  - name: reasoning
+    description: Tenant-scoped Phase 3 session and reasoning-artifact resources.
+  - name: formalizations
+    description: Immutable T11-01 formalization revisions and lifecycle facts.
+paths:
+  /health:
+    get:
+      operationId: getHealth
+      summary: Liveness probe
+      tags: [health]
+      security: []
+      responses:
+        "200":
+          description: The API process is live.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+  /ready:
+    get:
+      operationId: getReadiness
+      summary: Readiness probe
+      tags: [health]
+      security: []
+      responses:
+        "200":
+          description: The API can serve traffic; dependencies are healthy or degraded.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReadinessResponse"
+        "503":
+          description: At least one required dependency is down.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReadinessResponse"
+  /metrics:
+    get:
+      operationId: getMetrics
+      summary: Prometheus metrics
+      description: Requires an ADMIN or OPERATOR bearer principal.
+      tags: [operations]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Prometheus text exposition.
+          content:
+            text/plain:
+              schema:
+                type: string
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/v1/formalizations:
+    post:
+      operationId: createFormalization
+      tags: [formalizations]
+      summary: Create an immutable candidate formalization
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/FormalizationCreate" }
+      responses:
+        "201": { $ref: "#/components/responses/FormalizationWritten" }
+        "400": { $ref: "#/components/responses/ValidationFailed" }
+        "409": { $ref: "#/components/responses/Conflict" }
+  /api/v1/formalizations/{formalization_id}:
+    get:
+      operationId: getFormalization
+      tags: [formalizations]
+      summary: Read the current or selected immutable revision
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/FormalizationId"
+        - name: revision
+          in: query
+          schema: { type: integer, minimum: 1 }
+      responses:
+        "200": { $ref: "#/components/responses/FormalizationRead" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /api/v1/formalizations/{formalization_id}/revisions:
+    post:
+      operationId: reviseFormalization
+      tags: [formalizations]
+      summary: Append a replacement content revision
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/FormalizationId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/IfMatch"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/FormalizationCreate" }
+      responses:
+        "201": { $ref: "#/components/responses/FormalizationWritten" }
+        "409": { $ref: "#/components/responses/Conflict" }
+  /api/v1/formalizations/{formalization_id}/validations:
+    post:
+      operationId: validateFormalization
+      tags: [formalizations]
+      summary: Record deterministic structural validation
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/FormalizationId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/IfMatch"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: false }
+      responses:
+        "201": { $ref: "#/components/responses/FormalizationWritten" }
+        "409": { $ref: "#/components/responses/Conflict" }
+  /api/v1/formalizations/{formalization_id}/confirmations:
+    post:
+      operationId: confirmFormalization
+      tags: [formalizations]
+      summary: Record human confirmation after successful validation
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/FormalizationId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/IfMatch"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/FormalizationDecisionCreate" }
+      responses:
+        "201": { $ref: "#/components/responses/FormalizationWritten" }
+        "409": { $ref: "#/components/responses/Conflict" }
+  /api/v1/formalizations/{formalization_id}/rejections:
+    post:
+      operationId: rejectFormalization
+      tags: [formalizations]
+      summary: Record an explicit human rejection
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/FormalizationId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/IfMatch"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/FormalizationDecisionCreate" }
+      responses:
+        "201": { $ref: "#/components/responses/FormalizationWritten" }
+        "409": { $ref: "#/components/responses/Conflict" }
+  /api/v1/sessions:
+    post:
+      operationId: createSession
+      summary: Create a fully bound draft session
+      description: Requires an ADMIN or RESEARCHER bearer principal.
+      tags: [reasoning]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SessionCreate"
+      responses:
+        "201":
+          description: The session, artifacts, graph projections, and ledger events committed atomically.
+          headers:
+            ETag:
+              $ref: "#/components/headers/ETag"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionResponse"
+        "400":
+          $ref: "#/components/responses/ValidationFailed"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/v1/sessions/{session_id}:
+    get:
+      operationId: getSession
+      summary: Read a fully bound draft session
+      tags: [reasoning]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+      responses:
+        "200":
+          description: Tenant-visible session resource.
+          headers:
+            ETag:
+              $ref: "#/components/headers/ETag"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionResponse"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/v1/sessions/{session_id}/events/stream:
+    get:
+      operationId: streamSessionEvents
+      summary: Stream committed session events from the authoritative ledger
+      description: Replays rows after Last-Event-ID or since, then uses NATS only as a wake-up for new ledger reads.
+      tags: [reasoning]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+        - name: since
+          in: query
+          schema: { type: integer, minimum: 0, default: 0 }
+        - name: Last-Event-ID
+          in: header
+          schema: { type: integer, minimum: 0 }
+      responses:
+        "200":
+          description: Ledger-ordered Server-Sent Events. Each SSE id equals ledger_seq.
+          content:
+            text/event-stream:
+              schema:
+                type: string
+        "401": { $ref: "#/components/responses/AuthenticationRequired" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /api/v1/sessions/{session_id}/start:
+    post:
+      operationId: startSession
+      summary: Idempotently start durable session execution
+      description: Requires an ADMIN or RESEARCHER bearer principal.
+      tags: [reasoning]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "202":
+          description: Temporal accepted the start and its execution identity was persisted.
+          headers:
+            ETag:
+              $ref: "#/components/headers/ETag"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionResponse"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "503":
+          description: The durable workflow engine is unavailable.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+  /api/v1/sessions/{session_id}/pause:
+    post:
+      operationId: pauseSession
+      summary: Enqueue an idempotent session pause
+      description: Requires an ADMIN or RESEARCHER bearer principal. The returned session is the current PostgreSQL projection; poll the session resource for the interpreted transition.
+      tags: [reasoning]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SessionControlCreate"
+      responses:
+        "202":
+          $ref: "#/components/responses/SessionControlAccepted"
+        "400":
+          $ref: "#/components/responses/ValidationFailed"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "503":
+          $ref: "#/components/responses/WorkflowUnavailable"
+  /api/v1/sessions/{session_id}/resume:
+    post:
+      operationId: resumeSession
+      summary: Enqueue an idempotent session resume
+      description: Requires an ADMIN or RESEARCHER bearer principal.
+      tags: [reasoning]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SessionControlCreate"
+      responses:
+        "202":
+          $ref: "#/components/responses/SessionControlAccepted"
+        "400":
+          $ref: "#/components/responses/ValidationFailed"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "503":
+          $ref: "#/components/responses/WorkflowUnavailable"
+  /api/v1/sessions/{session_id}/cancel:
+    post:
+      operationId: cancelSession
+      summary: Enqueue idempotent terminal cancellation
+      description: Requires an ADMIN or RESEARCHER bearer principal. Cancellation never deletes session history.
+      tags: [reasoning]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SessionControlCreate"
+      responses:
+        "202":
+          $ref: "#/components/responses/SessionControlAccepted"
+        "400":
+          $ref: "#/components/responses/ValidationFailed"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "503":
+          $ref: "#/components/responses/WorkflowUnavailable"
+  /api/v1/sessions/{session_id}/terminate:
+    post:
+      operationId: terminateSession
+      deprecated: true
+      summary: Enqueue cancellation through the legacy termination path
+      description: Compatibility alias for cancelSession. It records SESSION_CANCELLED and never deletes history.
+      tags: [reasoning]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SessionControlCreate"
+      responses:
+        "202":
+          $ref: "#/components/responses/SessionControlAccepted"
+        "400":
+          $ref: "#/components/responses/ValidationFailed"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "503":
+          $ref: "#/components/responses/WorkflowUnavailable"
+  /api/v1/sessions/{session_id}/human-input:
+    post:
+      operationId: submitHumanInput
+      summary: Enqueue a validated human directive
+      description: Requires an ADMIN or RESEARCHER bearer principal. The workflow records the directive as a HUMAN-authored ledger event.
+      tags: [reasoning]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HumanInputCreate"
+      responses:
+        "202":
+          $ref: "#/components/responses/SessionControlAccepted"
+        "400":
+          $ref: "#/components/responses/ValidationFailed"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "503":
+          $ref: "#/components/responses/WorkflowUnavailable"
+  /api/v1/sessions/{session_id}/artifacts:
+    post:
+      operationId: createArtifact
+      summary: Commit an initial reasoning artifact
+      description: Requires an ADMIN or RESEARCHER bearer principal.
+      tags: [reasoning]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ArtifactCreate"
+      responses:
+        "201":
+          description: Artifact, graph projection, and ledger event committed atomically.
+          headers:
+            ETag:
+              $ref: "#/components/headers/ETag"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ArtifactResponse"
+        "400":
+          $ref: "#/components/responses/ValidationFailed"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/v1/artifacts/{artifact_id}:
+    get:
+      operationId: getArtifact
+      summary: Read a reasoning artifact revision
+      tags: [reasoning]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ArtifactId"
+      responses:
+        "200":
+          description: Tenant-visible artifact with explicit epistemic and provenance state.
+          headers:
+            ETag:
+              $ref: "#/components/headers/ETag"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ArtifactResponse"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/v1/artifacts/{artifact_id}/provenance:
+    get:
+      operationId: getArtifactProvenance
+      summary: Read bounded reasoning ancestry and canonical evidence citations
+      tags: [reasoning]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ArtifactId"
+        - name: max_depth
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            maximum: 12
+            default: 12
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 100
+        - name: cursor
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Bounded graph ancestry enriched with canonical citation resolution.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProvenanceResponse"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/v1/artifacts/{artifact_id}/revisions:
+    post:
+      operationId: reviseArtifact
+      summary: Commit a complete replacement artifact revision
+      description: Requires an ADMIN or RESEARCHER bearer principal.
+      tags: [reasoning]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ArtifactId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/IfMatch"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ArtifactRevisionCreate"
+      responses:
+        "201":
+          description: New active revision; predecessor is retained as superseded.
+          headers:
+            ETag:
+              $ref: "#/components/headers/ETag"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ArtifactResponse"
+        "400":
+          $ref: "#/components/responses/ValidationFailed"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/v1/artifacts/{artifact_id}/withdrawals:
+    post:
+      operationId: withdrawArtifact
+      summary: Withdraw an artifact without deletion
+      description: Requires an ADMIN or RESEARCHER bearer principal and at least one warrant.
+      tags: [reasoning]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ArtifactId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/IfMatch"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ArtifactWithdrawalCreate"
+      responses:
+        "200":
+          description: Artifact lifecycle is withdrawn; immutable content remains available.
+          headers:
+            ETag:
+              $ref: "#/components/headers/ETag"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ArtifactResponse"
+        "400":
+          $ref: "#/components/responses/ValidationFailed"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/v1/sources/{source_id}/retractions:
+    post:
+      operationId: retractSource
+      summary: Retract a source and atomically publish its durable impact report
+      description: Requires an ADMIN or RESEARCHER bearer principal.
+      tags: [reasoning]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/SourceId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SourceRetractionCreate"
+      responses:
+        "201":
+          description: Source state, exact dependency snapshot, report, and workspace event committed atomically without mutating downstream artifacts.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImpactReportResponse"
+        "400": { $ref: "#/components/responses/ValidationFailed" }
+        "401": { $ref: "#/components/responses/AuthenticationRequired" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+  /api/v1/impact-reports/{report_id}:
+    get:
+      operationId: getImpactReport
+      summary: Read an immutable source-impact report
+      tags: [reasoning]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ImpactReportId"
+      responses:
+        "200":
+          description: Tenant-visible immutable impact report.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImpactReportResponse"
+        "401": { $ref: "#/components/responses/AuthenticationRequired" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: opaque
+  headers:
+    ETag:
+      description: Current integer entity version.
+      schema:
+        type: string
+        pattern: "^[1-9][0-9]*$"
+  parameters:
+    SessionId:
+      name: session_id
+      in: path
+      required: true
+      schema:
+        $ref: "#/components/schemas/SessionId"
+    ArtifactId:
+      name: artifact_id
+      in: path
+      required: true
+      schema:
+        $ref: "#/components/schemas/ArtifactId"
+    SourceId:
+      name: source_id
+      in: path
+      required: true
+      schema:
+        $ref: "#/components/schemas/SourceId"
+    ImpactReportId:
+      name: report_id
+      in: path
+      required: true
+      schema:
+        $ref: "#/components/schemas/ImpactReportId"
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 255
+    IfMatch:
+      name: If-Match
+      in: header
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+    FormalizationId:
+      name: formalization_id
+      in: path
+      required: true
+      schema: { $ref: "#/components/schemas/FormalizationId" }
+  responses:
+    FormalizationRead:
+      description: The authoritative immutable formalization revision and derived status.
+      headers:
+        ETag: { $ref: "#/components/headers/ETag" }
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/FormalizationResponse" }
+    FormalizationWritten:
+      description: The formalization revision or lifecycle fact committed atomically.
+      headers:
+        ETag: { $ref: "#/components/headers/ETag" }
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/FormalizationResponse" }
+    SessionControlAccepted:
+      description: The durable workflow accepted the command. PostgreSQL remains authoritative for lifecycle state.
+      headers:
+        ETag:
+          $ref: "#/components/headers/ETag"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/SessionResponse"
+    WorkflowUnavailable:
+      description: The durable workflow engine is unavailable.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+    AuthenticationRequired:
+      description: A valid bearer token was not supplied.
+      headers:
+        WWW-Authenticate:
+          schema:
+            type: string
+            const: Bearer
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+    Forbidden:
+      description: The verified principal is not allowed to use this route.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+    ValidationFailed:
+      description: The strict request or a domain invariant failed validation.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+    NotFound:
+      description: The resource is absent or hidden by tenant isolation.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+    Conflict:
+      description: The entity version or idempotency request identity conflicts.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+  schemas:
+    SessionId:
+      type: string
+      pattern: "^ses_[0-9a-f]{32}$"
+    ArtifactId:
+      type: string
+      pattern: "^art_[0-9a-f]{32}$"
+    FormalizationId:
+      type: string
+      pattern: "^frm_[0-9a-f]{32}$"
+    ValidationStatus:
+      type: string
+      enum: [CANDIDATE, VALIDATED, REJECTED]
+    SymbolDeclaration:
+      type: object
+      additionalProperties: false
+      required: [name, sort, meaning, unit]
+      properties:
+        name: { type: string, pattern: "^[A-Za-z][A-Za-z0-9_]{0,63}$" }
+        sort: { type: string, enum: [BOOLEAN, INTEGER, REAL] }
+        meaning: { type: string, minLength: 1 }
+        unit: { type: [string, "null"] }
+    FormalAST:
+      description: Closed typed AST. Unknown nodes and operators are rejected.
+      oneOf:
+        - $ref: "#/components/schemas/FormalBoolean"
+        - $ref: "#/components/schemas/FormalInteger"
+        - $ref: "#/components/schemas/FormalReal"
+        - $ref: "#/components/schemas/FormalSymbol"
+        - $ref: "#/components/schemas/FormalOperation"
+      discriminator:
+        propertyName: kind
+    FormalBoolean:
+      type: object
+      additionalProperties: false
+      required: [kind, value]
+      properties:
+        kind: { type: string, const: boolean }
+        value: { type: boolean }
+    FormalInteger:
+      type: object
+      additionalProperties: false
+      required: [kind, value]
+      properties:
+        kind: { type: string, const: integer }
+        value: { type: string, pattern: "^(?:0|-?[1-9][0-9]*)$" }
+    FormalReal:
+      type: object
+      additionalProperties: false
+      required: [kind, value]
+      properties:
+        kind: { type: string, const: real }
+        value: { type: string, pattern: "^(?:0|-?[1-9][0-9]*)(?:\\.[0-9]*[1-9])?$" }
+    FormalSymbol:
+      type: object
+      additionalProperties: false
+      required: [kind, name]
+      properties:
+        kind: { type: string, const: symbol }
+        name: { type: string, pattern: "^[A-Za-z][A-Za-z0-9_]{0,63}$" }
+    FormalOperation:
+      type: object
+      additionalProperties: false
+      required: [kind, operator, arguments]
+      properties:
+        kind: { type: string, const: operation }
+        operator:
+          type: string
+          enum: [NOT, AND, OR, NEG, ADD, SUB, MUL, DIV, EQ, NE, LT, LE, GT, GE]
+        arguments:
+          type: array
+          items: { $ref: "#/components/schemas/FormalAST" }
+    FormalizationCreate:
+      type: object
+      additionalProperties: false
+      required: [source_artifact_id, ast, symbols, canonical_rendering, premise_artifact_ids, limitations, fidelity_notes]
+      properties:
+        source_artifact_id: { $ref: "#/components/schemas/ArtifactId" }
+        ast: { $ref: "#/components/schemas/FormalAST" }
+        symbols:
+          type: array
+          items: { $ref: "#/components/schemas/SymbolDeclaration" }
+        canonical_rendering: { type: string, minLength: 1 }
+        premise_artifact_ids:
+          type: array
+          uniqueItems: true
+          items: { $ref: "#/components/schemas/ArtifactId" }
+        limitations:
+          type: array
+          minItems: 1
+          items: { type: string, minLength: 1 }
+        fidelity_notes: { type: string, minLength: 1 }
+    FormalizationDecisionCreate:
+      type: object
+      additionalProperties: false
+      required: [reason]
+      properties:
+        reason: { type: string, minLength: 1 }
+    FormalizationResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [id, revision_id, revision, ast, ast_hash, validation_status, enforceable]
+          properties:
+            id: { $ref: "#/components/schemas/FormalizationId" }
+            revision_id: { $ref: "#/components/schemas/FormalizationId" }
+            revision: { type: integer, minimum: 1 }
+            ast: { $ref: "#/components/schemas/FormalAST" }
+            ast_hash: { type: string, pattern: "^sha256:[0-9a-f]{64}$" }
+            validation_status: { $ref: "#/components/schemas/ValidationStatus" }
+            enforceable: { type: boolean }
+          additionalProperties: true
+        meta: { type: object, additionalProperties: true }
+    SourceId:
+      type: string
+      pattern: "^src_[0-9a-f]{32}$"
+    ImpactReportId:
+      type: string
+      pattern: "^imr_[0-9a-f]{32}$"
+    SourceRetractionId:
+      type: string
+      pattern: "^srt_[0-9a-f]{32}$"
+    ConsensusResultId:
+      type: string
+      pattern: "^csr_[0-9a-f]{32}$"
+    RecommendationId:
+      type: string
+      pattern: "^rec_[0-9a-f]{32}$"
+    AgentId:
+      type: string
+      pattern: "^agt_[0-9a-f]{32}$"
+    WorkspaceId:
+      type: string
+      pattern: "^ws_[0-9a-f]{32}$"
+    ArtifactKind:
+      type: string
+      enum:
+        - CLAIM
+        - FACT
+        - ASSUMPTION
+        - INFERENCE
+        - PROPOSITION
+        - EVIDENCE
+        - UNCERTAINTY
+        - RISK
+        - IMPACT
+        - OBJECTIVE
+        - CONSTRAINT
+        - ALTERNATIVE
+        - POSITION
+        - CRITIQUE
+    LifecycleStatus:
+      type: string
+      enum: [ACTIVE, SUPERSEDED, WITHDRAWN]
+    ActorClass:
+      type: string
+      enum: [HUMAN, AGENT, SERVICE, POLICY]
+    ProvenanceOrigin:
+      type: string
+      enum:
+        [
+          HUMAN,
+          LLM,
+          RETRIEVAL,
+          TOOL,
+          SIMULATION,
+          SYMBOLIC,
+          IMPORT,
+          HISTORICAL_SESSION,
+        ]
+    GraphEdgeType:
+      type: string
+      enum:
+        - SUPPORTS
+        - OPPOSES
+        - CONTRADICTS
+        - DERIVED_FROM
+        - BASED_ON_ASSUMPTION
+        - FORMALIZES
+        - QUANTIFIES
+        - IMPACTS
+        - CONSTRAINS
+        - VIOLATES
+        - SATISFIES
+        - INFEASIBLE_UNKNOWN
+        - ATTACKS
+        - RESPONDS_TO
+        - SUPERSEDES
+        - ADVOCATES
+    ProvenanceInput:
+      type: object
+      additionalProperties: false
+      required: [origin, reference]
+      properties:
+        origin:
+          $ref: "#/components/schemas/ProvenanceOrigin"
+        reference:
+          type: string
+          minLength: 1
+    SourceReference:
+      type: object
+      additionalProperties: false
+      required: [reference, locator, content_hash, retrieved_at]
+      properties:
+        reference:
+          type: string
+          minLength: 1
+        locator:
+          type: object
+          minProperties: 1
+          additionalProperties: true
+        content_hash:
+          type: string
+          pattern: "^sha256:[0-9a-f]{64}$"
+        retrieved_at:
+          type: string
+          format: date-time
+        source_timestamp:
+          type: [string, "null"]
+          format: date-time
+    ParentRelationshipInput:
+      type: object
+      additionalProperties: false
+      required: [edge_type, target_artifact_id]
+      properties:
+        edge_type:
+          $ref: "#/components/schemas/GraphEdgeType"
+        target_artifact_id:
+          $ref: "#/components/schemas/ArtifactId"
+    ConfidenceInput:
+      type: object
+      additionalProperties: false
+      required: [kind, value, meaning, basis_artifact_ids]
+      properties:
+        kind:
+          type: string
+          minLength: 1
+        value:
+          type: string
+          pattern: "^(?:-?0(?:\\.0+)?|0\\.\\d+|1(?:\\.0+)?)$"
+        meaning:
+          type: string
+          minLength: 1
+        basis_artifact_ids:
+          type: array
+          items:
+            $ref: "#/components/schemas/ArtifactId"
+    ArtifactCreate:
+      type: object
+      additionalProperties: false
+      required:
+        [
+          kind,
+          payload,
+          provenance,
+          source_references,
+          parent_relationships,
+          metadata,
+        ]
+      properties:
+        kind:
+          $ref: "#/components/schemas/ArtifactKind"
+        payload:
+          type: object
+          description: Strictly validated against the selected Phase 3 artifact kind.
+          additionalProperties: true
+        provenance:
+          $ref: "#/components/schemas/ProvenanceInput"
+        source_references:
+          type: array
+          items:
+            $ref: "#/components/schemas/SourceReference"
+        parent_relationships:
+          type: array
+          items:
+            $ref: "#/components/schemas/ParentRelationshipInput"
+        confidence:
+          oneOf:
+            - $ref: "#/components/schemas/ConfidenceInput"
+            - type: "null"
+        metadata:
+          type: object
+          additionalProperties: true
+    ArtifactRevisionCreate:
+      type: object
+      additionalProperties: false
+      required:
+        [
+          payload,
+          provenance,
+          source_references,
+          parent_relationships,
+          metadata,
+          reason,
+        ]
+      properties:
+        payload:
+          type: object
+          description: Complete replacement payload; kind and logical identity are server-owned.
+          additionalProperties: true
+        provenance:
+          $ref: "#/components/schemas/ProvenanceInput"
+        source_references:
+          type: array
+          items:
+            $ref: "#/components/schemas/SourceReference"
+        parent_relationships:
+          type: array
+          items:
+            $ref: "#/components/schemas/ParentRelationshipInput"
+        confidence:
+          oneOf:
+            - $ref: "#/components/schemas/ConfidenceInput"
+            - type: "null"
+        metadata:
+          type: object
+          additionalProperties: true
+        reason:
+          type: string
+          minLength: 1
+    ArtifactWithdrawalCreate:
+      type: object
+      additionalProperties: false
+      required: [reason, warrant_artifact_ids]
+      properties:
+        reason:
+          type: string
+          minLength: 1
+        warrant_artifact_ids:
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items:
+            $ref: "#/components/schemas/ArtifactId"
+    SessionBudget:
+      type: object
+      additionalProperties: false
+      required: [max_rounds, max_tokens, max_usd]
+      properties:
+        max_rounds:
+          type: integer
+          minimum: 1
+          maximum: 50
+        max_tokens:
+          type: integer
+          minimum: 1
+          maximum: 9223372036854775807
+        max_usd:
+          type: string
+          pattern: "^(?:0|[1-9][0-9]{0,9})(?:\\.[0-9]{1,2})?$"
+        deadline_at:
+          type: [string, "null"]
+          format: date-time
+    SessionCreate:
+      type: object
+      additionalProperties: false
+      required:
+        [
+          problem_statement,
+          agent_definition_ids,
+          objectives,
+          constraints,
+          budget,
+        ]
+      properties:
+        problem_statement:
+          type: string
+          minLength: 1
+        agent_definition_ids:
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items:
+            $ref: "#/components/schemas/AgentId"
+        objectives:
+          type: array
+          minItems: 1
+          items:
+            allOf:
+              - $ref: "#/components/schemas/ArtifactCreate"
+              - type: object
+                properties:
+                  kind:
+                    type: string
+                    const: OBJECTIVE
+        constraints:
+          type: array
+          items:
+            allOf:
+              - $ref: "#/components/schemas/ArtifactCreate"
+              - type: object
+                properties:
+                  kind:
+                    type: string
+                    const: CONSTRAINT
+        budget:
+          $ref: "#/components/schemas/SessionBudget"
+    SessionControlCreate:
+      type: object
+      additionalProperties: false
+      required: [reason]
+      properties:
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 2000
+    HumanDirectiveKind:
+      type: string
+      enum:
+        - INJECT_EVIDENCE
+        - ADD_CONSTRAINT
+        - MODIFY_OBJECTIVE
+        - REQUEST_SIMULATION
+        - REQUEST_CRITIQUE
+        - REQUEST_ANOTHER_ROUND
+        - REJECT_RECOMMENDATION
+        - OVERRIDE_OUTCOME
+    HumanInputCreate:
+      type: object
+      additionalProperties: false
+      required: [reason, kind, instruction]
+      properties:
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        kind:
+          $ref: "#/components/schemas/HumanDirectiveKind"
+        instruction:
+          type: string
+          minLength: 1
+          maxLength: 10000
+        artifact_ids:
+          type: array
+          default: []
+          uniqueItems: true
+          items:
+            $ref: "#/components/schemas/ArtifactId"
+    ResourceOwner:
+      type: object
+      additionalProperties: false
+      required: [id, class]
+      properties:
+        id:
+          type: string
+          pattern: "^(?:usr|agt|svc|pol)_[0-9a-f]{32}$"
+        class:
+          $ref: "#/components/schemas/ActorClass"
+    SessionData:
+      type: object
+      additionalProperties: false
+      required:
+        [
+          id,
+          status,
+          problem_statement,
+          agent_definition_ids,
+          objective_ids,
+          constraint_ids,
+          budget,
+          round,
+          workflow_id,
+          run_id,
+          initialized_at,
+          started_at,
+          ended_at,
+        ]
+      properties:
+        id:
+          $ref: "#/components/schemas/SessionId"
+        status:
+          type: string
+          enum:
+            [
+              DRAFT,
+              INITIALIZING,
+              RUNNING,
+              WAITING_FOR_AGENT,
+              WAITING_FOR_EVIDENCE,
+              WAITING_FOR_CRITIQUE,
+              WAITING_FOR_SIMULATION,
+              WAITING_FOR_HUMAN,
+              EVALUATING_CONSENSUS,
+              PAUSED,
+              FAILED_RETRYABLE,
+              COMPLETED,
+              PARTIAL_CONSENSUS_STATE,
+              NO_CONSENSUS,
+              DEADLOCK,
+              FAILED,
+              CANCELLED,
+            ]
+        problem_statement:
+          type: string
+        agent_definition_ids:
+          type: array
+          items:
+            $ref: "#/components/schemas/AgentId"
+        objective_ids:
+          type: array
+          items:
+            $ref: "#/components/schemas/ArtifactId"
+        constraint_ids:
+          type: array
+          items:
+            $ref: "#/components/schemas/ArtifactId"
+        budget:
+          $ref: "#/components/schemas/SessionBudget"
+        round:
+          type: integer
+          minimum: 0
+        workflow_id:
+          type: [string, "null"]
+        run_id:
+          type: [string, "null"]
+        initialized_at:
+          type: [string, "null"]
+          format: date-time
+        started_at:
+          type: [string, "null"]
+          format: date-time
+        ended_at:
+          type: [string, "null"]
+          format: date-time
+    SessionMeta:
+      type: object
+      additionalProperties: false
+      required:
+        [
+          request_id,
+          schema_version,
+          version,
+          workspace_id,
+          created_at,
+          updated_at,
+          owner,
+          permissions,
+          trace,
+        ]
+      properties:
+        request_id:
+          type: string
+        schema_version:
+          type: integer
+          const: 1
+        version:
+          type: integer
+          const: 1
+        workspace_id:
+          $ref: "#/components/schemas/WorkspaceId"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        owner:
+          $ref: "#/components/schemas/ResourceOwner"
+        permissions:
+          type: array
+          items:
+            type: string
+        trace:
+          type: "null"
+    SessionResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/SessionData"
+        meta:
+          $ref: "#/components/schemas/SessionMeta"
+    ArtifactAttributes:
+      type: object
+      description: Kind-specific payload. CLAIM always includes explicit unsupported boolean.
+      properties:
+        unsupported:
+          type: boolean
+      additionalProperties: true
+    ProvenanceState:
+      type: object
+      additionalProperties: false
+      required: [origin, reference, complete, missing]
+      properties:
+        origin:
+          $ref: "#/components/schemas/ProvenanceOrigin"
+        reference:
+          type: string
+        complete:
+          type: boolean
+        missing:
+          type: array
+          items:
+            type: string
+    ArtifactData:
+      type: object
+      additionalProperties: false
+      required:
+        [
+          id,
+          kind,
+          attributes,
+          source_references,
+          parent_relationships,
+          confidence,
+          metadata,
+          content_hash,
+        ]
+      properties:
+        id:
+          $ref: "#/components/schemas/ArtifactId"
+        kind:
+          $ref: "#/components/schemas/ArtifactKind"
+        attributes:
+          $ref: "#/components/schemas/ArtifactAttributes"
+        source_references:
+          type: array
+          items:
+            $ref: "#/components/schemas/SourceReference"
+        parent_relationships:
+          type: array
+          items:
+            $ref: "#/components/schemas/ParentRelationshipInput"
+        confidence:
+          oneOf:
+            - $ref: "#/components/schemas/ConfidenceInput"
+            - type: "null"
+        metadata:
+          type: object
+          additionalProperties: true
+        content_hash:
+          type: string
+          pattern: "^sha256:[0-9a-f]{64}$"
+    ArtifactMeta:
+      type: object
+      additionalProperties: false
+      required:
+        [
+          request_id,
+          schema_version,
+          version,
+          workspace_id,
+          session_id,
+          logical_id,
+          created_at,
+          updated_at,
+          owner,
+          lifecycle_status,
+          supersedes_id,
+          provenance,
+          permissions,
+          trace,
+        ]
+      properties:
+        request_id:
+          type: string
+        schema_version:
+          type: integer
+          minimum: 1
+        version:
+          type: integer
+          minimum: 1
+        workspace_id:
+          $ref: "#/components/schemas/WorkspaceId"
+        session_id:
+          $ref: "#/components/schemas/SessionId"
+        logical_id:
+          $ref: "#/components/schemas/ArtifactId"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        owner:
+          $ref: "#/components/schemas/ResourceOwner"
+        lifecycle_status:
+          $ref: "#/components/schemas/LifecycleStatus"
+        supersedes_id:
+          oneOf:
+            - $ref: "#/components/schemas/ArtifactId"
+            - type: "null"
+        provenance:
+          $ref: "#/components/schemas/ProvenanceState"
+        permissions:
+          type: array
+          items:
+            type: string
+        trace:
+          type: "null"
+    ArtifactResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/ArtifactData"
+        meta:
+          $ref: "#/components/schemas/ArtifactMeta"
+    ProvenanceGraphNode:
+      type: object
+      additionalProperties: false
+      required: [id, workspace_id, session_id, kind, ref_id, label, attrs]
+      properties:
+        id:
+          type: string
+          pattern: "^gnd_[0-9a-f]{32}$"
+        workspace_id:
+          $ref: "#/components/schemas/WorkspaceId"
+        session_id:
+          $ref: "#/components/schemas/SessionId"
+        kind:
+          $ref: "#/components/schemas/ArtifactKind"
+        ref_id:
+          $ref: "#/components/schemas/ArtifactId"
+        label:
+          type: string
+        attrs:
+          type: object
+          additionalProperties: true
+    ProvenanceGraphEdge:
+      type: object
+      additionalProperties: false
+      required:
+        [
+          id,
+          workspace_id,
+          session_id,
+          from_node,
+          to_node,
+          edge_type,
+          weight,
+          qualifier,
+          actor_class,
+          actor_id,
+        ]
+      properties:
+        id:
+          type: string
+          pattern: "^ged_[0-9a-f]{32}$"
+        workspace_id:
+          $ref: "#/components/schemas/WorkspaceId"
+        session_id:
+          $ref: "#/components/schemas/SessionId"
+        from_node:
+          type: string
+          pattern: "^gnd_[0-9a-f]{32}$"
+        to_node:
+          type: string
+          pattern: "^gnd_[0-9a-f]{32}$"
+        edge_type:
+          $ref: "#/components/schemas/GraphEdgeType"
+        weight:
+          type: [number, "null"]
+        qualifier:
+          type: object
+          additionalProperties: true
+        actor_class:
+          $ref: "#/components/schemas/ActorClass"
+        actor_id:
+          type: string
+          pattern: "^[0-9a-f]{32}$"
+    CitationResolution:
+      type: object
+      additionalProperties: true
+      description: Immutable citation snapshot plus current source status and retraction metadata.
+      required:
+        [citation, current_source_status, retracted_at, retraction_reason]
+      properties:
+        citation:
+          type: object
+          additionalProperties: true
+        current_source_status:
+          type: string
+          enum: [PROCESSING, READY, FAILED, RETRACTED]
+        retracted_at:
+          type: [string, "null"]
+          format: date-time
+        retraction_reason:
+          type: [string, "null"]
+    ProvenanceNode:
+      type: object
+      additionalProperties: false
+      required: [graph_node, artifact_version, verification, citations]
+      properties:
+        graph_node:
+          $ref: "#/components/schemas/ProvenanceGraphNode"
+        artifact_version:
+          type: integer
+          minimum: 1
+        verification:
+          type: [string, "null"]
+          enum:
+            [
+              UNVERIFIED,
+              SOURCE_VERIFIED,
+              CROSS_CHECKED,
+              DISPUTED,
+              REJECTED,
+              null,
+            ]
+        citations:
+          type: array
+          items:
+            $ref: "#/components/schemas/CitationResolution"
+    ProvenanceData:
+      type: object
+      additionalProperties: false
+      required:
+        [
+          root_artifact_id,
+          root_artifact_version,
+          root_node,
+          nodes,
+          edges,
+          truncated,
+          max_depth,
+          next_cursor,
+        ]
+      properties:
+        root_artifact_id:
+          $ref: "#/components/schemas/ArtifactId"
+        root_artifact_version:
+          type: integer
+          minimum: 1
+        root_node:
+          $ref: "#/components/schemas/ProvenanceGraphNode"
+        nodes:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProvenanceNode"
+        edges:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProvenanceGraphEdge"
+        truncated:
+          type: boolean
+        max_depth:
+          type: integer
+          minimum: 0
+          maximum: 12
+        next_cursor:
+          type: [string, "null"]
+    ProvenanceResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/ProvenanceData"
+        meta:
+          type: object
+          additionalProperties: false
+          required: [request_id, workspace_id]
+          properties:
+            request_id:
+              type: string
+            workspace_id:
+              $ref: "#/components/schemas/WorkspaceId"
+    SourceRetractionCreate:
+      type: object
+      additionalProperties: false
+      required: [reason]
+      properties:
+        reason:
+          type: string
+          minLength: 1
+    ImpactDependency:
+      type: object
+      additionalProperties: false
+      required:
+        [
+          dependency_type,
+          dependent_id,
+          session_id,
+          root_evidence_id,
+          artifact_kind,
+          logical_id,
+          artifact_version,
+          min_depth,
+          path_count,
+          evidence_weight,
+        ]
+      properties:
+        dependency_type:
+          type: string
+          enum: [ARTIFACT, CONSENSUS_RESULT, RECOMMENDATION]
+        dependent_id:
+          type: string
+          pattern: "^(?:art|csr|rec)_[0-9a-f]{32}$"
+        session_id:
+          $ref: "#/components/schemas/SessionId"
+        root_evidence_id:
+          $ref: "#/components/schemas/ArtifactId"
+        artifact_kind:
+          oneOf:
+            - $ref: "#/components/schemas/ArtifactKind"
+            - type: "null"
+        logical_id:
+          oneOf:
+            - $ref: "#/components/schemas/ArtifactId"
+            - type: "null"
+        artifact_version:
+          type: [integer, "null"]
+          minimum: 1
+        min_depth:
+          type: integer
+          minimum: 0
+        path_count:
+          type: integer
+          minimum: 1
+        evidence_weight:
+          type: string
+          pattern: "^[0-9]+(?:\\.[0-9]+)?$"
+    ImpactReportData:
+      type: object
+      additionalProperties: false
+      required:
+        [
+          id,
+          retraction_id,
+          event_id,
+          source_id,
+          actor_id,
+          reason,
+          generated_at,
+          analysis_status,
+          complete,
+          truncated,
+          error,
+          dependencies,
+          affected_claim_ids,
+          affected_alternative_ids,
+          affected_consensus_result_ids,
+          affected_recommendation_ids,
+        ]
+      properties:
+        id:
+          $ref: "#/components/schemas/ImpactReportId"
+        retraction_id:
+          $ref: "#/components/schemas/SourceRetractionId"
+        event_id:
+          type: string
+          pattern: "^evt_[0-9a-f]{32}$"
+        source_id:
+          $ref: "#/components/schemas/SourceId"
+        actor_id:
+          type: string
+          pattern: "^usr_[0-9a-f]{32}$"
+        reason:
+          type: string
+        generated_at:
+          type: string
+          format: date-time
+        analysis_status:
+          type: string
+          enum: [COMPLETE, INCOMPLETE]
+        complete:
+          type: boolean
+        truncated:
+          type: boolean
+        error:
+          type: [string, "null"]
+        dependencies:
+          type: array
+          items:
+            $ref: "#/components/schemas/ImpactDependency"
+        affected_claim_ids:
+          type: array
+          items:
+            $ref: "#/components/schemas/ArtifactId"
+        affected_alternative_ids:
+          type: array
+          items:
+            $ref: "#/components/schemas/ArtifactId"
+        affected_consensus_result_ids:
+          type: array
+          items:
+            $ref: "#/components/schemas/ConsensusResultId"
+        affected_recommendation_ids:
+          type: array
+          items:
+            $ref: "#/components/schemas/RecommendationId"
+    ImpactReportResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/ImpactReportData"
+        meta:
+          type: object
+          additionalProperties: false
+          required: [request_id, workspace_id]
+          properties:
+            request_id:
+              type: string
+            workspace_id:
+              $ref: "#/components/schemas/WorkspaceId"
+    HealthStatus:
+      type: string
+      enum: [ok, degraded, down, unknown]
+    HealthResponse:
+      type: object
+      additionalProperties: false
+      required: [status, service, version]
+      properties:
+        status:
+          type: string
+          const: ok
+        service:
+          type: string
+        version:
+          type: string
+    ComponentHealth:
+      type: object
+      additionalProperties: false
+      required: [status, details]
+      properties:
+        status:
+          $ref: "#/components/schemas/HealthStatus"
+        details:
+          type: object
+          additionalProperties: true
+    ReadinessResponse:
+      type: object
+      additionalProperties: false
+      required: [status, service, version, components]
+      properties:
+        status:
+          $ref: "#/components/schemas/HealthStatus"
+        service:
+          type: string
+        version:
+          type: string
+        components:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/ComponentHealth"
+    ValidationIssue:
+      type: object
+      additionalProperties: false
+      required: [pointer, message, type]
+      properties:
+        pointer:
+          type: string
+        message:
+          type: string
+        type:
+          type: string
+    ErrorCode:
+      type: string
+      enum:
+        - VALIDATION_FAILED
+        - UNKNOWN_FIELD
+        - AUTH_REQUIRED
+        - FORBIDDEN
+        - COMMIT_FORBIDDEN
+        - VERSION_CONFLICT
+        - IDEMPOTENCY_REPLAY
+        - NOT_FOUND
+        - PROVENANCE_MISSING
+        - BUDGET_EXCEEDED
+        - RATE_LIMITED
+        - PORT_UNAVAILABLE
+        - RAG_FAILED
+        - WORKFLOW_UNREACHABLE
+        - INTERNAL
+    ProblemDetails:
+      type: object
+      required: [type, title, status, code, detail, retryable]
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+          minimum: 100
+          maximum: 599
+        code:
+          $ref: "#/components/schemas/ErrorCode"
+        detail:
+          type: string
+        instance:
+          type: [string, "null"]
+        trace_id:
+          type: [string, "null"]
+        retryable:
+          type: boolean
+        errors:
+          type: array
+          items:
+            $ref: "#/components/schemas/ValidationIssue"
+        current_version:
+          type: integer
+        retry_after_s:
+          type: number
+        degraded:
+          type: string

@@ -1,0 +1,159 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHONHASHSEED: "0"
+  UV_FROZEN: "true"
+
+jobs:
+  backend-quality:
+    name: Backend / lint, typecheck, unit
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.10.12"
+          enable-cache: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: uv sync --extra dev --frozen
+      - run: uv run ruff format --check app tests
+      - run: uv run ruff check app tests
+      - run: uv run mypy app tests
+      - run: uv run pytest -m "not integration"
+
+  frontend-quality:
+    name: Frontend / lint, typecheck, unit, build
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - run: npm run format
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+
+  contract:
+    name: Contract / OpenAPI and generated client
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: npm ci --no-audit --no-fund
+        working-directory: frontend
+      - run: python scripts/check_contracts.py
+      - run: npm run contract:check
+        working-directory: frontend
+
+  trace-check:
+    name: Trace / matrix and documentation links
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python scripts/check_traceability.py
+      - run: python scripts/check_links.py
+
+  integration:
+    name: Integration / healthy stack and API to PostgreSQL trace
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      POSTGRES_PASSWORD: ci-postgres-only
+      TEMPORAL_POSTGRES_PASSWORD: ci-temporal-postgres-only
+      MINIO_ROOT_USER: agora-ci
+      MINIO_ROOT_PASSWORD: ci-minio-only
+      TEST_DATABASE_URL: postgresql+asyncpg://agora:ci-postgres-only@127.0.0.1:5432/agora
+      TEST_REDIS_URL: redis://127.0.0.1:6379/0
+      TEST_MINIO_ENDPOINT: 127.0.0.1:9000
+      TEST_MINIO_ACCESS_KEY: agora-ci
+      TEST_MINIO_SECRET_KEY: ci-minio-only
+      TEST_NATS_URL: nats://127.0.0.1:4222
+      TEST_NATS_STREAM: AGORA
+      TEST_TEMPORAL_ADDRESS: 127.0.0.1:7233
+      TEST_TEMPORAL_NAMESPACE: default
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.10.12"
+          enable-cache: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: uv sync --extra dev --frozen
+      - name: Build and start the complete stack
+        run: docker compose up --build --wait
+        working-directory: .
+      - name: Assert API and frontend are reachable
+        run: |
+          curl --fail --silent --show-error http://127.0.0.1:8000/ready
+          curl --fail --silent --show-error http://127.0.0.1:3000/
+        working-directory: .
+      - name: Run every live adapter acceptance, including API to database tracing
+        run: uv run pytest -m integration --no-header -q
+      - name: Capture stack logs on failure
+        if: failure()
+        run: docker compose logs --no-color
+        working-directory: .
+      - name: Tear down disposable state
+        if: always()
+        run: docker compose down --volumes --remove-orphans
+        working-directory: .
+
+  phase-1-gate:
+    name: Phase 1 / required checks
+    if: always()
+    needs:
+      [backend-quality, frontend-quality, contract, trace-check, integration]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Require every Phase 1 check
+        env:
+          BACKEND: ${{ needs.backend-quality.result }}
+          FRONTEND: ${{ needs.frontend-quality.result }}
+          CONTRACT: ${{ needs.contract.result }}
+          TRACE: ${{ needs.trace-check.result }}
+          INTEGRATION: ${{ needs.integration.result }}
+        run: |
+          test "$BACKEND" = success
+          test "$FRONTEND" = success
+          test "$CONTRACT" = success
+          test "$TRACE" = success
+          test "$INTEGRATION" = success

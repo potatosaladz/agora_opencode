@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agora.example/contracts/events/reasoning-event.json",
+  "title": "ReasoningEvent",
+  "description": "Committed ledger event transported over NATS and SSE. ledger_seq remains PostgreSQL-assigned authority.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "event_id",
+    "ledger_seq",
+    "type",
+    "ts",
+    "session_id",
+    "actor_id",
+    "actor_class",
+    "round",
+    "payload",
+    "schema_version",
+    "code_version"
+  ],
+  "properties": {
+    "event_id": { "type": "string", "format": "uuid" },
+    "ledger_seq": { "type": "integer", "minimum": 1 },
+    "type": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]*$" },
+    "ts": { "type": "string", "format": "date-time" },
+    "session_id": { "type": "string", "format": "uuid" },
+    "actor_id": { "type": "string", "format": "uuid" },
+    "actor_class": {
+      "type": "string",
+      "enum": ["AGENT", "HUMAN", "SERVICE", "POLICY"]
+    },
+    "round": { "type": "integer", "minimum": 0 },
+    "payload": {
+      "type": "object",
+      "description": "Reference IDs only; artifact and reasoning bodies are fetched through authorized resources.",
+      "propertyNames": { "pattern": "_ids?$" },
+      "additionalProperties": {
+        "oneOf": [
+          { "type": "string" },
+          {
+            "type": "array",
+            "items": { "type": "string" },
+            "uniqueItems": true
+          }
+        ]
+      }
+    },
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "code_version": { "type": "string" }
+  }
+}

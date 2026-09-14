@@ -1,0 +1,17 @@
+version: 1
+codes:
+  VALIDATION_FAILED: { status: 400, retryable: false }
+  UNKNOWN_FIELD: { status: 400, retryable: false }
+  AUTH_REQUIRED: { status: 401, retryable: false }
+  FORBIDDEN: { status: 403, retryable: false }
+  COMMIT_FORBIDDEN: { status: 403, retryable: false }
+  VERSION_CONFLICT: { status: 409, retryable: false }
+  IDEMPOTENCY_REPLAY: { status: 200, retryable: false }
+  NOT_FOUND: { status: 404, retryable: false }
+  PROVENANCE_MISSING: { status: 422, retryable: false }
+  BUDGET_EXCEEDED: { status: 402, retryable: false }
+  RATE_LIMITED: { status: 429, retryable: true }
+  PORT_UNAVAILABLE: { status: 503, retryable: true }
+  RAG_FAILED: { status: 503, retryable: true }
+  WORKFLOW_UNREACHABLE: { status: 503, retryable: true }
+  INTERNAL: { status: 500, retryable: false }
