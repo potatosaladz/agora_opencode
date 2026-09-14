@@ -8,6 +8,16 @@ uses semantic versioning once it ships a release. Phase 0 is pre-release.
 
 ## [Unreleased]
 
+### Added — Phase 14 T14-01 (Graph View)
+
+- Added authenticated `POST /api/v1/graph/subgraph` over the existing tenant/session-scoped graph traversal,
+  including public IDs, closed filters, bounded radius/page size, query-bound cursors, deterministic ordering
+  and independent truncation/pagination.
+- Added a code-split responsive Graph View with authoritative TanStack Query state, labelled edge semantics,
+  keyboard selection, visible focus, textual equivalence and explicit operational states.
+- Added focused API, PostgreSQL and frontend acceptance coverage. No migration, persistence, repository or
+  traversal implementation was added.
+
 ### Added — Phase 14 acceptance contract
 
 - Froze the ordered T14-01…T14-06 Graph, Dissent, Assumption, Explanation, Replay and Audit UI task

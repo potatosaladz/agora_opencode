@@ -23,7 +23,7 @@ evidence remains separate. Phase-0 architecture baseline: **approved by the proj
 | 11 | Neuro-symbolic | **Complete** | T11-01…04 complete: immutable formalisation lifecycle, bounded Z3, exact-revision evidence, and conservative `UNKNOWN → DEFER` consensus policy |
 | 12 | MARL environment | **Complete** | T12-01…05: exact trajectory domain, reward/credit accounting, canonical export, hermetic replay, in-memory/PostgreSQL stores and migration 0024 |
 | 13 | Trustworthiness | **Complete** | T13-01 catalogue; T13-02 audit records + eight queries; T13-03 replay modes; T13-04 canonical durable pinned run manifests |
-| 14 | Full UI | Contract frozen; implementation not started | T14-01…06 ordered acceptance and scripted usability fixture frozen; all tasks open |
+| 14 | Full UI | In progress | T14-01 Graph View complete; T14-02…06 open; scripted usability fixture remains unpassed |
 | 15 | MCP | Not started | — |
 | 16 | Research extensions | Not started | — |
 | 17 | Swarm & hardening | Not started | — |
@@ -31,6 +31,18 @@ evidence remains separate. Phase-0 architecture baseline: **approved by the proj
 ---
 
 ## Detailed log
+
+### 2026-09-14 — Phase 14 T14-01 Graph View
+
+- Added authenticated `POST /api/v1/graph/subgraph` as a public-ID boundary over the existing
+  `ReasoningTransaction.graph.subgraph()` traversal with fail-closed root/session scope and exact cursor
+  binding. No repository, traversal implementation, persistence or migration was added.
+- Added a code-split responsive Graph View with TanStack Query server state, labelled visual edge semantics,
+  keyboard node selection, textual equivalence and explicit loading/error/empty/pagination/truncation states.
+- Validation: 50 focused backend graph/API/provenance tests, one live PostgreSQL HTTP fixture, 807 offline
+  backend tests, 30 frontend tests, backend/frontend static and build gates, OpenAPI/client drift,
+  traceability and links pass. Isolated Compose is healthy at Alembic `20260914_0026`; `/ready` and frontend
+  return 200.
 
 ### 2026-09-14 — Phase 14 acceptance contract
 
@@ -774,7 +786,7 @@ Phase 0 by design and become applicable in Phase 1.
 | M11 Z3 rejects infeasible alternative | Phase 11 | **Complete** — T11-01…04 complete; UNSAT alternatives are blocked and UNKNOWN remains unresolved |
 | M12 Trajectories recorded | Phase 12 | not started |
 | M13 Manifest + replay modes | Phase 13 | not started |
-| M14 Full UI | Phase 14 | contract frozen; T14-01…06 open |
+| M14 Full UI | Phase 14 | T14-01 complete; T14-02…06 open |
 | M15 MCP gateway enforced | Phase 15 | not started |
 | M16 Research extensions demonstrated | Phase 16 | not started |
 | M17 Swarm stack hardened | Phase 17 | not started |

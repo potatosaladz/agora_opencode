@@ -186,6 +186,12 @@ legacy constraint payload `formal_status` is non-authoritative, and no solver ou
 Full signatures, semantics, failure modes and idempotency expectations:
 [../docs/PORTS.md](../docs/PORTS.md).
 
+T14-01 exposes the existing `subgraph` operation as authenticated
+`POST /api/v1/graph/subgraph`. Its structured body uses public session/root IDs, radius `0..5`, optional
+closed edge filters, page size `1..200` and an opaque query-bound cursor. The response translates all graph,
+artifact, session and workspace IDs to public forms and preserves deterministic ordering, `truncated` and
+`next_cursor`. It adds no repository, persistence or migration.
+
 ## 7. Synchronization checklist (run at every phase exit)
 
 - [ ] Every contract in §3 exists as a Pydantic model with `schema_version`.

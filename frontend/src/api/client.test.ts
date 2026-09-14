@@ -185,6 +185,71 @@ describe("ApiClient", () => {
     );
   });
 
+  // req: FR-805, NFR-004, NFR-010
+  it("posts an authenticated graph read without idempotency", async () => {
+    const response = {
+      data: { nodes: [], edges: [], truncated: false, next_cursor: null },
+      meta: { request_id: "request", workspace_id: `ws_${"2".repeat(32)}` },
+    };
+    const fetchImpl = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response(JSON.stringify(response), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+    const input = {
+      session_id: `ses_${"1".repeat(32)}`,
+      root_ids: [`gnd_${"3".repeat(32)}`],
+      max_depth: 2,
+      page_size: 100,
+    };
+
+    await expect(
+      new ApiClient({ fetchImpl }).getGraphSubgraph(input, "graph-token"),
+    ).resolves.toEqual(response);
+    const [, init] = fetchImpl.mock.calls[0] ?? [];
+    expect(init).toMatchObject({
+      method: "POST",
+      body: JSON.stringify(input),
+      headers: {
+        Accept: "application/json",
+        Authorization: "Bearer graph-token",
+        "Content-Type": "application/json",
+      },
+    });
+    expect(init?.headers).not.toHaveProperty("Idempotency-Key");
+  });
+
+  // req: FR-805, NFR-010
+  it("preserves graph problem responses", async () => {
+    const problem = {
+      type: "about:blank",
+      title: "Invalid graph root",
+      status: 422,
+      code: "VALIDATION_FAILED" as const,
+      detail: "The graph root is not visible in this session.",
+      retryable: false,
+    };
+    const fetchImpl = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response(JSON.stringify(problem), {
+        status: 422,
+        headers: { "Content-Type": "application/problem+json" },
+      }),
+    );
+
+    await expect(
+      new ApiClient({ fetchImpl }).getGraphSubgraph(
+        {
+          session_id: "ses_1",
+          root_ids: ["gnd_1"],
+          max_depth: 2,
+          page_size: 100,
+        },
+        "token",
+      ),
+    ).rejects.toEqual(new ApiProblem(problem));
+  });
+
   // req: FR-104, FR-107
   it("maps legacy termination to its typed compatibility endpoint", async () => {
     const fetchImpl = vi.fn<typeof fetch>().mockResolvedValue(

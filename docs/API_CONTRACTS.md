@@ -51,6 +51,14 @@ Phase 10 adds `GET /api/v1/artifacts/{id}/provenance`. It uses the same read-rol
 `404` policy, exposes the exact root and ancestor artifact versions, and returns bounded graph traversal
 metadata plus citation snapshots/current source status for EVIDENCE nodes.
 
+T14-01 adds authenticated `POST /api/v1/graph/subgraph` as a read-only POST because the bounded query has
+structured root and edge-filter sets. The body carries one public session id, one or more public graph-node
+root ids, radius `0..5`, optional closed edge types, page size `1..200` and an optional opaque cursor. The
+route resolves every root under the caller's workspace and supplied session before delegating to the
+existing `ReasoningGraphStore.subgraph()` port. Missing, hidden and cross-session roots share the `404`
+policy. Malformed public ids, filters and cursors use `VALIDATION_FAILED`. Results preserve deterministic
+node-then-edge ordering and report depth `truncated` independently from `next_cursor` pagination.
+
 `GET /api/v1/sessions/{id}` reads authoritative state from PostgreSQL's session lifecycle
 projection. Temporal execution descriptions are operational diagnostics only and never overwrite
 or replace that projection.
@@ -375,4 +383,3 @@ makes an unknown field a compile error, which is what keeps §7 meaningful.
 [API.md](API.md) · [PORTS.md](PORTS.md) · [ARCHITECTURE.md §2](ARCHITECTURE.md) ·
 [SECURITY.md](SECURITY.md) · [TESTING.md](TESTING.md) · [EXTENDING.md](EXTENDING.md) ·
 [ORCHESTRATION_POLICY.md](ORCHESTRATION_POLICY.md)
-

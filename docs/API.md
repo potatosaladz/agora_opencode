@@ -153,7 +153,7 @@ credentials, raw provider errors or unauthorized namespace existence.
 | `GET` | `/sessions/{id}/metrics/profile` | the metric profile — no composite score exists (FR-901) |
 | `GET` | `/sessions/{id}/metrics` | raw `metric_values` with versions, inputs and caveats |
 | `GET` | `/artifacts/{id}/provenance` | bounded backward reasoning ancestry plus canonical evidence citations and current source status |
-| `POST` | `/graph/subgraph` | typed subgraph for a node set and depth |
+| `POST` | `/graph/subgraph` | authenticated tenant/session-scoped `ReasoningGraphStore.subgraph()` read; public roots, radius `0..5`, edge filters, deterministic cursor pages and independent truncation |
 | `POST` | `/graph/paths` | path between two artifacts |
 | `POST` | `/experiments` | define a comparison |
 | `GET` | `/experiments/{id}/runs` | per-cell results |
@@ -226,4 +226,3 @@ GET /api/v1/consensus/cns_01H…/explain
 
 [API_CONTRACTS.md](API_CONTRACTS.md) · [PORTS.md](PORTS.md) · [SECURITY.md](SECURITY.md) ·
 [DATA_MODEL.md](DATA_MODEL.md) · [ARCHITECTURE.md §2](ARCHITECTURE.md)
-

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 
 import { apiClient, type SessionResponse } from "../api/client";
 import { Icon } from "../components/icon";
@@ -10,11 +10,18 @@ import { ReasoningPage } from "../features/reasoning/reasoning-page";
 import { hrefForRoute } from "./router";
 import { useHashRoute } from "./use-hash-route";
 
+const GraphPage = lazy(() => import("../features/graph/graph-page"));
+
 const navigation = [
   {
     route: "reasoning" as const,
     label: "Live reasoning",
     icon: "activity" as const,
+  },
+  {
+    route: "graph" as const,
+    label: "Graph view",
+    icon: "network" as const,
   },
   {
     route: "observatory" as const,
@@ -145,6 +152,19 @@ export function App() {
               window.location.hash = hrefForRoute("reasoning");
             }}
           />
+        ) : route === "graph" ? (
+          <Suspense
+            fallback={
+              <main
+                className="graph-page graph-page--loading"
+                id="main-content"
+              >
+                <p role="status">Loading graph workspace…</p>
+              </main>
+            }
+          >
+            <GraphPage {...(liveSession ? { connection: liveSession } : {})} />
+          </Suspense>
         ) : (
           <ReasoningPage
             {...(liveSession ? { connection: liveSession } : {})}

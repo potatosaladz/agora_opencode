@@ -432,6 +432,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/graph/subgraph": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Read a bounded reasoning subgraph
+         * @description Resolves public graph-node roots inside one caller-visible session and delegates to the existing deterministic ReasoningGraphStore subgraph traversal. Depth truncation and cursor pagination are independent.
+         */
+        post: operations["getGraphSubgraph"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/sources/{source_id}/retractions": {
         parameters: {
             query?: never;
@@ -750,6 +770,43 @@ export interface components {
         ArtifactResponse: {
             data: components["schemas"]["ArtifactData"];
             meta: components["schemas"]["ArtifactMeta"];
+        };
+        GraphSubgraphRequest: {
+            session_id: components["schemas"]["SessionId"];
+            root_ids: string[];
+            /** @default 2 */
+            max_depth: number;
+            edge_types?: components["schemas"]["GraphEdgeType"][];
+            /** @default 100 */
+            page_size: number;
+            cursor?: string | null;
+        };
+        GraphSubgraphData: {
+            nodes: components["schemas"]["ProvenanceGraphNode"][];
+            edges: components["schemas"]["GraphSubgraphEdge"][];
+            truncated: boolean;
+            next_cursor: string | null;
+        };
+        GraphSubgraphResponse: {
+            data: components["schemas"]["GraphSubgraphData"];
+            meta: {
+                request_id: string;
+                workspace_id: components["schemas"]["WorkspaceId"];
+            };
+        };
+        GraphSubgraphEdge: {
+            id: string;
+            workspace_id: components["schemas"]["WorkspaceId"];
+            session_id: components["schemas"]["SessionId"];
+            from_node: string;
+            to_node: string;
+            edge_type: components["schemas"]["GraphEdgeType"];
+            weight: number | null;
+            qualifier: {
+                [key: string]: unknown;
+            };
+            actor_class: components["schemas"]["ActorClass"];
+            actor_id: string;
         };
         ProvenanceGraphNode: {
             id: string;
@@ -1613,6 +1670,34 @@ export interface operations {
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
+        };
+    };
+    getGraphSubgraph: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GraphSubgraphRequest"];
+            };
+        };
+        responses: {
+            /** @description Deterministically ordered public graph nodes and edges. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GraphSubgraphResponse"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["AuthenticationRequired"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
         };
     };
     retractSource: {

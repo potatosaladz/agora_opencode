@@ -33,6 +33,7 @@ from app.domain.reasoning import (
     Bearing,
     ClaimPayload,
     ClaimType,
+    GraphEdgeType,
     LifecycleStatus,
     Provenance,
     ProvenanceOrigin,
@@ -42,7 +43,7 @@ from app.domain.reasoning import (
     content_hash,
     validate_artifact,
 )
-from app.domain.reasoning_graph import GraphNode, TraversalResult
+from app.domain.reasoning_graph import GraphEdge, GraphNode, TraversalResult
 from app.ports.auth import VerifiedPrincipal, WorkspaceRole
 from tests.traceability import req
 
@@ -350,6 +351,69 @@ class ProvenanceCitations:
         return ()
 
 
+class Subgraph:
+    def __init__(self, artifact: Any) -> None:
+        self.root = GraphNode(
+            id=U[5],
+            workspace_id=artifact.workspace_id,
+            session_id=artifact.session_id,
+            kind=artifact.kind,
+            ref_id=artifact.id,
+            label="Root claim",
+        )
+        self.other = GraphNode(
+            id=U[6],
+            workspace_id=artifact.workspace_id,
+            session_id=artifact.session_id,
+            kind=ArtifactKind.EVIDENCE,
+            ref_id=U[7],
+            label="Evidence",
+        )
+        self.edge = GraphEdge(
+            id=U[8],
+            workspace_id=artifact.workspace_id,
+            session_id=artifact.session_id,
+            from_node=self.other.id,
+            to_node=self.root.id,
+            edge_type=GraphEdgeType.SUPPORTS,
+            actor_class=ActorClass.HUMAN,
+            actor_id=U[4],
+        )
+        self.calls: list[dict[str, Any]] = []
+
+    async def subgraph(
+        self,
+        workspace_id: UUID,
+        session_id: UUID,
+        root_ids: tuple[UUID, ...],
+        **kwargs: Any,
+    ) -> TraversalResult:
+        self.calls.append(
+            {
+                "workspace_id": workspace_id,
+                "session_id": session_id,
+                "root_ids": root_ids,
+                **kwargs,
+            }
+        )
+        if (
+            workspace_id != self.root.workspace_id
+            or session_id != self.root.session_id
+            or root_ids != (self.root.id,)
+        ):
+            return TraversalResult()
+        if kwargs.get("max_depth") == 0:
+            return TraversalResult(nodes=(self.root,))
+        if kwargs.get("cursor") == "wrong-query":
+            raise ValueError("invalid traversal cursor")
+        return TraversalResult(
+            nodes=(self.root, self.other),
+            edges=(self.edge,),
+            truncated=True,
+            next_cursor="next-page",
+        )
+
+
 @req("FR-305")
 def test_artifact_provenance_route_returns_shape_truncation_and_hidden_404() -> None:
     artifact = claim()
@@ -400,6 +464,85 @@ def test_phase3_routes_declare_frozen_role_matrix() -> None:
     assert policies["/api/v1/sessions/{session_id}/start"] == frozenset(
         {WorkspaceRole.ADMIN, WorkspaceRole.RESEARCHER}
     )
+
+
+@req("FR-805", "NFR-004", "NFR-010", "NFR-019")
+@pytest.mark.parametrize("role", list(WorkspaceRole))
+def test_graph_subgraph_is_authenticated_and_available_to_every_workspace_role(
+    role: WorkspaceRole,
+) -> None:
+    artifact = claim()
+    graph = Subgraph(artifact)
+    principal = VerifiedPrincipal("oidc|u", U[4], U[1], role)
+    client, _ = _client_for(principal, Tx(Artifacts(artifact), Idempotency(), graph=graph))
+    body = {
+        "session_id": public_id("session", artifact.session_id),
+        "root_ids": [public_id("graph_node", graph.root.id)],
+        "max_depth": 2,
+        "edge_types": ["SUPPORTS"],
+        "page_size": 2,
+    }
+    with client:
+        denied = client.post("/api/v1/graph/subgraph", json=body)
+        response = client.post(
+            "/api/v1/graph/subgraph",
+            headers={"Authorization": "Bearer valid"},
+            json=body,
+        )
+    assert denied.status_code == 401
+    assert response.status_code == 200, response.text
+    data = response.json()["data"]
+    assert [node["id"] for node in data["nodes"]] == [
+        public_id("graph_node", graph.root.id),
+        public_id("graph_node", graph.other.id),
+    ]
+    assert data["edges"][0]["id"] == public_id("graph_edge", graph.edge.id)
+    assert data["edges"][0]["from_node"] == public_id("graph_node", graph.other.id)
+    assert data["edges"][0]["actor_id"] == public_id("user", U[4])
+    assert data["truncated"] is True
+    assert data["next_cursor"] == "next-page"
+    assert graph.calls[-1]["edge_types"] == frozenset({GraphEdgeType.SUPPORTS})
+
+
+@req("FR-805", "NFR-004", "NFR-010")
+@pytest.mark.parametrize(
+    ("change", "status"),
+    [
+        ({"session_id": "ses_bad"}, 400),
+        ({"root_ids": ["gnd_bad"]}, 400),
+        ({"root_ids": []}, 400),
+        ({"max_depth": -1}, 400),
+        ({"max_depth": 6}, 400),
+        ({"page_size": 0}, 400),
+        ({"page_size": 201}, 400),
+        ({"edge_types": ["NOT_AN_EDGE"]}, 400),
+        ({"cursor": "wrong-query"}, 400),
+        ({"session_id": public_id("session", U[3])}, 404),
+        ({"root_ids": [public_id("graph_node", U[7])]}, 404),
+    ],
+)
+def test_graph_subgraph_rejects_invalid_or_hidden_query(
+    change: dict[str, Any], status: int
+) -> None:
+    artifact = claim()
+    graph = Subgraph(artifact)
+    principal = VerifiedPrincipal("oidc|u", U[4], U[1], WorkspaceRole.VIEWER)
+    client, _ = _client_for(principal, Tx(Artifacts(artifact), Idempotency(), graph=graph))
+    body = {
+        "session_id": public_id("session", artifact.session_id),
+        "root_ids": [public_id("graph_node", graph.root.id)],
+        "max_depth": 2,
+        "page_size": 100,
+        **change,
+    }
+    with client:
+        response = client.post(
+            "/api/v1/graph/subgraph",
+            headers={"Authorization": "Bearer valid"},
+            json=body,
+        )
+    assert response.status_code == status, response.text
+    assert response.headers["content-type"].startswith("application/problem+json")
 
 
 def _revision_body(statement: str = "Replacement") -> dict[str, Any]:

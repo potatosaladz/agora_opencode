@@ -12,6 +12,7 @@ from app.api.errors import register_exception_handlers
 from app.api.middleware import CorrelationIdMiddleware, RequestMetricsMiddleware
 from app.api.routes import (
     formalizations_router,
+    graph_router,
     health_router,
     metrics_router,
     phase3_router,
@@ -95,6 +96,7 @@ def create_app(
     app.include_router(health_router)
     app.include_router(phase3_router)
     app.include_router(formalizations_router)
+    app.include_router(graph_router)
     app.include_router(realtime_router)
     if resolved_settings.metrics_enabled:
         app.include_router(metrics_router)

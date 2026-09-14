@@ -7,6 +7,7 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import quote_plus
+from uuid import UUID
 
 import pytest
 from alembic import command
@@ -130,6 +131,19 @@ async def _counts(url: str, workspace_id: object) -> tuple[int, int, int, int, i
     return counts[0], counts[1], counts[2], counts[3], counts[4]
 
 
+async def _graph_nodes(url: str, workspace_id: object) -> list[UUID]:
+    engine = create_async_engine(url)
+    async with engine.begin() as connection:
+        await connection.execute(
+            text("SELECT set_config('app.workspace_id', :workspace_id, true)"),
+            {"workspace_id": str(workspace_id)},
+        )
+        rows = (await connection.execute(text("SELECT id FROM graph_nodes ORDER BY id"))).scalars()
+        values = list(rows)
+    await engine.dispose()
+    return values
+
+
 def _settings(url: str) -> Settings:
     parsed = make_url(url)
     assert parsed.host
@@ -150,7 +164,7 @@ def _settings(url: str) -> Settings:
     )
 
 
-@req("FR-101", "FR-103")
+@req("FR-101", "FR-103", "FR-805", "NFR-004", "NFR-010")
 def test_phase3_http_create_read_and_replay_are_atomic() -> None:
     assert _DATABASE_URL is not None
     asyncio.run(_reset_database(_DATABASE_URL))
@@ -226,5 +240,21 @@ def test_phase3_http_create_read_and_replay_are_atomic() -> None:
         )
         assert read_claim.status_code == 200
         assert read_claim.headers["ETag"] == "1"
+
+        graph_nodes = asyncio.run(_graph_nodes(_DATABASE_URL, principal.workspace_id))
+        assert len(graph_nodes) == 2
+        graph = client.post(
+            "/api/v1/graph/subgraph",
+            headers={"Authorization": "Bearer integration"},
+            json={
+                "session_id": session_id,
+                "root_ids": [public_id("graph_node", graph_nodes[0])],
+                "max_depth": 1,
+                "page_size": 1,
+            },
+        )
+        assert graph.status_code == 200, graph.text
+        assert graph.json()["data"]["nodes"][0]["id"] == public_id("graph_node", graph_nodes[0])
+        assert graph.json()["data"]["next_cursor"] is None
 
     assert asyncio.run(_counts(_DATABASE_URL, principal.workspace_id)) == (1, 2, 2, 3, 2)

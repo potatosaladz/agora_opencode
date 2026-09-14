@@ -10,6 +10,13 @@ export type SessionControlCreate =
 export type HumanInputCreate = components["schemas"]["HumanInputCreate"];
 export type ArtifactCreate = components["schemas"]["ArtifactCreate"];
 export type ArtifactResponse = components["schemas"]["ArtifactResponse"];
+export type GraphEdgeType = components["schemas"]["GraphEdgeType"];
+export type GraphNode = components["schemas"]["ProvenanceGraphNode"];
+export type GraphEdge = components["schemas"]["GraphSubgraphEdge"];
+export type GraphSubgraphRequest =
+  components["schemas"]["GraphSubgraphRequest"];
+export type GraphSubgraphResponse =
+  components["schemas"]["GraphSubgraphResponse"];
 
 export type RealtimeEvent = {
   event_id: string;
@@ -81,6 +88,18 @@ export class ApiClient {
       `/api/v1/sessions/${encodeURIComponent(sessionId)}`,
       signal,
       token,
+    );
+  }
+
+  getGraphSubgraph(
+    input: GraphSubgraphRequest,
+    token: string,
+    signal?: AbortSignal,
+  ): Promise<GraphSubgraphResponse> {
+    return this.sendJson<GraphSubgraphResponse>(
+      "/api/v1/graph/subgraph",
+      input,
+      { token, ...(signal === undefined ? {} : { signal }) },
     );
   }
 
@@ -295,18 +314,21 @@ export class ApiClient {
     body: unknown,
     options: {
       token: string;
-      idempotencyKey: string;
+      idempotencyKey?: string;
       signal?: AbortSignal;
     },
   ): Promise<T> {
+    const headers: Record<string, string> = {
+      Accept: "application/json",
+      Authorization: `Bearer ${options.token}`,
+      "Content-Type": "application/json",
+    };
+    if (options.idempotencyKey !== undefined) {
+      headers["Idempotency-Key"] = options.idempotencyKey;
+    }
     const init: RequestInit = {
       method: "POST",
-      headers: {
-        Accept: "application/json",
-        Authorization: `Bearer ${options.token}`,
-        "Content-Type": "application/json",
-        "Idempotency-Key": options.idempotencyKey,
-      },
+      headers,
     };
     if (body !== undefined) init.body = JSON.stringify(body);
     if (options.signal !== undefined) init.signal = options.signal;

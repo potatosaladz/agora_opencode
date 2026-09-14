@@ -1,6 +1,6 @@
 # Phase 14 Acceptance Contract
 
-**Version:** 1.0 · **Status:** frozen · **Phase:** 14
+**Version:** 1.1 · **Status:** T14-01 complete; T14-02…06 frozen and open · **Phase:** 14
 **Baseline:** Phase 13 complete through T13-04
 **Requirements:** UI/exposure verification of existing FR-305, FR-504…FR-506, FR-605, FR-609,
 FR-705, FR-708, FR-802, FR-804, FR-805, FR-807, FR-808, FR-901, NFR-003, NFR-004, NFR-005,
@@ -23,7 +23,7 @@ The authoritative task order is:
 5. T14-05 — Replay Controls
 6. T14-06 — Audit Search
 
-All six tasks are open. Each task must preserve generated API type drift checks, deny-by-default
+T14-01 is complete; T14-02…06 remain open. Each task must preserve generated API type drift checks, deny-by-default
 authentication, tenant isolation, accessible non-visual equivalents and responsive desktop/mobile use.
 Earlier-phase requirements cited below are verification dependencies, not reassigned implementation
 ownership.
@@ -83,6 +83,13 @@ implementation ownership remains Phases 10, 1/12 and 13 as recorded in `REQUIREM
 **Ownership:** API — this task owns only `POST /api/v1/graph/subgraph` and its authored/generated contract.
 Frontend — this task owns the code-split Graph View and its interaction/accessibility states. Persistence —
 none. Migration — none.
+
+**Acceptance evidence:** 26 focused API tests and 24 inherited graph/provenance tests pass; the live
+PostgreSQL HTTP fixture passes against the Compose database; all 807 non-integration backend tests and 30
+frontend tests pass. OpenAPI/client drift, strict mypy, Ruff, frontend lint/typecheck/build/accessibility,
+traceability, links and Compose deployment are green. The deployed stack reached healthy with Alembic head
+`20260914_0026`, `/ready` and frontend HTTP 200, the route rejected unauthenticated requests with the
+standard 401 envelope, and the authenticated live integration exercised the same endpoint over PostgreSQL.
 
 ## 3. T14-02 — Dissent View
 
