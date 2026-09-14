@@ -59,6 +59,20 @@ existing `ReasoningGraphStore.subgraph()` port. Missing, hidden and cross-sessio
 policy. Malformed public ids, filters and cursors use `VALIDATION_FAILED`. Results preserve deterministic
 node-then-edge ordering and report depth `truncated` independently from `next_cursor` pagination.
 
+T14-02 adds authenticated `GET /api/v1/sessions/{id}/dissent` for every workspace role. It selects the
+latest persisted consensus result deterministically by `(round, id)`, reads that result's persisted
+`ConsensusExplanation`, and combines its complete minority report with every `OPEN`, `UNRESOLVED`, or
+`DISPUTED` entry from the complete Critique explanation handoff. There are no omission, pagination, or
+filter parameters. Warrant artifacts are hydrated from artifact authority with kind, lifecycle, optional
+graph projection label/node id, and a provenance URL; Critique arguments are included when the persisted
+artifact payload can supply them. The response uses public IDs only and intentionally excludes aggregate
+support and dissent scores.
+
+`data.evaluated` means the latest consensus result has a persisted explanation. `data.empty_reason` is
+exactly one of `NO_CONSENSUS_RESULT`, `CONSENSUS_EXPLANATION_UNAVAILABLE`, or `EVALUATED_NO_DISSENT` when
+applicable, and is otherwise null. `what_would_change` is nullable so persisted absence is explicit.
+Malformed, missing, and cross-tenant sessions use the same tenant-hidden `404` response.
+
 `GET /api/v1/sessions/{id}` reads authoritative state from PostgreSQL's session lifecycle
 projection. Temporal execution descriptions are operational diagnostics only and never overwrite
 or replace that projection.

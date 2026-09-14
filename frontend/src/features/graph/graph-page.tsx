@@ -15,6 +15,11 @@ import {
 type GraphConnection = { session: SessionResponse; token: string };
 type QueryInput = Omit<GraphSubgraphRequest, "cursor">;
 
+function rootFromHash(): string {
+  const query = window.location.hash.split("?", 2)[1];
+  return new URLSearchParams(query).get("root") ?? "";
+}
+
 const edgeKinds: GraphEdgeType[] = [
   "SUPPORTS",
   "OPPOSES",
@@ -200,7 +205,7 @@ export default function GraphPage({
 }: {
   connection?: GraphConnection;
 }) {
-  const [roots, setRoots] = useState("");
+  const [roots, setRoots] = useState(rootFromHash);
   const [depth, setDepth] = useState(2);
   const [pageSize, setPageSize] = useState(100);
   const [filter, setFilter] = useState<GraphEdgeType[]>([]);

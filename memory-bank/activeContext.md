@@ -1,6 +1,6 @@
 # Active Context
 
-**Snapshot taken:** 2026-09-14 · **Phase:** 14 in progress · **Active task:** T14-01 Graph View complete
+**Snapshot taken:** 2026-09-14 · **Phase:** 14 in progress · **Active task:** T14-02 Dissent View complete
 This is the "what is happening right now" file. Rewrite it at the end of every
 significant unit of work.
 
@@ -8,14 +8,21 @@ significant unit of work.
 
 ## 1. Focus of the current session
 
+T14-02 Dissent View is complete. A new authenticated read-only endpoint composes the latest persisted
+consensus explanation, selected alternative, supporting/opposing/qualifying evidence, complete Critique
+handoff, exact artifact state and existing graph/provenance identities. The code-split UI presents all
+minority entries and open/unresolved/disputed critiques without omission controls or composite scores, with
+keyboard, screen-reader and responsive behavior. No persistence or migration changed. T14-03 Assumption
+Register is next and has not started.
+
 T14-01 Graph View is complete. The authenticated subgraph endpoint reuses the existing transaction graph
 port and traversal, translating public IDs without new persistence or migration. The code-split React view
 renders authoritative server pages with labelled edge semantics, keyboard selection, textual equivalence,
 responsive states and explicit loading/error/empty/pagination/truncation disclosure. Focused and full local
-gates plus isolated Compose deployment pass. T14-02 is next and has not started.
+gates plus isolated Compose deployment pass.
 
-Phase 14 task authority remains frozen in `docs/PHASE14_ACCEPTANCE.md`. T14-02 Dissent View, T14-03
-Assumption Register, T14-04 Explanation Panel, T14-05 Replay Controls and T14-06 Audit Search remain open.
+Phase 14 task authority remains frozen in `docs/PHASE14_ACCEPTANCE.md`. T14-03 Assumption Register, T14-04
+Explanation Panel, T14-05 Replay Controls and T14-06 Audit Search remain open.
 The contract preserves earlier-phase implementation ownership. The scripted usability fixture exists but
 has not passed.
 
@@ -94,7 +101,8 @@ formalisation plus symbolic-evidence persistence tests, with strict static, trac
 
 Phase 13 T13-01 through T13-04 are closed (metric catalogue; audit persistence + eight audit queries;
 STRICT/TOLERANT/LIVE replay; durable pinned run manifests). Phase 14's contract is frozen and all six
-implementation tasks remain open; T14-01 Graph View is complete and T14-02 Dissent View is next.
+implementation tasks remain open; T14-01 Graph View and T14-02 Dissent View are complete, and T14-03
+Assumption Register is next.
 Phase 12 T12-01 through
 T12-05 and Phase 11
 are closed. Phases 0–4 and 6–10 have exact-SHA

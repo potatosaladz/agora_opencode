@@ -140,6 +140,7 @@ Concurrency:     If-Match / ETag on versioned artifacts
 Formalisation:   POST/GET /api/v1/formalizations; revisions/validations/confirmations/rejections
 Phase 3 writes:  POST sessions; POST artifacts; POST artifact revisions/withdrawals
 Phase 4 start:   POST /api/v1/sessions/{id}/start -> 202 (T4-02; separate from 201 create)
+T14 dissent:     GET /api/v1/sessions/{id}/dissent (complete latest persisted minority + open critique view)
 SSE:             GET /api/v1/sessions/{id}/events/stream   (Last-Event-ID supported)
 WS:              /api/v1/ws/sessions/{id}   (bidirectional control only where required)
 ```
@@ -147,6 +148,12 @@ WS:              /api/v1/ws/sessions/{id}   (bidirectional control only where re
 Resource families: `auth`, `workspaces`, `agents`, `llm-providers`, `sessions`,
 `propositions`, `claims`, `evidence`, `knowledge`, `rag`, `critiques`, `simulations`,
 `formalizations`, `consensus`, `metrics`, `experiments`, `audit`, `mcp`, `system`.
+
+The T14 dissent read has no filter/omission parameters. It chooses the latest consensus result by
+`(round,id)`, exposes majority context without support/dissent scores, hydrates minority warrants from
+artifact authority and includes every open/unresolved/disputed Critique handoff head. Public IDs and
+tenant-hidden `404` are mandatory. `evaluated` plus `empty_reason` distinguishes no result, a result whose
+explanation is unavailable, and an evaluated result with no dissent.
 
 T11-01 formalisation writes require `Idempotency-Key`; all current-head lifecycle writes additionally
 require `If-Match`. Reads expose derived `validation_status` and `enforceable`. Only an exact revision with

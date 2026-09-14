@@ -1,7 +1,7 @@
 # Handoff
 
 **For:** whoever continues this work, probably with no memory of the session that produced it.
-**As of:** 2026-09-14 · **Phase:** 14 in progress · **Active task:** T14-01 Graph View complete
+**As of:** 2026-09-14 · **Phase:** 14 in progress · **Active task:** T14-02 Dissent View complete
 
 ## Read these five, in this order
 
@@ -36,8 +36,12 @@ Read [PHASE14_ACCEPTANCE.md](../docs/PHASE14_ACCEPTANCE.md) before continuing Ph
 `POST /api/v1/graph/subgraph` delegates to the existing graph store with public-ID,
 scope, radius/filter/page/cursor validation, and the code-split Graph View renders its authoritative pages
 with accessible visual/textual equivalents and responsive interaction. It added no migration, persistence,
-repository or traversal. T14-02 Dissent View is next; do not reimplement the Graph View or start later
-tasks. The Phase 14 usability fixture remains unpassed.
+repository or traversal. The Phase 14 usability fixture remains unpassed.
+
+T14-02 is now complete. The authenticated dissent read composes existing persisted consensus explanations,
+Critique handoff, artifacts, provenance and graph-node identities; the code-split UI exposes selected
+context, evidence relations, every minority entry and unresolved disagreement without filtering or scores.
+No migration or persistence was added. T14-03 Assumption Register is next; do not start it automatically.
 
 Phase 13 T13-01 through T13-04 are complete. T13-02 ships the Phase 13 audit substrate: migration
 `20260912_0025` adds forced-RLS, caller-append-only `access_log` and `audit_anchors`, and

@@ -97,7 +97,7 @@ UI/API exposure of earlier-phase capabilities and do not reassign their implemen
 | ID | Task | Status | Est | Acceptance |
 | --- | --- | --- | --- | --- |
 | T14-01 | Graph View | `[x]` | L | existing `ReasoningGraphStore.subgraph()` is exposed through authenticated `POST /api/v1/graph/subgraph` with tenant/session scope, deterministic public ordering, bounded radius/filter/page/cursor validation and independent truncation/pagination signals; a code-split responsive Graph View renders server authority with textual equivalence, keyboard selection, visible edge semantics and explicit loading/error/empty states; no migration or new persistence; focused, regression, contract and deployed Compose gates pass |
-| T14-02 | Dissent View | `[ ]` | M | every minority position, opposing warrant and unresolved/open/disputed critique is visible inline, deterministically ordered and navigable to existing artifact/graph views; omission/suppression controls and Graph View reimplementation are absent |
+| T14-02 | Dissent View | `[x]` | M | authenticated read composition returns latest persisted selected context, supporting/opposing/qualifying evidence, every minority entry and every open/unresolved/disputed Critique with public IDs and no omission controls or aggregate score; the code-split accessible responsive UI preserves these distinctions and navigates to existing provenance/Graph views; no migration or persistence added |
 | T14-03 | Assumption Register | `[ ]` | M | session assumptions and constraints expose lifecycle, attribution, dependents, critiques, provenance and symbolic state with exact `UNKNOWN → DEFER` presentation and navigation; no mutation, solver or graph reimplementation |
 | T14-04 | Explanation Panel | `[ ]` | L | one accessible "why" panel presents consensus/recommendation drivers, inhibitors, conditions, counterfactuals, absent evidence, dissent, critiques, provenance and caveats with explicit empty reasons; the fixture's weakest evidence is discoverable without generated explanation authority or recomputation |
 | T14-05 | Replay Controls | `[ ]` | M | authenticated UI/API delegates exact manifest-bound STRICT/TOLERANT/LIVE requests to existing replay services; mode claims remain distinct, history immutable and LIVE freshly linked; no replay-engine redesign or new persistence by default |
@@ -105,7 +105,7 @@ UI/API exposure of earlier-phase capabilities and do not reassign their implemen
 
 **Exit gate:** the frozen scripted fixture proves that a reviewer with no knowledge of the internals can
 identify the minority position and weakest evidence from the UI alone. The fixture is defined but has not
-passed because T14-02…06 remain open.
+passed because T14-03…06 remain open.
 
 ## Phase 3 — detailed execution plan
 

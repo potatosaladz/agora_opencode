@@ -237,6 +237,32 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+  /api/v1/sessions/{session_id}/dissent:
+    get:
+      operationId: getSessionDissent
+      summary: Read persisted minority and unresolved critique context
+      description: >-
+        Returns the explanation for the latest consensus result by (round,id), plus every
+        OPEN, UNRESOLVED, or DISPUTED critique chain head. The complete result has no omission
+        or filter parameters and never exposes aggregate support or dissent scores.
+      tags: [reasoning]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+      responses:
+        "200":
+          description: Persisted dissent state, including an explicit evaluation/empty state.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DissentResponse"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
   /api/v1/sessions/{session_id}/events/stream:
     get:
       operationId: streamSessionEvents
@@ -1556,6 +1582,230 @@ components:
           $ref: "#/components/schemas/ArtifactData"
         meta:
           $ref: "#/components/schemas/ArtifactMeta"
+    DissentWarrant:
+      type: object
+      additionalProperties: false
+      required: [id, kind, label, lifecycle, graph_node_id, provenance_href]
+      properties:
+        id: { $ref: "#/components/schemas/ArtifactId" }
+        kind: { $ref: "#/components/schemas/ArtifactKind" }
+        label: { type: [string, "null"] }
+        lifecycle: { $ref: "#/components/schemas/LifecycleStatus" }
+        graph_node_id:
+          type: [string, "null"]
+          pattern: "^gnd_[0-9a-f]{32}$"
+        provenance_href:
+          {
+            type: string,
+            pattern: "^/api/v1/artifacts/art_[0-9a-f]{32}/provenance$",
+          }
+    MinorityDissent:
+      type: object
+      additionalProperties: false
+      required:
+        [
+          agent_id,
+          position,
+          warrants,
+          disputed_proposition_ids,
+          unresolved_critique_ids,
+          what_would_change,
+        ]
+      properties:
+        agent_id: { $ref: "#/components/schemas/AgentId" }
+        position: { type: string, minLength: 1 }
+        warrants:
+          type: array
+          items: { $ref: "#/components/schemas/DissentWarrant" }
+        disputed_proposition_ids:
+          type: array
+          items: { type: string, pattern: "^prp_[0-9a-f]{32}$" }
+        unresolved_critique_ids:
+          type: array
+          items: { type: string, pattern: "^crt_[0-9a-f]{32}$" }
+        what_would_change: { type: [string, "null"] }
+    CritiqueDissent:
+      type: object
+      additionalProperties: false
+      required:
+        [
+          critique_id,
+          critique_artifact_id,
+          logical_id,
+          version,
+          target_artifact_id,
+          critique_type,
+          severity,
+          resolution,
+          response_disposition,
+          warrant_artifact_ids,
+          replacement_target_artifact_id,
+          graph_node_id,
+          provenance_href,
+          argument,
+        ]
+      properties:
+        critique_id: { type: string, pattern: "^crt_[0-9a-f]{32}$" }
+        critique_artifact_id: { $ref: "#/components/schemas/ArtifactId" }
+        logical_id: { type: string, pattern: "^crt_[0-9a-f]{32}$" }
+        version: { type: integer, minimum: 1 }
+        target_artifact_id: { $ref: "#/components/schemas/ArtifactId" }
+        critique_type:
+          type: string
+          enum:
+            [
+              EVIDENCE_GAP,
+              LOGICAL_FALLACY,
+              HALLUCINATED_SOURCE,
+              MEASUREMENT_ERROR,
+              MODEL_MISUSE,
+              CONSTRAINT_IGNORED,
+              CONFLICT_OF_INTEREST,
+              ALTERNATIVE_OMITTED,
+              UNCERTAINTY_UNDERSTATED,
+              CAUSAL_OVERCLAIM,
+            ]
+        severity: { type: string, enum: [LOW, MEDIUM, HIGH, BLOCKING] }
+        resolution: { type: string, enum: [OPEN, UNRESOLVED, DISPUTED] }
+        response_disposition:
+          type: [string, "null"]
+          enum:
+            [
+              ACCEPT,
+              PARTIALLY_ACCEPT,
+              REJECT_WITH_JUSTIFICATION,
+              REVISE,
+              REQUEST_EVIDENCE,
+              REQUEST_SIMULATION,
+              ABSTAIN,
+              null,
+            ]
+        warrant_artifact_ids:
+          type: array
+          items: { $ref: "#/components/schemas/ArtifactId" }
+        replacement_target_artifact_id:
+          oneOf:
+            - $ref: "#/components/schemas/ArtifactId"
+            - type: "null"
+        graph_node_id:
+          type: [string, "null"]
+          pattern: "^gnd_[0-9a-f]{32}$"
+        provenance_href:
+          {
+            type: string,
+            pattern: "^/api/v1/artifacts/art_[0-9a-f]{32}/provenance$",
+          }
+        argument: { type: [string, "null"] }
+    DissentMajorityContext:
+      type: object
+      additionalProperties: false
+      required:
+        [
+          consensus_result_id,
+          outcome,
+          selected_alternative_id,
+          selected_alternative_label,
+          selected_alternative_graph_node_id,
+          selected_alternative_provenance_href,
+          strategy,
+          strategy_version,
+          round,
+        ]
+      properties:
+        consensus_result_id: { type: string, pattern: "^csr_[0-9a-f]{32}$" }
+        outcome:
+          type: string
+          enum:
+            [
+              FULL_CONSENSUS,
+              PARTIAL_CONSENSUS,
+              CONDITIONAL_CONSENSUS,
+              PARETO_SET,
+              NO_CONSENSUS,
+              DEADLOCK,
+              INSUFFICIENT_EVIDENCE,
+              INFEASIBLE,
+            ]
+        selected_alternative_id:
+          oneOf:
+            - $ref: "#/components/schemas/ArtifactId"
+            - type: "null"
+        selected_alternative_label: { type: [string, "null"] }
+        selected_alternative_graph_node_id:
+          type: [string, "null"]
+          pattern: "^gnd_[0-9a-f]{32}$"
+        selected_alternative_provenance_href:
+          type: [string, "null"]
+          pattern: "^/api/v1/artifacts/art_[0-9a-f]{32}/provenance$"
+        strategy: { type: string, minLength: 1 }
+        strategy_version: { type: string, minLength: 1 }
+        round: { type: integer, minimum: 1 }
+    DissentData:
+      type: object
+      additionalProperties: false
+      required:
+        [
+          session_id,
+          evaluated,
+          empty_reason,
+          majority,
+          evidence_context,
+          minority,
+          critiques,
+        ]
+      properties:
+        session_id: { $ref: "#/components/schemas/SessionId" }
+        evaluated: { type: boolean }
+        empty_reason:
+          type: [string, "null"]
+          enum:
+            [
+              NO_CONSENSUS_RESULT,
+              CONSENSUS_EXPLANATION_UNAVAILABLE,
+              EVALUATED_NO_DISSENT,
+              null,
+            ]
+        majority:
+          oneOf:
+            - $ref: "#/components/schemas/DissentMajorityContext"
+            - type: "null"
+        evidence_context:
+          $ref: "#/components/schemas/DissentEvidenceContext"
+        minority:
+          type: array
+          items: { $ref: "#/components/schemas/MinorityDissent" }
+        critiques:
+          type: array
+          items: { $ref: "#/components/schemas/CritiqueDissent" }
+    DissentEvidenceContext:
+      type: object
+      additionalProperties: false
+      required: [supports_selected, opposes_selected, qualifies_selected]
+      properties:
+        supports_selected:
+          type: array
+          items: { $ref: "#/components/schemas/DissentWarrant" }
+        opposes_selected:
+          type: array
+          items: { $ref: "#/components/schemas/DissentWarrant" }
+        qualifies_selected:
+          type: array
+          items: { $ref: "#/components/schemas/DissentWarrant" }
+    DissentMeta:
+      type: object
+      additionalProperties: false
+      required: [request_id, schema_version, workspace_id]
+      properties:
+        request_id: { type: string }
+        schema_version: { type: integer, const: 1 }
+        workspace_id: { $ref: "#/components/schemas/WorkspaceId" }
+    DissentResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data: { $ref: "#/components/schemas/DissentData" }
+        meta: { $ref: "#/components/schemas/DissentMeta" }
     GraphSubgraphRequest:
       type: object
       additionalProperties: false

@@ -23,7 +23,7 @@ evidence remains separate. Phase-0 architecture baseline: **approved by the proj
 | 11 | Neuro-symbolic | **Complete** | T11-01…04 complete: immutable formalisation lifecycle, bounded Z3, exact-revision evidence, and conservative `UNKNOWN → DEFER` consensus policy |
 | 12 | MARL environment | **Complete** | T12-01…05: exact trajectory domain, reward/credit accounting, canonical export, hermetic replay, in-memory/PostgreSQL stores and migration 0024 |
 | 13 | Trustworthiness | **Complete** | T13-01 catalogue; T13-02 audit records + eight queries; T13-03 replay modes; T13-04 canonical durable pinned run manifests |
-| 14 | Full UI | In progress | T14-01 Graph View complete; T14-02…06 open; scripted usability fixture remains unpassed |
+| 14 | Full UI | In progress | T14-01 Graph View and T14-02 Dissent View complete; T14-03…06 open; scripted usability fixture remains unpassed |
 | 15 | MCP | Not started | — |
 | 16 | Research extensions | Not started | — |
 | 17 | Swarm & hardening | Not started | — |
@@ -31,6 +31,17 @@ evidence remains separate. Phase-0 architecture baseline: **approved by the proj
 ---
 
 ## Detailed log
+
+### 2026-09-14 — Phase 14 T14-02 Dissent View
+
+- Added authenticated, unfiltered session dissent reads over persisted consensus explanations, Critique
+  handoff, artifacts, provenance and graph nodes. Public responses distinguish selected context, supporting,
+  opposing and qualifying evidence, minority positions and open/unresolved/disputed critiques.
+- Added a code-split accessible Dissent View with keyboard selection, explicit lifecycle/missing-data/empty
+  states, Graph View and provenance navigation, and responsive desktop/mobile layouts. No scores are
+  calculated or presented.
+- Added no migration or persistence; Alembic remains `20260914_0026`. Focused backend/frontend tests, live
+  HTTP/PostgreSQL acceptance, inherited local gates and isolated Compose deployment pass.
 
 ### 2026-09-14 — Phase 14 T14-01 Graph View
 
@@ -786,7 +797,7 @@ Phase 0 by design and become applicable in Phase 1.
 | M11 Z3 rejects infeasible alternative | Phase 11 | **Complete** — T11-01…04 complete; UNSAT alternatives are blocked and UNKNOWN remains unresolved |
 | M12 Trajectories recorded | Phase 12 | not started |
 | M13 Manifest + replay modes | Phase 13 | not started |
-| M14 Full UI | Phase 14 | T14-01 complete; T14-02…06 open |
+| M14 Full UI | Phase 14 | T14-01…02 complete; T14-03…06 open |
 | M15 MCP gateway enforced | Phase 15 | not started |
 | M16 Research extensions demonstrated | Phase 16 | not started |
 | M17 Swarm stack hardened | Phase 17 | not started |

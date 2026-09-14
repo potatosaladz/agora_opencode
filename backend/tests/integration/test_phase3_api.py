@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import os
 from dataclasses import dataclass
 from pathlib import Path
@@ -19,7 +20,7 @@ from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import create_async_engine
 
 from app.api import create_app
-from app.common.ids import public_id, uuid7
+from app.common.ids import parse_id, public_id, uuid7
 from app.config import Settings
 from app.ports.auth import VerifiedPrincipal, WorkspaceRole
 from tests.traceability import req
@@ -144,6 +145,80 @@ async def _graph_nodes(url: str, workspace_id: object) -> list[UUID]:
     return values
 
 
+async def _seed_dissent(
+    url: str,
+    principal: VerifiedPrincipal,
+    session_id: UUID,
+    selected_id: UUID,
+    warrant_id: UUID,
+) -> UUID:
+    consensus_id = uuid7()
+    explanation: dict[str, object] = {
+        "consensus_id": str(consensus_id),
+        "outcome": "PARTIAL_CONSENSUS",
+        "strategy": "constraint_aware",
+        "strategy_version": "1",
+        "formula": "persisted integration fixture",
+        "weights": {},
+        "thresholds": {},
+        "contributions": [],
+        "derivation": [],
+        "caveats": ["support is not probability"],
+        "minority_report": [
+            {
+                "agent_id": str(principal.user_id),
+                "position": "OPPOSE",
+                "warrant_artifact_ids": [str(warrant_id)],
+                "disputed_propositions": [],
+                "unresolved_critiques": [],
+                "what_would_change": "independent corroboration",
+            }
+        ],
+        "counterfactuals": [],
+        "flip_distance": None,
+        "degenerate_input": False,
+        "input_hash": "sha256:" + "d" * 64,
+    }
+    engine = create_async_engine(url)
+    async with engine.begin() as connection:
+        await connection.execute(
+            text("SELECT set_config('app.workspace_id', :workspace_id, true)"),
+            {"workspace_id": str(principal.workspace_id)},
+        )
+        await connection.execute(
+            text(
+                "INSERT INTO consensus_results (id, workspace_id, session_id, round, strategy, "
+                "strategy_version, outcome, selected_alternative_id, pareto_set, "
+                "constraint_report, "
+                "conditions, input_hash, created_at) VALUES (:id, :workspace, :session, 1, "
+                "'constraint_aware', '1', 'PARTIAL_CONSENSUS', :selected, '{}', '{}'::jsonb, "
+                "'[]'::jsonb, :hash, now())"
+            ),
+            {
+                "id": consensus_id,
+                "workspace": principal.workspace_id,
+                "session": session_id,
+                "selected": selected_id,
+                "hash": "sha256:" + "d" * 64,
+            },
+        )
+        await connection.execute(
+            text(
+                "INSERT INTO consensus_explanations (id, workspace_id, consensus_id, explanation, "
+                "created_at) VALUES (:id, :workspace, :consensus, "
+                "CAST(:explanation AS jsonb), now())"
+            ),
+            {
+                "id": consensus_id,
+                "workspace": principal.workspace_id,
+                "consensus": consensus_id,
+                "explanation": json.dumps(explanation),
+            },
+        )
+    await engine.dispose()
+    return consensus_id
+
+
 def _settings(url: str) -> Settings:
     parsed = make_url(url)
     assert parsed.host
@@ -164,7 +239,17 @@ def _settings(url: str) -> Settings:
     )
 
 
-@req("FR-101", "FR-103", "FR-805", "NFR-004", "NFR-010")
+@req(
+    "FR-101",
+    "FR-103",
+    "FR-505",
+    "FR-609",
+    "FR-805",
+    "NFR-004",
+    "NFR-005",
+    "NFR-010",
+    "NFR-019",
+)
 def test_phase3_http_create_read_and_replay_are_atomic() -> None:
     assert _DATABASE_URL is not None
     asyncio.run(_reset_database(_DATABASE_URL))
@@ -209,6 +294,24 @@ def test_phase3_http_create_read_and_replay_are_atomic() -> None:
         )
         assert read_session.status_code == 200
         assert read_session.json()["data"]["status"] == "DRAFT"
+        dissent = client.get(
+            f"/api/v1/sessions/{session_id}/dissent",
+            headers={"Authorization": "Bearer integration"},
+        )
+        assert dissent.status_code == 200, dissent.text
+        assert dissent.json()["data"] == {
+            "session_id": session_id,
+            "evaluated": False,
+            "empty_reason": "NO_CONSENSUS_RESULT",
+            "majority": None,
+            "evidence_context": {
+                "supports_selected": [],
+                "opposes_selected": [],
+                "qualifies_selected": [],
+            },
+            "minority": [],
+            "critiques": [],
+        }
 
         claim_request = {
             "kind": "CLAIM",
@@ -240,6 +343,28 @@ def test_phase3_http_create_read_and_replay_are_atomic() -> None:
         )
         assert read_claim.status_code == 200
         assert read_claim.headers["ETag"] == "1"
+
+        internal_session_id = parse_id("session", session_id)
+        internal_artifact_id = parse_id("artifact", artifact_id)
+        asyncio.run(
+            _seed_dissent(
+                _DATABASE_URL,
+                principal,
+                internal_session_id,
+                internal_artifact_id,
+                internal_artifact_id,
+            )
+        )
+        persisted_dissent = client.get(
+            f"/api/v1/sessions/{session_id}/dissent",
+            headers={"Authorization": "Bearer integration"},
+        )
+        assert persisted_dissent.status_code == 200, persisted_dissent.text
+        assert persisted_dissent.json()["data"]["minority"][0]["position"] == "OPPOSE"
+        assert persisted_dissent.json()["data"]["minority"][0]["warrants"][0]["id"] == artifact_id
+        assert (
+            persisted_dissent.json()["data"]["majority"]["selected_alternative_id"] == artifact_id
+        )
 
         graph_nodes = asyncio.run(_graph_nodes(_DATABASE_URL, principal.workspace_id))
         assert len(graph_nodes) == 2

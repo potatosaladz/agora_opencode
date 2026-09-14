@@ -11,6 +11,7 @@ from fastapi import APIRouter, Header, Query, Request
 from pydantic import ValidationError
 from starlette.responses import JSONResponse
 
+from app.api.dissent_contracts import DissentEmptyReason, DissentResponse
 from app.api.errors import not_found
 from app.api.phase3_contracts import (
     ArtifactCreate,
@@ -38,8 +39,12 @@ from app.domain.phase3_api import IdempotencyRecord
 from app.domain.reasoning import (
     ActorClass,
     ArtifactKind,
+    CritiquePayload,
+    EvidencePayload,
+    EvidenceRelation,
     LifecycleStatus,
     ReasoningArtifact,
+    Resolution,
     artifact_content_hash,
     content_hash,
     validate_artifact,
@@ -134,6 +139,214 @@ def _public_provenance(value: Any, key: str = "") -> Any:
     if isinstance(value, list | tuple):
         return [_public_provenance(item) for item in value]
     return value
+
+
+async def _dissent_artifact(
+    tx: Any,
+    workspace_id: UUID,
+    session_id: UUID,
+    artifact_id: UUID,
+    *,
+    relation: str,
+) -> dict[str, Any]:
+    artifact = await tx.artifacts.get(workspace_id, artifact_id, session_id=session_id)
+    if artifact is None:
+        raise Internal(f"persisted dissent {relation} artifact is missing")
+    node = await tx.graph.node_for_artifact(workspace_id, session_id, artifact_id)
+    encoded = public_id("artifact", artifact.id)
+    return {
+        "id": encoded,
+        "kind": artifact.kind,
+        "label": node.label if node is not None else None,
+        "lifecycle": artifact.status,
+        "graph_node_id": public_id("graph_node", node.id) if node is not None else None,
+        "provenance_href": f"/api/v1/artifacts/{encoded}/provenance",
+    }
+
+
+# trace: FR-504, FR-505, FR-506, FR-609, FR-901, NFR-005, NFR-019
+async def _dissent_response(
+    tx: Any, workspace_id: UUID, session_id: UUID, request_id: str
+) -> dict[str, Any]:
+    results = await tx.consensus_results.list_results(workspace_id, session_id)
+    latest = max(results, key=lambda item: (item.round, item.id.int)) if results else None
+    explanation = (
+        await tx.dissent_explanations.get(workspace_id, latest.id) if latest is not None else None
+    )
+    handoff = await tx.critique_handoffs.read(workspace_id, session_id)
+
+    minority: list[dict[str, Any]] = []
+    if explanation is not None:
+        for entry in explanation.minority_report:
+            minority.append(
+                {
+                    "agent_id": public_id("agent", entry.agent_id),
+                    "position": entry.position,
+                    "warrants": [
+                        await _dissent_artifact(
+                            tx,
+                            workspace_id,
+                            session_id,
+                            artifact_id,
+                            relation="warrant",
+                        )
+                        for artifact_id in entry.warrant_artifact_ids
+                    ],
+                    "disputed_proposition_ids": [
+                        public_id("proposition", value) for value in entry.disputed_propositions
+                    ],
+                    "unresolved_critique_ids": [
+                        public_id("critique", value) for value in entry.unresolved_critiques
+                    ],
+                    "what_would_change": entry.what_would_change or None,
+                }
+            )
+
+    critiques: list[dict[str, Any]] = []
+    for entry in handoff.entries:
+        if entry.resolution not in {Resolution.OPEN, Resolution.UNRESOLVED, Resolution.DISPUTED}:
+            continue
+        artifact = await tx.artifacts.get(workspace_id, entry.critique_id, session_id=session_id)
+        node = await tx.graph.node_for_artifact(workspace_id, session_id, entry.critique_id)
+        argument = (
+            str(artifact.payload.argument)
+            if artifact is not None and isinstance(artifact.payload, CritiquePayload)
+            else None
+        )
+        critiques.append(
+            {
+                "critique_id": public_id("critique", entry.critique_id),
+                "critique_artifact_id": public_id("artifact", entry.critique_id),
+                "logical_id": public_id("critique", entry.logical_id),
+                "version": entry.version,
+                "target_artifact_id": public_id("artifact", entry.target_artifact_id),
+                "critique_type": entry.critique_type,
+                "severity": entry.severity,
+                "resolution": entry.resolution,
+                "response_disposition": entry.response_disposition,
+                "warrant_artifact_ids": [
+                    public_id("artifact", value) for value in entry.warrant_artifact_ids
+                ],
+                "replacement_target_artifact_id": (
+                    public_id("artifact", entry.replacement_target_artifact_id)
+                    if entry.replacement_target_artifact_id is not None
+                    else None
+                ),
+                "graph_node_id": public_id("graph_node", node.id) if node is not None else None,
+                "provenance_href": (
+                    f"/api/v1/artifacts/{public_id('artifact', entry.critique_id)}/provenance"
+                ),
+                "argument": argument,
+            }
+        )
+
+    empty_reason = None
+    if latest is None:
+        empty_reason = DissentEmptyReason.NO_CONSENSUS_RESULT
+    elif explanation is None:
+        empty_reason = DissentEmptyReason.CONSENSUS_EXPLANATION_UNAVAILABLE
+    elif not minority and not critiques:
+        empty_reason = DissentEmptyReason.EVALUATED_NO_DISSENT
+    selected_alternative = (
+        await _dissent_artifact(
+            tx,
+            workspace_id,
+            session_id,
+            latest.selected_alternative_id,
+            relation="selected alternative",
+        )
+        if explanation is not None
+        and latest is not None
+        and latest.selected_alternative_id is not None
+        else None
+    )
+    support_evidence: list[dict[str, Any]] = []
+    opposing_evidence: list[dict[str, Any]] = []
+    qualifying_evidence: list[dict[str, Any]] = []
+    if (
+        explanation is not None
+        and latest is not None
+        and latest.selected_alternative_id is not None
+    ):
+        provenance = await ProvenanceService(tx.artifacts, tx.graph, tx.citations).provenance_of(
+            workspace_id, latest.selected_alternative_id
+        )
+        for provenance_node in provenance.nodes if provenance is not None else ():
+            if provenance_node.graph_node.kind is not ArtifactKind.EVIDENCE:
+                continue
+            artifact = await tx.artifacts.get(
+                workspace_id,
+                provenance_node.graph_node.ref_id,
+                session_id=session_id,
+            )
+            if artifact is None or not isinstance(artifact.payload, EvidencePayload):
+                raise Internal("persisted dissent evidence context is inconsistent")
+            if artifact.payload.claim_id != latest.selected_alternative_id:
+                continue
+            rendered = await _dissent_artifact(
+                tx,
+                workspace_id,
+                session_id,
+                artifact.id,
+                relation="evidence context",
+            )
+            if artifact.payload.relation is EvidenceRelation.SUPPORTS:
+                support_evidence.append(rendered)
+            elif artifact.payload.relation is EvidenceRelation.OPPOSES:
+                opposing_evidence.append(rendered)
+            else:
+                qualifying_evidence.append(rendered)
+    body = DissentResponse.model_validate(
+        {
+            "data": {
+                "session_id": public_id("session", session_id),
+                "evaluated": explanation is not None,
+                "empty_reason": empty_reason,
+                "majority": (
+                    {
+                        "consensus_result_id": public_id("consensus_result", latest.id),
+                        "outcome": latest.outcome,
+                        "selected_alternative_id": (
+                            selected_alternative["id"] if selected_alternative is not None else None
+                        ),
+                        "selected_alternative_label": (
+                            selected_alternative["label"]
+                            if selected_alternative is not None
+                            else None
+                        ),
+                        "selected_alternative_graph_node_id": (
+                            selected_alternative["graph_node_id"]
+                            if selected_alternative is not None
+                            else None
+                        ),
+                        "selected_alternative_provenance_href": (
+                            selected_alternative["provenance_href"]
+                            if selected_alternative is not None
+                            else None
+                        ),
+                        "strategy": latest.strategy,
+                        "strategy_version": latest.strategy_version,
+                        "round": latest.round,
+                    }
+                    if latest is not None
+                    else None
+                ),
+                "evidence_context": {
+                    "supports_selected": support_evidence,
+                    "opposes_selected": opposing_evidence,
+                    "qualifies_selected": qualifying_evidence,
+                },
+                "minority": minority,
+                "critiques": critiques,
+            },
+            "meta": {
+                "request_id": request_id,
+                "schema_version": 1,
+                "workspace_id": public_id("workspace", workspace_id),
+            },
+        }
+    )
+    return body.model_dump(mode="json")
 
 
 def _impact_response(report: SourceImpactReport, request: Request) -> dict[str, Any]:
@@ -388,6 +601,27 @@ async def get_session(request: Request, session_id: str) -> JSONResponse:
             binding, principal, request_id=_request_id(request), lifecycle=lifecycle
         )
         return JSONResponse(body, headers={"ETag": "1"})
+
+
+@router.get("/sessions/{session_id}/dissent")
+@require_roles(*_READ)
+async def get_session_dissent(request: Request, session_id: str) -> JSONResponse:
+    principal = current_principal(request)
+    try:
+        internal_id = parse_id("session", session_id)
+    except ValueError as exc:
+        raise not_found("session") from exc
+    async with request.app.state.container.reasoning_transaction(principal.workspace_id) as tx:
+        if await tx.sessions.get(principal.workspace_id, internal_id) is None:
+            raise not_found("session")
+        return JSONResponse(
+            await _dissent_response(
+                tx,
+                principal.workspace_id,
+                internal_id,
+                _request_id(request),
+            )
+        )
 
 
 @router.post("/sessions/{session_id}/start", status_code=202)

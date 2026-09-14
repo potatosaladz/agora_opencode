@@ -2447,3 +2447,428 @@ footer {
     font-size: 5rem;
   }
 }
+
+/* Preserved dissent record */
+.dissent-page {
+  min-height: calc(100vh - 58px);
+  color: var(--console-text);
+  background:
+    linear-gradient(90deg, rgb(231 149 94 / 3%) 1px, transparent 1px), #080a10;
+  background-size: 48px 48px;
+  animation: console-in 300ms ease-out both;
+}
+.dissent-page--loading {
+  display: grid;
+  place-items: center;
+  color: var(--console-muted);
+  font-size: 10px;
+}
+.dissent-header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  padding: 28px 30px 22px;
+  border-bottom: 1px solid var(--console-line);
+  background: rgb(8 10 16 / 90%);
+}
+.dissent-header p,
+.majority-context span,
+.minority-section > header span,
+.critiques-section > header span {
+  margin: 0 0 8px;
+  color: #a97f63;
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.dissent-header h1 {
+  margin: 0;
+  font-family: "Newsreader", Georgia, serif;
+  font-size: clamp(2.1rem, 4vw, 4rem);
+  font-weight: 300;
+  letter-spacing: -0.04em;
+  line-height: 0.9;
+}
+.dissent-header .graph-session {
+  max-width: min(42vw, 360px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dissent-record {
+  padding: 30px;
+}
+.majority-context {
+  display: grid;
+  grid-template-columns: minmax(230px, 1.25fr) 2fr auto;
+  gap: 28px;
+  align-items: center;
+  margin-bottom: 34px;
+  padding: 20px 22px;
+  border: 1px solid #2c3d55;
+  border-left: 3px solid var(--console-blue);
+  background: #0c121c;
+}
+.majority-context h2,
+.minority-section h2,
+.critiques-section h2,
+.dissent-empty h2 {
+  margin: 0;
+  font-family: "Newsreader", Georgia, serif;
+  font-size: 1.7rem;
+  font-weight: 400;
+  overflow-wrap: anywhere;
+}
+.majority-context dl,
+.dissent-entry dl,
+.critique-entry dl {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+}
+.majority-context dt,
+.dissent-entry dt,
+.critique-entry dt {
+  color: #657083;
+  font-size: 7px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.majority-context dd,
+.dissent-entry dd,
+.critique-entry dd {
+  margin: 5px 0 0;
+  overflow-wrap: anywhere;
+  font-size: 8px;
+  line-height: 1.5;
+}
+.majority-context > a,
+.dissent-related a,
+.critique-links a,
+.critique-warrants a,
+.critique-entry dd a,
+.critique-entry > p a,
+.dissent-empty a {
+  color: #91bcff;
+  font-size: 8px;
+  overflow-wrap: anywhere;
+  text-underline-offset: 3px;
+}
+.minority-section > header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.minority-section > header p {
+  max-width: 340px;
+  margin: 0;
+  color: #687486;
+  font-size: 8px;
+  text-align: right;
+}
+.minority-list {
+  display: grid;
+  gap: 12px;
+}
+.dissent-entry {
+  display: grid;
+  grid-template-columns: 190px minmax(0, 1fr);
+  border: 1px solid #34313a;
+  outline: none;
+  background: #0c0e14;
+  cursor: pointer;
+}
+.dissent-entry:focus-visible {
+  outline: 2px solid #d5ff46;
+  outline-offset: 3px;
+}
+.dissent-entry--selected {
+  border-color: #a66a4c;
+  box-shadow: inset 3px 0 #e7955e;
+  background: #12100f;
+}
+.dissent-entry > header {
+  padding: 20px;
+  border-right: 1px solid #34313a;
+  background: rgb(231 149 94 / 4%);
+}
+.dissent-entry > header span,
+.critique-entry > header span {
+  display: block;
+  margin-bottom: 12px;
+  color: #b58567;
+  font-size: 7px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.dissent-entry > header strong {
+  font-family: "Newsreader", Georgia, serif;
+  font-size: 1.55rem;
+  font-weight: 400;
+  overflow-wrap: anywhere;
+}
+.dissent-entry__body {
+  min-width: 0;
+  padding: 20px;
+}
+.dissent-entry__body h3 {
+  margin: 19px 0 8px;
+  color: #858fa0;
+  font-size: 8px;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.dissent-artifacts {
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--console-line-soft);
+  list-style: none;
+}
+.dissent-artifacts li {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) auto auto;
+  gap: 14px;
+  align-items: center;
+  min-height: 58px;
+  border-bottom: 1px solid var(--console-line-soft);
+}
+.dissent-artifacts li div > span,
+.dissent-change > span,
+.dissent-related > span,
+.critique-warrants > span {
+  display: block;
+  margin-bottom: 5px;
+  color: #6e788a;
+  font-size: 7px;
+  text-transform: uppercase;
+}
+.dissent-artifacts a {
+  color: #a9c8fa;
+  font-size: 8px;
+  overflow-wrap: anywhere;
+  text-underline-offset: 3px;
+}
+.artifact-state {
+  padding: 4px 6px;
+  border: 1px solid #2d6854;
+  color: #77dbb5;
+  font-size: 7px;
+  font-weight: 400;
+}
+.artifact-state--withdrawn {
+  border-color: #78484c;
+  color: #f09ba0;
+  text-decoration: line-through;
+}
+.artifact-state--superseded {
+  border-color: #665a38;
+  color: #d8bc73;
+}
+.unavailable,
+.dissent-absence {
+  color: #9da4b0;
+  font-size: 8px;
+  font-style: italic;
+}
+.dissent-change {
+  margin-top: 16px;
+  padding: 12px;
+  border-left: 2px solid #856044;
+  background: #17130f;
+}
+.dissent-change p {
+  margin: 0;
+  color: #c5b7aa;
+  font:
+    400 1rem/1.45 "Newsreader",
+    Georgia,
+    serif;
+}
+.dissent-related {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin-top: 14px;
+}
+.dissent-related > span {
+  flex-basis: 100%;
+}
+.critiques-section {
+  margin-top: 42px;
+  padding-top: 25px;
+  border-top: 1px solid var(--console-line);
+}
+.critiques-section > header {
+  margin-bottom: 15px;
+}
+.critiques-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.critique-entry {
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid #68434a;
+  border-top: 3px solid #e5747c;
+  background: #151014;
+}
+.critique-entry--open {
+  border-top-style: dashed;
+}
+.critique-entry--unresolved {
+  border-top-color: #e3ae58;
+  background: #15130e;
+}
+.critique-entry--disputed {
+  border-top-color: #bd86e8;
+  border-top-style: double;
+  border-top-width: 5px;
+  background: #141019;
+}
+.critique-entry > header strong,
+.critique-entry > header small {
+  display: block;
+}
+.critique-entry > header strong {
+  font-size: 10px;
+  text-transform: capitalize;
+}
+.critique-entry > header small {
+  margin-top: 5px;
+  color: #858d9b;
+  font-size: 7px;
+}
+.critique-entry > p {
+  color: #c0c5ce;
+  font:
+    400 1rem/1.45 "Newsreader",
+    Georgia,
+    serif;
+}
+.critique-entry dl {
+  grid-template-columns: 1fr;
+  margin-top: 17px;
+}
+.critique-links,
+.critique-warrants {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px 14px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--console-line-soft);
+}
+.critique-warrants > span {
+  flex-basis: 100%;
+}
+.critique-warrants p {
+  margin: 0;
+  color: #9da4b0;
+  font-size: 8px;
+  font-style: italic;
+}
+.dissent-state {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  margin: 30px;
+  padding: 24px;
+  border: 1px dashed #343b49;
+  color: #9ba4b2;
+  font-size: 9px;
+}
+.dissent-state i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--console-orange);
+  animation: status-pulse 1s infinite;
+}
+.dissent-state--error {
+  display: grid;
+  border-color: #713d43;
+  color: #efa2a7;
+  background: #1a1014;
+}
+.dissent-empty {
+  display: grid;
+  grid-template-columns: auto minmax(0, 560px);
+  gap: 32px;
+  align-items: center;
+  justify-content: center;
+  min-height: 430px;
+  padding: 35px;
+}
+.dissent-empty > span {
+  color: #34303a;
+  font-family: "Newsreader", serif;
+  font-size: 7rem;
+}
+.dissent-empty p {
+  color: #939baa;
+  font-size: 9px;
+  line-height: 1.8;
+}
+
+@media (max-width: 1050px) {
+  .critiques-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .majority-context {
+    grid-template-columns: 1fr 1.5fr;
+  }
+  .majority-context > a,
+  .majority-context > .dissent-absence {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 700px) {
+  .dissent-header,
+  .minority-section > header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 17px;
+  }
+  .dissent-header {
+    padding: 22px 16px;
+  }
+  .dissent-header .graph-session {
+    max-width: 100%;
+  }
+  .dissent-record {
+    padding: 20px 12px;
+  }
+  .majority-context,
+  .dissent-entry,
+  .critiques-grid {
+    grid-template-columns: 1fr;
+  }
+  .majority-context dl,
+  .dissent-entry dl {
+    grid-template-columns: 1fr;
+  }
+  .majority-context > a,
+  .majority-context > .dissent-absence {
+    grid-column: auto;
+  }
+  .dissent-entry > header {
+    border-right: 0;
+    border-bottom: 1px solid #34313a;
+  }
+  .dissent-artifacts li {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 12px 0;
+  }
+  .minority-section > header p {
+    text-align: left;
+  }
+  .dissent-empty {
+    grid-template-columns: 1fr;
+    padding: 25px 18px;
+  }
+}

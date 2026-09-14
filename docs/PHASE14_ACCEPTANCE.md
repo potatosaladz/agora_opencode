@@ -1,6 +1,6 @@
 # Phase 14 Acceptance Contract
 
-**Version:** 1.1 · **Status:** T14-01 complete; T14-02…06 frozen and open · **Phase:** 14
+**Version:** 1.2 · **Status:** T14-01…02 complete; T14-03…06 frozen and open · **Phase:** 14
 **Baseline:** Phase 13 complete through T13-04
 **Requirements:** UI/exposure verification of existing FR-305, FR-504…FR-506, FR-605, FR-609,
 FR-705, FR-708, FR-802, FR-804, FR-805, FR-807, FR-808, FR-901, NFR-003, NFR-004, NFR-005,
@@ -23,7 +23,7 @@ The authoritative task order is:
 5. T14-05 — Replay Controls
 6. T14-06 — Audit Search
 
-T14-01 is complete; T14-02…06 remain open. Each task must preserve generated API type drift checks, deny-by-default
+T14-01…02 are complete; T14-03…06 remain open. Each task must preserve generated API type drift checks, deny-by-default
 authentication, tenant isolation, accessible non-visual equivalents and responsive desktop/mobile use.
 Earlier-phase requirements cited below are verification dependencies, not reassigned implementation
 ownership.
@@ -130,6 +130,13 @@ NFR-005 and NFR-019 capabilities. Ownership remains Phases 7, 9, 10 and 13.
 
 **Ownership:** API — read-only exposure/composition of existing dissent facts if required. Frontend —
 Dissent View and navigation. Persistence — none. Migration — none.
+
+**Acceptance evidence:** authenticated `GET /api/v1/sessions/{session_id}/dissent` composes the latest
+persisted consensus explanation, complete Critique handoff, exact artifacts, provenance and graph nodes
+without omission/filter controls or aggregate scores. The code-split Dissent View renders selected context,
+supporting/opposing/qualifying evidence, every minority entry and all open/unresolved/disputed critiques,
+with explicit unavailable/empty states and Graph/provenance navigation. Focused backend, live PostgreSQL and
+frontend accessibility/responsive tests pass; full local, contract, docs and Compose gates are green.
 
 ## 4. T14-03 — Assumption Register
 

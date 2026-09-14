@@ -185,6 +185,43 @@ describe("ApiClient", () => {
     );
   });
 
+  // req: FR-504, FR-505, FR-506, FR-609, FR-901, NFR-005, NFR-019
+  it("reads authenticated session dissent", async () => {
+    const response = {
+      data: {
+        session_id: `ses_${"1".repeat(32)}`,
+        evaluated: true,
+        empty_reason: "EVALUATED_NO_DISSENT",
+        majority: null,
+        minority: [],
+        critiques: [],
+      },
+      meta: { request_id: "request", schema_version: 1, workspace_id: "ws_1" },
+    };
+    const fetchImpl = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response(JSON.stringify(response), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+
+    await expect(
+      new ApiClient({ fetchImpl }).getSessionDissent(
+        response.data.session_id,
+        "dissent-token",
+      ),
+    ).resolves.toEqual(response);
+    expect(fetchImpl).toHaveBeenCalledWith(
+      `/api/v1/sessions/${response.data.session_id}/dissent`,
+      expect.objectContaining({
+        headers: {
+          Accept: "application/json",
+          Authorization: "Bearer dissent-token",
+        },
+      }),
+    );
+  });
+
   // req: FR-805, NFR-004, NFR-010
   it("posts an authenticated graph read without idempotency", async () => {
     const response = {

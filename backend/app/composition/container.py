@@ -36,6 +36,7 @@ from app.db.consensus import SqlAlchemyConsensusResultStore
 from app.db.coordinator_policy import SqlAlchemyCoordinatorPolicyStore
 from app.db.critique_handoff import SqlAlchemyCritiqueExplanationHandoffReader
 from app.db.critique_response import SqlAlchemyCritiqueResponseStore
+from app.db.dissent import SqlAlchemyDissentConsensusExplanationReader
 from app.db.formalization import SqlAlchemyFormalizationRepository
 from app.db.memory import SqlAlchemyMemoryProvider
 from app.db.phase3_api import SqlAlchemyIdempotencyStore, SqlAlchemyPhase3SessionStore
@@ -57,6 +58,7 @@ from app.domain.consensus import ConsensusResultStore
 from app.domain.coordinator_policy import CoordinatorPolicyStore
 from app.domain.critique import CritiqueResponseStore
 from app.domain.critique_handoff import CritiqueExplanationHandoffReader
+from app.domain.dissent import DissentConsensusExplanationReader
 from app.domain.formalization import FormalizationRepository, FormalizationRevision
 from app.domain.memory import MemoryProvider
 from app.domain.phase3_api import IdempotencyStore, Phase3ArtifactStore, Phase3SessionStore
@@ -96,6 +98,7 @@ class ReasoningTransaction:
     critique_handoffs: CritiqueExplanationHandoffReader
     source_impacts: SourceImpactRepository
     consensus_results: ConsensusResultStore
+    dissent_explanations: DissentConsensusExplanationReader
     formalizations: FormalizationRepository
     symbolic_evaluations: SymbolicEvaluationRepository
     access_logs: AccessLogRepository
@@ -151,6 +154,7 @@ class Container:
                         session, SqlAlchemyReasoningGraphStore(session)
                     ),
                     consensus_results=SqlAlchemyConsensusResultStore(session),
+                    dissent_explanations=SqlAlchemyDissentConsensusExplanationReader(session),
                     formalizations=SqlAlchemyFormalizationRepository(session),
                     symbolic_evaluations=SqlAlchemySymbolicEvaluationRepository(session),
                     access_logs=SqlAlchemyAccessLogRepository(session),

@@ -26,18 +26,33 @@ from app.api.phase3_contracts import (
 from app.api.routes.phase3 import router as phase3_router
 from app.common.ids import parse_id, public_id
 from app.config import Settings
+from app.domain.consensus import (
+    ConsensusExplanation,
+    ConsensusOutcome,
+    ConsensusRunRecord,
+    MinorityEntry,
+)
+from app.domain.critique_handoff import (
+    CritiqueExplanationEntry,
+    CritiqueExplanationHandoff,
+    CritiqueHandoffEmptyReason,
+)
 from app.domain.phase3_api import IdempotencyRecord
 from app.domain.reasoning import (
     ActorClass,
+    AlternativePayload,
     ArtifactKind,
     Bearing,
     ClaimPayload,
     ClaimType,
+    CritiqueType,
     GraphEdgeType,
     LifecycleStatus,
     Provenance,
     ProvenanceOrigin,
+    Resolution,
     ReviewStatus,
+    Severity,
     Strength,
     artifact_content_hash,
     content_hash,
@@ -212,6 +227,9 @@ class Tx:
     graph: Any = None
     ledger: Any = None
     citations: Any = None
+    consensus_results: Any = None
+    critique_handoffs: Any = None
+    dissent_explanations: Any = None
 
 
 class _TestContainer:
@@ -452,6 +470,7 @@ def test_phase3_routes_declare_frozen_role_matrix() -> None:
         if isinstance(route, APIRoute) and route.path.startswith("/api/v1")
     }
     assert policies["/api/v1/sessions/{session_id}"] == frozenset(WorkspaceRole)
+    assert policies["/api/v1/sessions/{session_id}/dissent"] == frozenset(WorkspaceRole)
     assert policies["/api/v1/artifacts/{artifact_id}"] == frozenset(WorkspaceRole)
     assert policies["/api/v1/artifacts/{artifact_id}/provenance"] == frozenset(WorkspaceRole)
     assert policies["/api/v1/impact-reports/{report_id}"] == frozenset(WorkspaceRole)
@@ -572,6 +591,324 @@ def _client_for(principal: VerifiedPrincipal, tx: Tx) -> tuple[TestClient, FastA
 
     app = create_app(settings(), container_builder=builder)
     return TestClient(app), app
+
+
+class DissentSessions:
+    def __init__(self, visible: bool = True) -> None:
+        self.visible = visible
+
+    async def get(self, workspace_id: UUID, session_id: UUID) -> object | None:
+        del workspace_id, session_id
+        return object() if self.visible else None
+
+
+class DissentConsensus:
+    def __init__(
+        self,
+        results: tuple[ConsensusRunRecord, ...],
+        explanations: dict[UUID, ConsensusExplanation],
+    ) -> None:
+        self.results = results
+        self.explanations = explanations
+
+    async def list_results(
+        self, workspace_id: UUID, session_id: UUID
+    ) -> tuple[ConsensusRunRecord, ...]:
+        del workspace_id, session_id
+        return self.results
+
+    async def get_explanation(
+        self, workspace_id: UUID, result_id: UUID
+    ) -> ConsensusExplanation | None:
+        del workspace_id
+        return self.explanations.get(result_id)
+
+    async def get(self, workspace_id: UUID, result_id: UUID) -> ConsensusExplanation | None:
+        return await self.get_explanation(workspace_id, result_id)
+
+
+@dataclass(slots=True)
+class DissentHandoffs:
+    handoff: CritiqueExplanationHandoff
+
+    async def read(self, workspace_id: UUID, session_id: UUID) -> CritiqueExplanationHandoff:
+        assert workspace_id == self.handoff.workspace_id
+        assert session_id == self.handoff.session_id
+        return self.handoff
+
+
+class DissentArtifacts:
+    def __init__(self, values: tuple[Any, ...] = ()) -> None:
+        self.values = {value.id: value for value in values}
+
+    async def get(
+        self, workspace_id: UUID, artifact_id: UUID, *, session_id: UUID | None = None
+    ) -> Any:
+        value = self.values.get(artifact_id)
+        if value is None or value.workspace_id != workspace_id or value.session_id != session_id:
+            return None
+        return value
+
+    async def list_for_session(self, workspace_id: UUID, session_id: UUID) -> tuple[Any, ...]:
+        return tuple(
+            value
+            for value in self.values.values()
+            if value.workspace_id == workspace_id and value.session_id == session_id
+        )
+
+
+class DissentGraph:
+    def __init__(self, nodes: tuple[GraphNode, ...] = ()) -> None:
+        self.nodes = {node.ref_id: node for node in nodes}
+
+    async def node_for_artifact(
+        self, workspace_id: UUID, session_id: UUID, artifact_id: UUID
+    ) -> GraphNode | None:
+        node = self.nodes.get(artifact_id)
+        if node is None or node.workspace_id != workspace_id or node.session_id != session_id:
+            return None
+        return node
+
+    async def trace_backward(
+        self,
+        workspace_id: UUID,
+        session_id: UUID,
+        node_id: UUID,
+        **kwargs: Any,
+    ) -> TraversalResult:
+        del kwargs
+        nodes = tuple(
+            node
+            for node in self.nodes.values()
+            if node.workspace_id == workspace_id
+            and node.session_id == session_id
+            and node.id == node_id
+        )
+        return TraversalResult(nodes=nodes)
+
+
+def _consensus(result_id: UUID, round_number: int) -> ConsensusRunRecord:
+    return ConsensusRunRecord(
+        id=result_id,
+        workspace_id=U[1],
+        session_id=U[2],
+        round=round_number,
+        strategy="weighted",
+        strategy_version="2",
+        outcome=ConsensusOutcome.PARTIAL_CONSENSUS,
+        selected_alternative_id=U[6],
+        input_hash="sha256:" + "a" * 64,
+        created_at=NOW,
+    )
+
+
+@req("FR-504", "FR-505", "FR-506", "FR-609", "FR-901", "NFR-005", "NFR-019")
+def test_dissent_route_projects_latest_persisted_explanation_and_open_critiques() -> None:
+    warrant = claim()
+    selected_values = warrant.model_dump(mode="python")
+    selected_values.update(
+        {
+            "id": U[6],
+            "logical_id": U[6],
+            "kind": ArtifactKind.ALTERNATIVE,
+            "payload": AlternativePayload(
+                name="Safer option",
+                summary="Lower risk",
+                components=("staged rollout",),
+                origin="fixture",
+                feasibility_status="SAT",
+            ),
+        }
+    )
+    selected_values["content_hash"] = artifact_content_hash(selected_values)
+    selected = validate_artifact(selected_values)
+    node = GraphNode(
+        id=U[5],
+        workspace_id=U[1],
+        session_id=U[2],
+        kind=warrant.kind,
+        ref_id=warrant.id,
+        label="Cost concern",
+    )
+    selected_node = GraphNode(
+        id=U[6],
+        workspace_id=U[1],
+        session_id=U[2],
+        kind=selected.kind,
+        ref_id=selected.id,
+        label="Safer option",
+    )
+    older, latest = _consensus(U[7], 1), _consensus(U[8], 2)
+    explanation = ConsensusExplanation(
+        consensus_id=latest.id,
+        outcome=latest.outcome,
+        strategy=latest.strategy,
+        strategy_version=latest.strategy_version,
+        formula="persisted",
+        minority_report=(
+            MinorityEntry(
+                agent_id=U[4],
+                position="Prefer the safer option",
+                warrant_artifact_ids=(warrant.id,),
+                disputed_propositions=(U[3],),
+                unresolved_critiques=(U[0],),
+            ),
+        ),
+        input_hash=latest.input_hash,
+    )
+    handoff = CritiqueExplanationHandoff(
+        workspace_id=U[1],
+        session_id=U[2],
+        entries=(
+            CritiqueExplanationEntry(
+                critique_id=U[0],
+                logical_id=U[0],
+                version=1,
+                target_artifact_id=U[6],
+                critique_type=CritiqueType.EVIDENCE_GAP,
+                severity=Severity.HIGH,
+                resolution=Resolution.OPEN,
+                creation_ledger_seq=1,
+            ),
+        ),
+    )
+    principal = VerifiedPrincipal("oidc|u", U[4], U[1], WorkspaceRole.VIEWER)
+    tx = Tx(
+        DissentArtifacts((warrant, selected)),
+        Idempotency(),
+        sessions=DissentSessions(),
+        graph=DissentGraph((node, selected_node)),
+        consensus_results=DissentConsensus((latest, older), {}),
+        dissent_explanations=DissentConsensus((), {latest.id: explanation}),
+        critique_handoffs=DissentHandoffs(handoff),
+        citations=ProvenanceCitations(),
+    )
+    client, _ = _client_for(principal, tx)
+    with client:
+        response = client.get(
+            f"/api/v1/sessions/{public_id('session', U[2])}/dissent",
+            headers={"Authorization": "Bearer valid"},
+        )
+    assert response.status_code == 200, response.text
+    data = response.json()["data"]
+    assert data["evaluated"] is True
+    assert data["empty_reason"] is None
+    assert data["majority"] == {
+        "consensus_result_id": public_id("consensus_result", latest.id),
+        "outcome": "PARTIAL_CONSENSUS",
+        "selected_alternative_id": public_id("artifact", U[6]),
+        "selected_alternative_label": "Safer option",
+        "selected_alternative_graph_node_id": public_id("graph_node", selected_node.id),
+        "selected_alternative_provenance_href": (
+            f"/api/v1/artifacts/{public_id('artifact', U[6])}/provenance"
+        ),
+        "strategy": "weighted",
+        "strategy_version": "2",
+        "round": 2,
+    }
+    assert data["minority"][0]["agent_id"] == public_id("agent", U[4])
+    assert data["evidence_context"] == {
+        "supports_selected": [],
+        "opposes_selected": [],
+        "qualifies_selected": [],
+    }
+    assert data["minority"][0]["what_would_change"] is None
+    assert data["minority"][0]["warrants"][0] == {
+        "id": public_id("artifact", warrant.id),
+        "kind": "CLAIM",
+        "label": "Cost concern",
+        "lifecycle": "ACTIVE",
+        "graph_node_id": public_id("graph_node", node.id),
+        "provenance_href": f"/api/v1/artifacts/{public_id('artifact', warrant.id)}/provenance",
+    }
+    assert data["critiques"][0]["critique_id"] == public_id("critique", U[0])
+    assert data["critiques"][0]["critique_artifact_id"] == public_id("artifact", U[0])
+    assert data["critiques"][0]["provenance_href"] == (
+        f"/api/v1/artifacts/{public_id('artifact', U[0])}/provenance"
+    )
+    assert "support" not in data["majority"]
+    assert "dissent" not in data["majority"]
+
+
+@req("FR-505", "FR-609", "NFR-019")
+@pytest.mark.parametrize(
+    ("results", "explanations", "evaluated", "empty_reason"),
+    [
+        ((), {}, False, "NO_CONSENSUS_RESULT"),
+        ((_consensus(U[7], 1),), {}, False, "CONSENSUS_EXPLANATION_UNAVAILABLE"),
+    ],
+)
+def test_dissent_route_has_explicit_unevaluated_empty_states(
+    results: tuple[ConsensusRunRecord, ...],
+    explanations: dict[UUID, ConsensusExplanation],
+    evaluated: bool,
+    empty_reason: str,
+) -> None:
+    principal = VerifiedPrincipal("oidc|u", U[4], U[1], WorkspaceRole.VIEWER)
+    handoff = CritiqueExplanationHandoff(
+        workspace_id=U[1],
+        session_id=U[2],
+        entries=(),
+        empty_reason=CritiqueHandoffEmptyReason.NO_COMPLETED_CRITIC_RUN,
+    )
+    tx = Tx(
+        DissentArtifacts(),
+        Idempotency(),
+        sessions=DissentSessions(),
+        graph=DissentGraph(),
+        consensus_results=DissentConsensus(results, {}),
+        dissent_explanations=DissentConsensus((), explanations),
+        critique_handoffs=DissentHandoffs(handoff),
+        citations=ProvenanceCitations(),
+    )
+    client, _ = _client_for(principal, tx)
+    path = f"/api/v1/sessions/{public_id('session', U[2])}/dissent"
+    with client:
+        response = client.get(path, headers={"Authorization": "Bearer valid"})
+    assert response.status_code == 200
+    assert response.json()["data"]["evaluated"] is evaluated
+    assert response.json()["data"]["empty_reason"] == empty_reason
+
+
+@req("FR-505", "FR-609", "NFR-005", "NFR-019")
+def test_dissent_route_reports_evaluated_no_dissent_and_hides_unknown_session() -> None:
+    result = _consensus(U[7], 1)
+    result = result.model_copy(update={"selected_alternative_id": None})
+    explanation = ConsensusExplanation(
+        consensus_id=result.id,
+        outcome=result.outcome,
+        strategy=result.strategy,
+        strategy_version=result.strategy_version,
+        formula="persisted",
+        input_hash=result.input_hash,
+    )
+    handoff = CritiqueExplanationHandoff(
+        workspace_id=U[1],
+        session_id=U[2],
+        entries=(),
+        empty_reason=CritiqueHandoffEmptyReason.COMPLETED_CRITIC_RUN_WITHOUT_CRITIQUES,
+    )
+    principal = VerifiedPrincipal("oidc|u", U[4], U[1], WorkspaceRole.VIEWER)
+    tx = Tx(
+        DissentArtifacts(),
+        Idempotency(),
+        sessions=DissentSessions(),
+        graph=DissentGraph(),
+        consensus_results=DissentConsensus((result,), {}),
+        dissent_explanations=DissentConsensus((), {result.id: explanation}),
+        critique_handoffs=DissentHandoffs(handoff),
+        citations=ProvenanceCitations(),
+    )
+    client, _ = _client_for(principal, tx)
+    path = f"/api/v1/sessions/{public_id('session', U[2])}/dissent"
+    with client:
+        response = client.get(path, headers={"Authorization": "Bearer valid"})
+        tx.sessions = DissentSessions(visible=False)
+        hidden = client.get(path, headers={"Authorization": "Bearer valid"})
+    assert response.status_code == 200
+    assert response.json()["data"]["evaluated"] is True
+    assert response.json()["data"]["empty_reason"] == "EVALUATED_NO_DISSENT"
+    assert hidden.status_code == 404
 
 
 @req("FR-305")

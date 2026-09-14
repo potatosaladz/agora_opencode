@@ -11,12 +11,18 @@ import { hrefForRoute } from "./router";
 import { useHashRoute } from "./use-hash-route";
 
 const GraphPage = lazy(() => import("../features/graph/graph-page"));
+const DissentPage = lazy(() => import("../features/dissent/dissent-page"));
 
 const navigation = [
   {
     route: "reasoning" as const,
     label: "Live reasoning",
     icon: "activity" as const,
+  },
+  {
+    route: "dissent" as const,
+    label: "Dissent view",
+    icon: "message" as const,
   },
   {
     route: "graph" as const,
@@ -152,6 +158,21 @@ export function App() {
               window.location.hash = hrefForRoute("reasoning");
             }}
           />
+        ) : route === "dissent" ? (
+          <Suspense
+            fallback={
+              <main
+                className="dissent-page dissent-page--loading"
+                id="main-content"
+              >
+                <p role="status">Loading dissent workspace...</p>
+              </main>
+            }
+          >
+            <DissentPage
+              {...(liveSession ? { connection: liveSession } : {})}
+            />
+          </Suspense>
         ) : route === "graph" ? (
           <Suspense
             fallback={

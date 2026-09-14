@@ -197,6 +197,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/sessions/{session_id}/dissent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read persisted minority and unresolved critique context
+         * @description Returns the explanation for the latest consensus result by (round,id), plus every OPEN, UNRESOLVED, or DISPUTED critique chain head. The complete result has no omission or filter parameters and never exposes aggregate support or dissent scores.
+         */
+        get: operations["getSessionDissent"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/sessions/{session_id}/events/stream": {
         parameters: {
             query?: never;
@@ -771,6 +791,79 @@ export interface components {
             data: components["schemas"]["ArtifactData"];
             meta: components["schemas"]["ArtifactMeta"];
         };
+        DissentWarrant: {
+            id: components["schemas"]["ArtifactId"];
+            kind: components["schemas"]["ArtifactKind"];
+            label: string | null;
+            lifecycle: components["schemas"]["LifecycleStatus"];
+            graph_node_id: string | null;
+            provenance_href: string;
+        };
+        MinorityDissent: {
+            agent_id: components["schemas"]["AgentId"];
+            position: string;
+            warrants: components["schemas"]["DissentWarrant"][];
+            disputed_proposition_ids: string[];
+            unresolved_critique_ids: string[];
+            what_would_change: string | null;
+        };
+        CritiqueDissent: {
+            critique_id: string;
+            critique_artifact_id: components["schemas"]["ArtifactId"];
+            logical_id: string;
+            version: number;
+            target_artifact_id: components["schemas"]["ArtifactId"];
+            /** @enum {string} */
+            critique_type: "EVIDENCE_GAP" | "LOGICAL_FALLACY" | "HALLUCINATED_SOURCE" | "MEASUREMENT_ERROR" | "MODEL_MISUSE" | "CONSTRAINT_IGNORED" | "CONFLICT_OF_INTEREST" | "ALTERNATIVE_OMITTED" | "UNCERTAINTY_UNDERSTATED" | "CAUSAL_OVERCLAIM";
+            /** @enum {string} */
+            severity: "LOW" | "MEDIUM" | "HIGH" | "BLOCKING";
+            /** @enum {string} */
+            resolution: "OPEN" | "UNRESOLVED" | "DISPUTED";
+            /** @enum {string|null} */
+            response_disposition: "ACCEPT" | "PARTIALLY_ACCEPT" | "REJECT_WITH_JUSTIFICATION" | "REVISE" | "REQUEST_EVIDENCE" | "REQUEST_SIMULATION" | "ABSTAIN" | null;
+            warrant_artifact_ids: components["schemas"]["ArtifactId"][];
+            replacement_target_artifact_id: components["schemas"]["ArtifactId"] | null;
+            graph_node_id: string | null;
+            provenance_href: string;
+            argument: string | null;
+        };
+        DissentMajorityContext: {
+            consensus_result_id: string;
+            /** @enum {string} */
+            outcome: "FULL_CONSENSUS" | "PARTIAL_CONSENSUS" | "CONDITIONAL_CONSENSUS" | "PARETO_SET" | "NO_CONSENSUS" | "DEADLOCK" | "INSUFFICIENT_EVIDENCE" | "INFEASIBLE";
+            selected_alternative_id: components["schemas"]["ArtifactId"] | null;
+            selected_alternative_label: string | null;
+            selected_alternative_graph_node_id: string | null;
+            selected_alternative_provenance_href: string | null;
+            strategy: string;
+            strategy_version: string;
+            round: number;
+        };
+        DissentData: {
+            session_id: components["schemas"]["SessionId"];
+            evaluated: boolean;
+            /** @enum {string|null} */
+            empty_reason: "NO_CONSENSUS_RESULT" | "CONSENSUS_EXPLANATION_UNAVAILABLE" | "EVALUATED_NO_DISSENT" | null;
+            majority: components["schemas"]["DissentMajorityContext"] | null;
+            evidence_context: components["schemas"]["DissentEvidenceContext"];
+            minority: components["schemas"]["MinorityDissent"][];
+            critiques: components["schemas"]["CritiqueDissent"][];
+        };
+        DissentEvidenceContext: {
+            supports_selected: components["schemas"]["DissentWarrant"][];
+            opposes_selected: components["schemas"]["DissentWarrant"][];
+            qualifies_selected: components["schemas"]["DissentWarrant"][];
+        };
+        DissentMeta: {
+            request_id: string;
+            /** @constant */
+            schema_version: 1;
+            workspace_id: components["schemas"]["WorkspaceId"];
+        };
+        DissentResponse: {
+            data: components["schemas"]["DissentData"];
+            meta: components["schemas"]["DissentMeta"];
+        };
         GraphSubgraphRequest: {
             session_id: components["schemas"]["SessionId"];
             root_ids: string[];
@@ -1309,6 +1402,31 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SessionResponse"];
+                };
+            };
+            401: components["responses"]["AuthenticationRequired"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    getSessionDissent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: components["parameters"]["SessionId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Persisted dissent state, including an explicit evaluation/empty state. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DissentResponse"];
                 };
             };
             401: components["responses"]["AuthenticationRequired"];

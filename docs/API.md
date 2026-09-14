@@ -75,6 +75,7 @@ omnibus token.
 | `POST` | `/sessions/{id}/start` | idempotently enqueue the bound draft for durable execution | Phase 4: `202`; T4-02 implementation |
 | `GET` | `/sessions` | list, filter by state/agent/date | cursor |
 | `GET` | `/sessions/{id}` | state, config, budget, phase | |
+| `GET` | `/sessions/{id}/dissent` | latest persisted minority report and unresolved critique census | authenticated; complete, unfiltered, explicit evaluation/empty state |
 | `GET` | `/sessions/{id}/rounds/{n}` | full round detail | |
 | `POST` | `/sessions/{id}/human-input` | typed human directive | idempotent; workflow emits `HUMAN_DIRECTIVE` |
 | `POST` | `/sessions/{id}/pause` · `/resume` · `/cancel` | lifecycle | authenticated, idempotent Temporal signals; cancel is terminal and never deletes |
@@ -141,6 +142,7 @@ credentials, raw provider errors or unauthorized namespace existence.
 | `POST` | `/sessions/{id}/consensus` | run a strategy | body names strategy + parameters |
 | `GET` | `/sessions/{id}/consensus` | all results including strategy comparisons | never averaged (S-3) |
 | `GET` | `/consensus/{id}/explain` | structured explanation + minority report | FR-609 |
+| `GET` | `/sessions/{id}/dissent` | latest consensus context, minority warrants and open critique handoff | public IDs only; no support/dissent scores |
 | `GET` | `/sessions/{id}/recommendation` | recommendation with dissent, gaps, caveats | FR-505; the minority report is not optional |
 | `POST` | `/recommendation/override` | human override | emits `OVERRIDE`, original preserved (FR-803) |
 

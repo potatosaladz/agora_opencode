@@ -8,6 +8,15 @@ uses semantic versioning once it ships a release. Phase 0 is pre-release.
 
 ## [Unreleased]
 
+### Added — Phase 14 T14-02 (Dissent View)
+
+- Added authenticated, complete session dissent reads composed from existing persisted consensus
+  explanations, Critique handoff, artifacts, provenance and graph-node identities.
+- Added a code-split responsive Dissent View showing selected context, supporting/opposing/qualifying
+  evidence, every minority entry and all open/unresolved/disputed critiques with accessible navigation.
+- Added focused API, PostgreSQL and frontend tests. No migration, persistence, consensus recomputation,
+  graph duplication or composite score was added.
+
 ### Added — Phase 14 T14-01 (Graph View)
 
 - Added authenticated `POST /api/v1/graph/subgraph` over the existing tenant/session-scoped graph traversal,

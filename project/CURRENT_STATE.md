@@ -1,7 +1,18 @@
 # Current State
 
-**As of:** 2026-09-14 · **Phase:** 14 in progress · **Active task:** T14-01 Graph View complete
+**As of:** 2026-09-14 · **Phase:** 14 in progress · **Active task:** T14-02 Dissent View complete
 **Track:** MVP · **Confidence:** Phases 0–4, 6–10 exact-SHA remote evidence; Phase 5 local gates green; Phase 13 local gates green
+
+Phase 14 T14-02 Dissent View is complete. Authenticated
+`GET /api/v1/sessions/{session_id}/dissent` composes the latest persisted consensus explanation, selected
+alternative context, supporting/opposing/qualifying evidence, complete Critique handoff, exact artifact
+lifecycle and existing graph/provenance links. It has no omission or filter parameter and returns explicit
+not-evaluated, explanation-unavailable and evaluated-without-dissent states. The code-split React view keeps
+minority positions, abstention, critique type/severity/resolution and evidence relation distinct; it exposes
+keyboard navigation, textual labels, visible focus and responsive layouts without a composite score. No
+migration or new persistence was added; Alembic remains `20260914_0026`. Focused API/frontend tests, the
+live HTTP/PostgreSQL fixture, full local gates and isolated Compose deployment are green. T14-03 Assumption
+Register is next and has not started.
 
 Phase 14 T14-01 Graph View is complete. Authenticated `POST /api/v1/graph/subgraph` is a thin public-ID
 boundary over `ReasoningTransaction.graph.subgraph()`: it validates tenant/session-visible roots, radius,
@@ -12,11 +23,11 @@ loading/error/empty/pagination/truncation states, and desktop/mobile layouts. No
 repository or traversal implementation was added. Focused API/graph/frontend tests, 807 offline backend
 tests, 30 frontend tests, strict/static/contract/docs gates and isolated Compose deployment are green;
 Alembic remains `20260914_0026`, backend `/ready` and frontend return 200, and the live HTTP/PostgreSQL
-fixture passes. T14-02 is next and has not started.
+fixture passes.
 
 Phase 14 task authority remains frozen in [PHASE14_ACCEPTANCE.md](../docs/PHASE14_ACCEPTANCE.md): T14-01 Graph
 View, T14-02 Dissent View, T14-03 Assumption Register, T14-04 Explanation Panel, T14-05 Replay Controls and
-T14-06 Audit Search, in that order. T14-01 is complete and T14-02…06 remain open. The contract preserves earlier-phase domain,
+T14-06 Audit Search, in that order. T14-01…02 are complete and T14-03…06 remain open. The contract preserves earlier-phase domain,
 storage and requirement ownership: Phase 14 adds authenticated API exposure and accessible UI presentation,
 not replacement graph, consensus, symbolic, replay, manifest or audit infrastructure. The scripted phase
 fixture is defined but has not passed.

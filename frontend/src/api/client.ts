@@ -5,6 +5,7 @@ export type ReadinessResponse = components["schemas"]["ReadinessResponse"];
 export type ProblemDetails = components["schemas"]["ProblemDetails"];
 export type SessionCreate = components["schemas"]["SessionCreate"];
 export type SessionResponse = components["schemas"]["SessionResponse"];
+export type DissentResponse = components["schemas"]["DissentResponse"];
 export type SessionControlCreate =
   components["schemas"]["SessionControlCreate"];
 export type HumanInputCreate = components["schemas"]["HumanInputCreate"];
@@ -86,6 +87,18 @@ export class ApiClient {
   ): Promise<SessionResponse> {
     return this.getJson<SessionResponse>(
       `/api/v1/sessions/${encodeURIComponent(sessionId)}`,
+      signal,
+      token,
+    );
+  }
+
+  getSessionDissent(
+    sessionId: string,
+    token: string,
+    signal?: AbortSignal,
+  ): Promise<DissentResponse> {
+    return this.getJson<DissentResponse>(
+      `/api/v1/sessions/${encodeURIComponent(sessionId)}/dissent`,
       signal,
       token,
     );
