@@ -26,6 +26,7 @@ from app.adapters.z3_symbolic import Z3SymbolicReasoner
 from app.common.errors import ValidationFailed
 from app.config.settings import Settings
 from app.db import Database, create_database
+from app.db.assumption_register import SqlAlchemyAssumptionRegisterReader
 from app.db.audit import (
     SqlAlchemyAccessLogRepository,
     SqlAlchemyAuditAnchorRepository,
@@ -48,6 +49,7 @@ from app.db.run_manifest import SqlAlchemyRunManifestRepository
 from app.db.session_lifecycle import SqlAlchemySessionLifecycleStore
 from app.db.source_impact import SqlAlchemySourceImpactRepository
 from app.db.symbolic_evaluation import SqlAlchemySymbolicEvaluationRepository
+from app.domain.assumption_register import AssumptionRegisterReader
 from app.domain.audit import (
     AccessLogRepository,
     AuditAnchorRepository,
@@ -85,6 +87,7 @@ Closer = Callable[[], Awaitable[None]]
 
 @dataclass(frozen=True, slots=True)
 class ReasoningTransaction:
+    assumption_register: AssumptionRegisterReader
     artifacts: Phase3ArtifactStore
     citations: CitationRepository
     graph: ReasoningGraphStore
@@ -139,6 +142,7 @@ class Container:
             async with self.database.session(workspace_id) as session:
                 ledger = SqlAlchemyReasoningLedger(session)
                 yield ReasoningTransaction(
+                    assumption_register=SqlAlchemyAssumptionRegisterReader(session),
                     artifacts=SqlAlchemyReasoningArtifactStore(session),
                     memory=SqlAlchemyMemoryProvider(session),
                     citations=SqlAlchemyCitationRepository(session),

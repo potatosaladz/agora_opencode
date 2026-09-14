@@ -263,6 +263,33 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+  /api/v1/sessions/{session_id}/assumptions:
+    get:
+      operationId: getSessionAssumptions
+      summary: Read the complete authoritative assumption register
+      description: >-
+        Returns every ASSUMPTION, CONSTRAINT, and UNCERTAINTY revision in deterministic
+        kind/logical-id/version/id order, without filters or lifecycle omission. Composes
+        authoritative graph relationships, unresolved Critique handoff entries, and exact-revision
+        formalization and latest persisted symbolic evaluation facts. Missing analysis is explicit.
+      tags: [reasoning]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+      responses:
+        "200":
+          description: Complete tenant-visible assumption register.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssumptionRegisterResponse"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
   /api/v1/sessions/{session_id}/events/stream:
     get:
       operationId: streamSessionEvents
@@ -1806,6 +1833,204 @@ components:
       properties:
         data: { $ref: "#/components/schemas/DissentData" }
         meta: { $ref: "#/components/schemas/DissentMeta" }
+    AssumptionRegisterRelation:
+      type: object
+      additionalProperties: false
+      required: [id, kind, relationship, label, graph_node_id, provenance_href]
+      properties:
+        id: { type: string, pattern: "^(art|rec)_[0-9a-f]{32}$" }
+        kind:
+          oneOf:
+            - $ref: "#/components/schemas/ArtifactKind"
+            - type: string
+              const: RECOMMENDATION
+        relationship: { type: string, minLength: 1 }
+        label: { type: [string, "null"] }
+        graph_node_id: { type: [string, "null"], pattern: "^gnd_[0-9a-f]{32}$" }
+        provenance_href:
+          type: [string, "null"]
+          pattern: "^/api/v1/artifacts/art_[0-9a-f]{32}/provenance$"
+    AssumptionRegisterCritique:
+      type: object
+      additionalProperties: false
+      required:
+        [
+          id,
+          artifact_id,
+          logical_id,
+          version,
+          critique_type,
+          severity,
+          resolution,
+          response_disposition,
+          graph_node_id,
+          provenance_href,
+        ]
+      properties:
+        id: { type: string, pattern: "^crt_[0-9a-f]{32}$" }
+        artifact_id: { $ref: "#/components/schemas/ArtifactId" }
+        logical_id: { type: string, pattern: "^crt_[0-9a-f]{32}$" }
+        version: { type: integer, minimum: 1 }
+        critique_type: { type: string, minLength: 1 }
+        severity: { type: string, minLength: 1 }
+        resolution: { type: string, enum: [OPEN, UNRESOLVED, DISPUTED] }
+        response_disposition: { type: [string, "null"] }
+        graph_node_id: { type: [string, "null"], pattern: "^gnd_[0-9a-f]{32}$" }
+        provenance_href:
+          type: string
+          pattern: "^/api/v1/artifacts/art_[0-9a-f]{32}/provenance$"
+    AssumptionRegisterFormalization:
+      type: object
+      additionalProperties: false
+      required:
+        [
+          id,
+          revision_id,
+          revision,
+          source_artifact_id,
+          source_artifact_version,
+          validation_status,
+        ]
+      properties:
+        id: { type: string, pattern: "^frm_[0-9a-f]{32}$" }
+        revision_id: { type: string, pattern: "^frm_[0-9a-f]{32}$" }
+        revision: { type: integer, minimum: 1 }
+        source_artifact_id: { $ref: "#/components/schemas/ArtifactId" }
+        source_artifact_version: { type: integer, minimum: 1 }
+        validation_status:
+          { type: string, enum: [CANDIDATE, VALIDATED, REJECTED] }
+    AssumptionRegisterSymbolicState:
+      type: object
+      additionalProperties: false
+      required:
+        [
+          analysis_status,
+          formalization,
+          evaluation_id,
+          status,
+          reason,
+          policy_action,
+        ]
+      properties:
+        analysis_status:
+          type: string
+          enum: [AVAILABLE, MISSING_FORMALIZATION, MISSING_EVALUATION]
+        formalization:
+          oneOf:
+            - $ref: "#/components/schemas/AssumptionRegisterFormalization"
+            - type: "null"
+        evaluation_id: { type: [string, "null"], pattern: "^sev_[0-9a-f]{32}$" }
+        status: { type: [string, "null"], enum: [SAT, UNSAT, UNKNOWN, null] }
+        reason: { type: string, minLength: 1 }
+        policy_action: { type: string, enum: [PROCEED, BLOCK, DEFER] }
+    AssumptionRegisterItem:
+      type: object
+      additionalProperties: false
+      required:
+        [
+          id,
+          logical_id,
+          kind,
+          statement,
+          basis,
+          materiality,
+          challengeable,
+          constraint_type,
+          category,
+          formal_status,
+          uncertainty_type,
+          drivers,
+          representation,
+          context_artifact_id,
+          owner,
+          round,
+          version,
+          lifecycle,
+          supersedes_id,
+          graph_node_id,
+          provenance_href,
+          evidence,
+          dependents,
+          critiques,
+          symbolic,
+        ]
+      properties:
+        id: { $ref: "#/components/schemas/ArtifactId" }
+        logical_id: { $ref: "#/components/schemas/ArtifactId" }
+        kind: { type: string, enum: [ASSUMPTION, CONSTRAINT, UNCERTAINTY] }
+        statement: { type: [string, "null"] }
+        basis: { type: [string, "null"] }
+        materiality: { type: [string, "null"] }
+        challengeable: { type: [boolean, "null"] }
+        constraint_type:
+          { type: [string, "null"], enum: [HARD, SOFT, NON_NEGOTIABLE, null] }
+        category: { type: [string, "null"] }
+        formal_status: { type: [string, "null"] }
+        uncertainty_type: { type: [string, "null"] }
+        drivers:
+          type: [array, "null"]
+          items: { type: string }
+        representation:
+          type: [object, "null"]
+          additionalProperties: true
+        context_artifact_id:
+          oneOf:
+            - $ref: "#/components/schemas/ArtifactId"
+            - type: "null"
+        owner:
+          type: object
+          additionalProperties: false
+          required: [actor_class, actor_id]
+          properties:
+            actor_class: { $ref: "#/components/schemas/ActorClass" }
+            actor_id:
+              { type: string, pattern: "^(usr|agt|svc|pol)_[0-9a-f]{32}$" }
+        round: { type: integer, minimum: 0 }
+        version: { type: integer, minimum: 1 }
+        lifecycle: { $ref: "#/components/schemas/LifecycleStatus" }
+        supersedes_id:
+          oneOf:
+            - $ref: "#/components/schemas/ArtifactId"
+            - type: "null"
+        graph_node_id: { type: [string, "null"], pattern: "^gnd_[0-9a-f]{32}$" }
+        provenance_href:
+          type: string
+          pattern: "^/api/v1/artifacts/art_[0-9a-f]{32}/provenance$"
+        evidence:
+          type: array
+          items: { $ref: "#/components/schemas/AssumptionRegisterRelation" }
+        dependents:
+          type: array
+          items: { $ref: "#/components/schemas/AssumptionRegisterRelation" }
+        critiques:
+          type: array
+          items: { $ref: "#/components/schemas/AssumptionRegisterCritique" }
+        symbolic:
+          oneOf:
+            - $ref: "#/components/schemas/AssumptionRegisterSymbolicState"
+            - type: "null"
+    AssumptionRegisterResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          additionalProperties: false
+          required: [session_id, items]
+          properties:
+            session_id: { $ref: "#/components/schemas/SessionId" }
+            items:
+              type: array
+              items: { $ref: "#/components/schemas/AssumptionRegisterItem" }
+        meta:
+          type: object
+          additionalProperties: false
+          required: [request_id, schema_version, workspace_id]
+          properties:
+            request_id: { type: string }
+            schema_version: { type: integer, const: 1 }
+            workspace_id: { $ref: "#/components/schemas/WorkspaceId" }
     GraphSubgraphRequest:
       type: object
       additionalProperties: false

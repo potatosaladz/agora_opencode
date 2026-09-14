@@ -2,6 +2,7 @@ export type AppRoute =
   | "reasoning"
   | "new-session"
   | "dissent"
+  | "assumptions"
   | "graph"
   | "observatory"
   | "architecture";
@@ -11,6 +12,7 @@ export function routeFromHash(hash: string): AppRoute {
   if (hash === "#/observatory") return "observatory";
   if (hash === "#/new-session") return "new-session";
   if (hash === "#/dissent") return "dissent";
+  if (hash === "#/assumptions") return "assumptions";
   if (hash === "#/graph" || hash.startsWith("#/graph?")) return "graph";
   return "reasoning";
 }
@@ -20,6 +22,7 @@ export function hrefForRoute(route: AppRoute): string {
   if (route === "observatory") return "#/observatory";
   if (route === "new-session") return "#/new-session";
   if (route === "dissent") return "#/dissent";
+  if (route === "assumptions") return "#/assumptions";
   if (route === "graph") return "#/graph";
   return "#/";
 }

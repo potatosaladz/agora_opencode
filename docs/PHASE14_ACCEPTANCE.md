@@ -1,6 +1,6 @@
 # Phase 14 Acceptance Contract
 
-**Version:** 1.2 · **Status:** T14-01…02 complete; T14-03…06 frozen and open · **Phase:** 14
+**Version:** 1.3 · **Status:** T14-01…03 complete; T14-04…06 frozen and open · **Phase:** 14
 **Baseline:** Phase 13 complete through T13-04
 **Requirements:** UI/exposure verification of existing FR-305, FR-504…FR-506, FR-605, FR-609,
 FR-705, FR-708, FR-802, FR-804, FR-805, FR-807, FR-808, FR-901, NFR-003, NFR-004, NFR-005,
@@ -23,7 +23,7 @@ The authoritative task order is:
 5. T14-05 — Replay Controls
 6. T14-06 — Audit Search
 
-T14-01…02 are complete; T14-03…06 remain open. Each task must preserve generated API type drift checks, deny-by-default
+T14-01…03 are complete; T14-04…06 remain open. Each task must preserve generated API type drift checks, deny-by-default
 authentication, tenant isolation, accessible non-visual equivalents and responsive desktop/mobile use.
 Earlier-phase requirements cited below are verification dependencies, not reassigned implementation
 ownership.
@@ -175,6 +175,14 @@ NFR-005, NFR-010 and NFR-019 capabilities. Ownership remains Phases 3, 7, 10 and
 
 **Ownership:** API — read-only register composition if required. Frontend — Assumption Register and related
 navigation. Persistence — none. Migration — none.
+
+**Acceptance evidence:** authenticated `GET /api/v1/sessions/{session_id}/assumptions` returns every
+ASSUMPTION, CONSTRAINT and UNCERTAINTY revision in deterministic order, retaining active, superseded and
+withdrawn lifecycle state, owner/origin, support/opposition/qualification, dependents, active critiques,
+provenance and graph identities. Exact constraint formalization/evaluation facts preserve SAT/UNSAT/UNKNOWN
+and the conservative PROCEED/BLOCK/DEFER policy; missing analysis is explicit. The code-split accessible
+register preserves these distinctions with keyboard and responsive behavior. Focused, live PostgreSQL, full
+local, contract and Compose gates pass; no migration or persistence was added.
 
 ## 5. T14-04 — Explanation Panel
 

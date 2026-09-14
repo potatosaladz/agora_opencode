@@ -76,6 +76,7 @@ omnibus token.
 | `GET` | `/sessions` | list, filter by state/agent/date | cursor |
 | `GET` | `/sessions/{id}` | state, config, budget, phase | |
 | `GET` | `/sessions/{id}/dissent` | latest persisted minority report and unresolved critique census | authenticated; complete, unfiltered, explicit evaluation/empty state |
+| `GET` | `/sessions/{id}/assumptions` | all assumption, constraint and uncertainty revisions | authenticated; complete, unfiltered; exact symbolic and missing-analysis state |
 | `GET` | `/sessions/{id}/rounds/{n}` | full round detail | |
 | `POST` | `/sessions/{id}/human-input` | typed human directive | idempotent; workflow emits `HUMAN_DIRECTIVE` |
 | `POST` | `/sessions/{id}/pause` · `/resume` · `/cancel` | lifecycle | authenticated, idempotent Temporal signals; cancel is terminal and never deletes |
@@ -93,6 +94,7 @@ projection. Clients read the session resource to observe the workflow-interprete
 | Method | Path | Purpose | Notes |
 | --- | --- | --- | --- |
 | `GET` | `/sessions/{id}/artifacts` | filter by `kind`, `author`, `status` | |
+| `GET` | `/sessions/{id}/assumptions` | authoritative assumption register | all lifecycle states; graph dependents/evidence, open critiques, symbolic policy state |
 | `POST` | `/sessions/{id}/artifacts` | propose an artifact | `201` only after coordinator commit |
 | `GET` | `/artifacts/{id}` | payload, provenance, edges | |
 | `POST` | `/artifacts/{id}/revisions` | create complete replacement version | `If-Match`; `201`; old row becomes `SUPERSEDED` |

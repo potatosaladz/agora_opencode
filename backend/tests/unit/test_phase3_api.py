@@ -26,6 +26,7 @@ from app.api.phase3_contracts import (
 from app.api.routes.phase3 import router as phase3_router
 from app.common.ids import parse_id, public_id
 from app.config import Settings
+from app.domain.assumption_register import AssumptionRegisterSnapshot
 from app.domain.consensus import (
     ConsensusExplanation,
     ConsensusOutcome,
@@ -230,6 +231,7 @@ class Tx:
     consensus_results: Any = None
     critique_handoffs: Any = None
     dissent_explanations: Any = None
+    assumption_register: Any = None
 
 
 class _TestContainer:
@@ -602,6 +604,11 @@ class DissentSessions:
         return object() if self.visible else None
 
 
+class EmptyAssumptionRegister:
+    async def read(self, workspace_id: UUID, session_id: UUID) -> AssumptionRegisterSnapshot:
+        return AssumptionRegisterSnapshot((), (), (), ())
+
+
 class DissentConsensus:
     def __init__(
         self,
@@ -685,6 +692,59 @@ class DissentGraph:
             and node.id == node_id
         )
         return TraversalResult(nodes=nodes)
+
+    async def subgraph(self, *args: Any, **kwargs: Any) -> TraversalResult:
+        del args, kwargs
+        return TraversalResult()
+
+
+@req("FR-311", "FR-504", "FR-705", "FR-708", "FR-805", "NFR-005", "NFR-019")
+@pytest.mark.parametrize("role", list(WorkspaceRole))
+def test_assumption_register_all_roles_and_authentication(role: WorkspaceRole) -> None:
+    principal = VerifiedPrincipal("oidc|u", U[4], U[1], role)
+    handoff = CritiqueExplanationHandoff(
+        workspace_id=U[1],
+        session_id=U[2],
+        entries=(),
+        empty_reason=CritiqueHandoffEmptyReason.NO_COMPLETED_CRITIC_RUN,
+    )
+    tx = Tx(
+        Artifacts(),
+        Idempotency(),
+        sessions=DissentSessions(),
+        graph=DissentGraph(),
+        critique_handoffs=DissentHandoffs(handoff),
+        assumption_register=EmptyAssumptionRegister(),
+    )
+    client, _ = _client_for(principal, tx)
+    path = f"/api/v1/sessions/{public_id('session', U[2])}/assumptions"
+    with client:
+        assert client.get(path).status_code == 401
+        response = client.get(path, headers={"Authorization": "Bearer valid"})
+    assert response.status_code == 200, response.text
+    assert response.json()["data"] == {
+        "session_id": public_id("session", U[2]),
+        "items": [],
+    }
+
+
+@req("NFR-005", "NFR-019")
+def test_assumption_register_hides_missing_or_cross_tenant_session() -> None:
+    principal = VerifiedPrincipal("oidc|u", U[4], U[1], WorkspaceRole.VIEWER)
+    tx = Tx(
+        Artifacts(),
+        Idempotency(),
+        sessions=DissentSessions(visible=False),
+        graph=DissentGraph(),
+        assumption_register=EmptyAssumptionRegister(),
+    )
+    client, _ = _client_for(principal, tx)
+    with client:
+        response = client.get(
+            f"/api/v1/sessions/{public_id('session', U[2])}/assumptions",
+            headers={"Authorization": "Bearer valid"},
+        )
+    assert response.status_code == 404
 
 
 def _consensus(result_id: UUID, round_number: int) -> ConsensusRunRecord:

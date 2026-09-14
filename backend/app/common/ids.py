@@ -44,6 +44,7 @@ ID_PREFIXES: dict[str, str] = {
     "graph_edge": "ged",
     "experiment": "exp",
     "formalization": "frm",
+    "symbolic_evaluation": "sev",
     "run": "run",
 }
 

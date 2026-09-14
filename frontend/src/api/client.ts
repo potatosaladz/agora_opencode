@@ -6,6 +6,14 @@ export type ProblemDetails = components["schemas"]["ProblemDetails"];
 export type SessionCreate = components["schemas"]["SessionCreate"];
 export type SessionResponse = components["schemas"]["SessionResponse"];
 export type DissentResponse = components["schemas"]["DissentResponse"];
+export type AssumptionRegisterResponse =
+  components["schemas"]["AssumptionRegisterResponse"];
+export type AssumptionRegisterItem =
+  components["schemas"]["AssumptionRegisterItem"];
+export type AssumptionRegisterRelation =
+  components["schemas"]["AssumptionRegisterRelation"];
+export type AssumptionRegisterCritique =
+  components["schemas"]["AssumptionRegisterCritique"];
 export type SessionControlCreate =
   components["schemas"]["SessionControlCreate"];
 export type HumanInputCreate = components["schemas"]["HumanInputCreate"];
@@ -99,6 +107,18 @@ export class ApiClient {
   ): Promise<DissentResponse> {
     return this.getJson<DissentResponse>(
       `/api/v1/sessions/${encodeURIComponent(sessionId)}/dissent`,
+      signal,
+      token,
+    );
+  }
+
+  getSessionAssumptions(
+    sessionId: string,
+    token: string,
+    signal?: AbortSignal,
+  ): Promise<AssumptionRegisterResponse> {
+    return this.getJson<AssumptionRegisterResponse>(
+      `/api/v1/sessions/${encodeURIComponent(sessionId)}/assumptions`,
       signal,
       token,
     );

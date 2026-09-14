@@ -8,6 +8,15 @@ uses semantic versioning once it ships a release. Phase 0 is pre-release.
 
 ## [Unreleased]
 
+### Added — Phase 14 T14-03 (Assumption Register)
+
+- Added authenticated session assumption-register reads composed from existing artifacts, graph,
+  provenance, Critique handoff, recommendations, formalizations and symbolic evaluations.
+- Added a code-split accessible register preserving assumption/constraint/uncertainty distinctions,
+  lifecycle history, evidence/dependent relationships and exact `SAT`/`UNSAT`/`UNKNOWN` policy semantics.
+- Added focused API, PostgreSQL and frontend tests. No migration, persistence, solver execution, graph
+  duplication or assumption score was added.
+
 ### Added — Phase 14 T14-02 (Dissent View)
 
 - Added authenticated, complete session dissent reads composed from existing persisted consensus

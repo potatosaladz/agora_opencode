@@ -222,6 +222,41 @@ describe("ApiClient", () => {
     );
   });
 
+  // req: FR-311, FR-504, FR-705, FR-708, FR-805, NFR-005, NFR-010, NFR-019
+  it("reads the authenticated authoritative assumption register", async () => {
+    const response = {
+      data: {
+        session_id: "ses_public",
+        analysis_status: "AVAILABLE",
+        unavailable_reason: null,
+        items: [],
+      },
+      meta: { request_id: "request", schema_version: 1, workspace_id: "ws" },
+    };
+    const fetchImpl = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response(JSON.stringify(response), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+
+    await expect(
+      new ApiClient({ fetchImpl }).getSessionAssumptions(
+        "ses_public",
+        "register-token",
+      ),
+    ).resolves.toEqual(response);
+    expect(fetchImpl).toHaveBeenCalledWith(
+      "/api/v1/sessions/ses_public/assumptions",
+      expect.objectContaining({
+        headers: {
+          Accept: "application/json",
+          Authorization: "Bearer register-token",
+        },
+      }),
+    );
+  });
+
   // req: FR-805, NFR-004, NFR-010
   it("posts an authenticated graph read without idempotency", async () => {
     const response = {

@@ -73,6 +73,17 @@ exactly one of `NO_CONSENSUS_RESULT`, `CONSENSUS_EXPLANATION_UNAVAILABLE`, or `E
 applicable, and is otherwise null. `what_would_change` is nullable so persisted absence is explicit.
 Malformed, missing, and cross-tenant sessions use the same tenant-hidden `404` response.
 
+T14-03 adds authenticated `GET /api/v1/sessions/{id}/assumptions` for every workspace role. The
+unfiltered response includes all `ASSUMPTION`, `CONSTRAINT`, and `UNCERTAINTY` revisions, including
+`ACTIVE`, `SUPERSEDED`, and `WITHDRAWN`, ordered by kind, logical artifact id, version, and revision id.
+Each entry exposes exact kind-specific content, public owner/revision/graph/provenance identities, direct
+authoritative evidence and dependent graph relationships, dependent recommendations, and every related
+`OPEN`, `UNRESOLVED`, or `DISPUTED` Critique handoff head. Constraints include the latest formalization
+whose source pins that exact artifact revision and the latest persisted symbolic evaluation for that
+formalization. `UNKNOWN` maps to `DEFER`; `SAT` to `PROCEED`; `UNSAT` to `BLOCK`. Missing formalization or
+evaluation is explicit and maps to `DEFER`. Malformed, missing, and cross-tenant sessions use tenant-hidden
+`404`; internal UUIDs are never returned.
+
 `GET /api/v1/sessions/{id}` reads authoritative state from PostgreSQL's session lifecycle
 projection. Temporal execution descriptions are operational diagnostics only and never overwrite
 or replace that projection.

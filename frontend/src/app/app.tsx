@@ -12,6 +12,9 @@ import { useHashRoute } from "./use-hash-route";
 
 const GraphPage = lazy(() => import("../features/graph/graph-page"));
 const DissentPage = lazy(() => import("../features/dissent/dissent-page"));
+const AssumptionRegisterPage = lazy(
+  () => import("../features/assumptions/assumption-register-page"),
+);
 
 const navigation = [
   {
@@ -23,6 +26,11 @@ const navigation = [
     route: "dissent" as const,
     label: "Dissent view",
     icon: "message" as const,
+  },
+  {
+    route: "assumptions" as const,
+    label: "Assumption register",
+    icon: "archive" as const,
   },
   {
     route: "graph" as const,
@@ -170,6 +178,21 @@ export function App() {
             }
           >
             <DissentPage
+              {...(liveSession ? { connection: liveSession } : {})}
+            />
+          </Suspense>
+        ) : route === "assumptions" ? (
+          <Suspense
+            fallback={
+              <main
+                className="assumption-page assumption-page--loading"
+                id="main-content"
+              >
+                <p role="status">Loading assumption register...</p>
+              </main>
+            }
+          >
+            <AssumptionRegisterPage
               {...(liveSession ? { connection: liveSession } : {})}
             />
           </Suspense>

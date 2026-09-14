@@ -312,6 +312,17 @@ def test_phase3_http_create_read_and_replay_are_atomic() -> None:
             "minority": [],
             "critiques": [],
         }
+        register = client.get(
+            f"/api/v1/sessions/{session_id}/assumptions",
+            headers={"Authorization": "Bearer integration"},
+        )
+        assert register.status_code == 200, register.text
+        assert register.json()["data"] == {"session_id": session_id, "items": []}
+        hidden = client.get(
+            f"/api/v1/sessions/{public_id('session', uuid7())}/assumptions",
+            headers={"Authorization": "Bearer integration"},
+        )
+        assert hidden.status_code == 404
 
         claim_request = {
             "kind": "CLAIM",
@@ -344,6 +355,37 @@ def test_phase3_http_create_read_and_replay_are_atomic() -> None:
         assert read_claim.status_code == 200
         assert read_claim.headers["ETag"] == "1"
 
+        assumption = client.post(
+            f"/api/v1/sessions/{session_id}/artifacts",
+            headers={**headers, "Idempotency-Key": "create-assumption"},
+            json={
+                "kind": "ASSUMPTION",
+                "payload": {
+                    "statement": "Demand remains above the planning floor",
+                    "basis": "Observed weekday counts",
+                    "materiality": "Changes the selected capacity",
+                    "challengeable": True,
+                },
+                "provenance": {"origin": "HUMAN", "reference": "api-test"},
+                "source_references": [],
+                "parent_relationships": [],
+                "metadata": {},
+            },
+        )
+        assert assumption.status_code == 201, assumption.text
+        persisted_register = client.get(
+            f"/api/v1/sessions/{session_id}/assumptions",
+            headers={"Authorization": "Bearer integration"},
+        )
+        assert persisted_register.status_code == 200, persisted_register.text
+        register_item = persisted_register.json()["data"]["items"][0]
+        assert register_item["id"] == assumption.json()["data"]["id"]
+        assert register_item["kind"] == "ASSUMPTION"
+        assert register_item["statement"] == "Demand remains above the planning floor"
+        assert register_item["lifecycle"] == "ACTIVE"
+        assert register_item["graph_node_id"].startswith("gnd_")
+        assert register_item["symbolic"] is None
+
         internal_session_id = parse_id("session", session_id)
         internal_artifact_id = parse_id("artifact", artifact_id)
         asyncio.run(
@@ -367,7 +409,7 @@ def test_phase3_http_create_read_and_replay_are_atomic() -> None:
         )
 
         graph_nodes = asyncio.run(_graph_nodes(_DATABASE_URL, principal.workspace_id))
-        assert len(graph_nodes) == 2
+        assert len(graph_nodes) == 3
         graph = client.post(
             "/api/v1/graph/subgraph",
             headers={"Authorization": "Bearer integration"},
@@ -382,4 +424,4 @@ def test_phase3_http_create_read_and_replay_are_atomic() -> None:
         assert graph.json()["data"]["nodes"][0]["id"] == public_id("graph_node", graph_nodes[0])
         assert graph.json()["data"]["next_cursor"] is None
 
-    assert asyncio.run(_counts(_DATABASE_URL, principal.workspace_id)) == (1, 2, 2, 3, 2)
+    assert asyncio.run(_counts(_DATABASE_URL, principal.workspace_id)) == (1, 3, 3, 4, 3)

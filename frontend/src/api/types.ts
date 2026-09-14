@@ -217,6 +217,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/sessions/{session_id}/assumptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read the complete authoritative assumption register
+         * @description Returns every ASSUMPTION, CONSTRAINT, and UNCERTAINTY revision in deterministic kind/logical-id/version/id order, without filters or lifecycle omission. Composes authoritative graph relationships, unresolved Critique handoff entries, and exact-revision formalization and latest persisted symbolic evaluation facts. Missing analysis is explicit.
+         */
+        get: operations["getSessionAssumptions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/sessions/{session_id}/events/stream": {
         parameters: {
             query?: never;
@@ -864,6 +884,93 @@ export interface components {
             data: components["schemas"]["DissentData"];
             meta: components["schemas"]["DissentMeta"];
         };
+        AssumptionRegisterRelation: {
+            id: string;
+            kind: components["schemas"]["ArtifactKind"] | "RECOMMENDATION";
+            relationship: string;
+            label: string | null;
+            graph_node_id: string | null;
+            provenance_href: string | null;
+        };
+        AssumptionRegisterCritique: {
+            id: string;
+            artifact_id: components["schemas"]["ArtifactId"];
+            logical_id: string;
+            version: number;
+            critique_type: string;
+            severity: string;
+            /** @enum {string} */
+            resolution: "OPEN" | "UNRESOLVED" | "DISPUTED";
+            response_disposition: string | null;
+            graph_node_id: string | null;
+            provenance_href: string;
+        };
+        AssumptionRegisterFormalization: {
+            id: string;
+            revision_id: string;
+            revision: number;
+            source_artifact_id: components["schemas"]["ArtifactId"];
+            source_artifact_version: number;
+            /** @enum {string} */
+            validation_status: "CANDIDATE" | "VALIDATED" | "REJECTED";
+        };
+        AssumptionRegisterSymbolicState: {
+            /** @enum {string} */
+            analysis_status: "AVAILABLE" | "MISSING_FORMALIZATION" | "MISSING_EVALUATION";
+            formalization: components["schemas"]["AssumptionRegisterFormalization"] | null;
+            evaluation_id: string | null;
+            /** @enum {string|null} */
+            status: "SAT" | "UNSAT" | "UNKNOWN" | null;
+            reason: string;
+            /** @enum {string} */
+            policy_action: "PROCEED" | "BLOCK" | "DEFER";
+        };
+        AssumptionRegisterItem: {
+            id: components["schemas"]["ArtifactId"];
+            logical_id: components["schemas"]["ArtifactId"];
+            /** @enum {string} */
+            kind: "ASSUMPTION" | "CONSTRAINT" | "UNCERTAINTY";
+            statement: string | null;
+            basis: string | null;
+            materiality: string | null;
+            challengeable: boolean | null;
+            /** @enum {string|null} */
+            constraint_type: "HARD" | "SOFT" | "NON_NEGOTIABLE" | null;
+            category: string | null;
+            formal_status: string | null;
+            uncertainty_type: string | null;
+            drivers: string[] | null;
+            representation: {
+                [key: string]: unknown;
+            } | null;
+            context_artifact_id: components["schemas"]["ArtifactId"] | null;
+            owner: {
+                actor_class: components["schemas"]["ActorClass"];
+                actor_id: string;
+            };
+            round: number;
+            version: number;
+            lifecycle: components["schemas"]["LifecycleStatus"];
+            supersedes_id: components["schemas"]["ArtifactId"] | null;
+            graph_node_id: string | null;
+            provenance_href: string;
+            evidence: components["schemas"]["AssumptionRegisterRelation"][];
+            dependents: components["schemas"]["AssumptionRegisterRelation"][];
+            critiques: components["schemas"]["AssumptionRegisterCritique"][];
+            symbolic: components["schemas"]["AssumptionRegisterSymbolicState"] | null;
+        };
+        AssumptionRegisterResponse: {
+            data: {
+                session_id: components["schemas"]["SessionId"];
+                items: components["schemas"]["AssumptionRegisterItem"][];
+            };
+            meta: {
+                request_id: string;
+                /** @constant */
+                schema_version: 1;
+                workspace_id: components["schemas"]["WorkspaceId"];
+            };
+        };
         GraphSubgraphRequest: {
             session_id: components["schemas"]["SessionId"];
             root_ids: string[];
@@ -1427,6 +1534,31 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DissentResponse"];
+                };
+            };
+            401: components["responses"]["AuthenticationRequired"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    getSessionAssumptions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: components["parameters"]["SessionId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Complete tenant-visible assumption register. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssumptionRegisterResponse"];
                 };
             };
             401: components["responses"]["AuthenticationRequired"];

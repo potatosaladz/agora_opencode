@@ -11,6 +11,7 @@ from fastapi import APIRouter, Header, Query, Request
 from pydantic import ValidationError
 from starlette.responses import JSONResponse
 
+from app.api.assumption_contracts import AssumptionRegisterResponse
 from app.api.dissent_contracts import DissentEmptyReason, DissentResponse
 from app.api.errors import not_found
 from app.api.phase3_contracts import (
@@ -26,6 +27,7 @@ from app.api.phase3_contracts import (
     session_response,
 )
 from app.application.artifact_commit import ArtifactCommitService, ArtifactEventContext
+from app.application.assumption_register import AssumptionRegisterService
 from app.application.provenance import ProvenanceService
 from app.application.session_commit import SessionArtifactCommit, SessionCommitService
 from app.application.session_control import SessionControlService, validate_control_request
@@ -622,6 +624,29 @@ async def get_session_dissent(request: Request, session_id: str) -> JSONResponse
                 _request_id(request),
             )
         )
+
+
+@router.get("/sessions/{session_id}/assumptions")
+@require_roles(*_READ)
+async def get_session_assumptions(request: Request, session_id: str) -> JSONResponse:
+    principal = current_principal(request)
+    try:
+        internal_id = parse_id("session", session_id)
+    except ValueError as exc:
+        raise not_found("session") from exc
+    async with request.app.state.container.reasoning_transaction(principal.workspace_id) as tx:
+        if await tx.sessions.get(principal.workspace_id, internal_id) is None:
+            raise not_found("session")
+        result = AssumptionRegisterResponse.model_validate(
+            await AssumptionRegisterService(
+                tx.assumption_register, tx.graph, tx.critique_handoffs
+            ).read(
+                principal.workspace_id,
+                internal_id,
+                request_id=_request_id(request),
+            )
+        )
+        return JSONResponse(result.model_dump(mode="json"))
 
 
 @router.post("/sessions/{session_id}/start", status_code=202)

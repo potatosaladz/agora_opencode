@@ -106,9 +106,9 @@ exact-version orchestration, ledger/MARL verification, structured tolerant diff,
 11 focused tests); T13-04 run manifests `[x]` (canonical typed pins, content-addressed finalized bytes,
 migration `20260914_0026`, forced RLS, one manifest/session, source lineage, exact T13-03 resolution).
 Phase 14 contract `[x]`; implementation tasks are T14-01 Graph View `[x]`, T14-02 Dissent View `[x]`,
-T14-03 Assumption Register `[ ]`, T14-04 Explanation Panel `[ ]`, T14-05 Replay Controls `[ ]`, and
+T14-03 Assumption Register `[x]`, T14-04 Explanation Panel `[ ]`, T14-05 Replay Controls `[ ]`, and
 T14-06 Audit Search `[ ]`. Exact boundaries and the unpassed scripted usability fixture are frozen in
-[../docs/PHASE14_ACCEPTANCE.md](../docs/PHASE14_ACCEPTANCE.md). T14-03 is next; do not start it
+[../docs/PHASE14_ACCEPTANCE.md](../docs/PHASE14_ACCEPTANCE.md). T14-04 is next; do not start it
 automatically.
 Phase 5 T5-00 through T5-09 are committed locally at
 `45253c8b91c103e9632554de8b31d55a5a5281c4`; its exact-SHA remote CI remains pending independently.

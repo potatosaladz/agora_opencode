@@ -141,6 +141,7 @@ Formalisation:   POST/GET /api/v1/formalizations; revisions/validations/confirma
 Phase 3 writes:  POST sessions; POST artifacts; POST artifact revisions/withdrawals
 Phase 4 start:   POST /api/v1/sessions/{id}/start -> 202 (T4-02; separate from 201 create)
 T14 dissent:     GET /api/v1/sessions/{id}/dissent (complete latest persisted minority + open critique view)
+T14 register:    GET /api/v1/sessions/{id}/assumptions (complete assumption/constraint/uncertainty history)
 SSE:             GET /api/v1/sessions/{id}/events/stream   (Last-Event-ID supported)
 WS:              /api/v1/ws/sessions/{id}   (bidirectional control only where required)
 ```
@@ -154,6 +155,13 @@ The T14 dissent read has no filter/omission parameters. It chooses the latest co
 artifact authority and includes every open/unresolved/disputed Critique handoff head. Public IDs and
 tenant-hidden `404` are mandatory. `evaluated` plus `empty_reason` distinguishes no result, a result whose
 explanation is unavailable, and an evaluated result with no dissent.
+
+The T14 assumption-register read has no filter/omission parameters and returns every lifecycle revision
+of every `ASSUMPTION`, `CONSTRAINT`, and `UNCERTAINTY` in deterministic kind/logical-id/version/id order.
+It composes direct graph evidence/dependents, recommendations and unresolved Critique handoff heads. Exact
+constraint formalizations and latest persisted symbolic evaluations are public; `SAT`/`UNSAT`/`UNKNOWN`
+map to `PROCEED`/`BLOCK`/`DEFER`, while missing formalization/evaluation is explicit `DEFER`. All identifiers
+are public and missing or cross-tenant sessions are hidden as `404`.
 
 T11-01 formalisation writes require `Idempotency-Key`; all current-head lifecycle writes additionally
 require `If-Match`. Reads expose derived `validation_status` and `enforceable`. Only an exact revision with
