@@ -1174,20 +1174,39 @@ CREATE TABLE experiment_runs (
 );
 
 CREATE TABLE reproducibility_manifests (
-  id            UUID PRIMARY KEY,
-  workspace_id  UUID NOT NULL REFERENCES workspaces(id),
-  session_id    UUID NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
-  manifest_ref  TEXT NOT NULL,   -- ObjectStore key of the canonical JSON
-  manifest_hash TEXT NOT NULL,
-  git_sha       TEXT NOT NULL,
-  image_digests JSONB NOT NULL,
-  model_pins    JSONB NOT NULL,
-  prompt_hashes JSONB NOT NULL,
-  seed          BIGINT,
-  created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
-  UNIQUE (session_id)
+  id                UUID PRIMARY KEY,
+  workspace_id      UUID NOT NULL,
+  session_id        UUID NOT NULL,
+  source_session_id UUID,
+  manifest_version  INTEGER NOT NULL CHECK (manifest_version > 0),
+  status            TEXT NOT NULL CHECK (status IN ('CREATED','FINALIZED')),
+  manifest_bucket   TEXT,
+  manifest_ref      TEXT,          -- ObjectStore key of canonical JSON after finalization
+  manifest_hash     TEXT,
+  manifest_size     INTEGER,
+  git_sha           TEXT NOT NULL,
+  image_digests     JSONB NOT NULL,
+  model_pins        JSONB NOT NULL,
+  prompt_hashes     JSONB NOT NULL,
+  seed              BIGINT,
+  created_at        TIMESTAMPTZ NOT NULL,
+  finalized_at      TIMESTAMPTZ,
+  UNIQUE (workspace_id, id),
+  UNIQUE (workspace_id, session_id),
+  FOREIGN KEY (workspace_id, session_id)
+    REFERENCES sessions(workspace_id, id) ON DELETE RESTRICT,
+  FOREIGN KEY (workspace_id, source_session_id)
+    REFERENCES sessions(workspace_id, id) ON DELETE RESTRICT
 );
 ```
+
+Migration `20260914_0026` implements this table for T13-04. A `CREATED` row captures immutable
+creation-time code/image/model/prompt and optional source-session pins in the same tenant scope as its
+session. Exactly one `CREATED → FINALIZED` update may attach the canonical object-store reference,
+digest, byte length and finalization timestamp; a trigger rejects every other update and all deletes
+with SQLSTATE `27000`. The row is forced-RLS and source/run foreign keys are tenant-safe. Finalized
+canonical bytes contain the complete typed version-1 pin document; PostgreSQL keeps the indexed lifecycle
+and integrity identity, while object storage holds the full self-describing document.
 
 ## 12. Cross-cutting integrity rules
 
@@ -1382,7 +1401,6 @@ PostgreSQL type and nullability are all part of the comparison.
 
 Retention jobs MUST set `status = 'WITHDRAWN'` on artifacts before removing any underlying
 bytes, and MUST be recorded as events.
-
 
 
 

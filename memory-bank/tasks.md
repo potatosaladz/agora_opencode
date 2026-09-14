@@ -103,7 +103,8 @@ complete, with no training. Phase 13 (Trustworthiness): T13-01 metric catalogue 
 `app/db/audit.py`, `app/application/audit.py` answering Q1–Q8, 21 unit + 7 live PostgreSQL tests,
 FR-807/NFR-006 implemented); T13-03 `STRICT`/`TOLERANT`/`LIVE` replay `[x]` (typed contracts,
 exact-version orchestration, ledger/MARL verification, structured tolerant diff, fresh LIVE identities,
-11 focused tests); T13-04 run manifests remains `[ ]`.
+11 focused tests); T13-04 run manifests `[x]` (canonical typed pins, content-addressed finalized bytes,
+migration `20260914_0026`, forced RLS, one manifest/session, source lineage, exact T13-03 resolution).
 Phase 5 T5-00 through T5-09 are committed locally at
 `45253c8b91c103e9632554de8b31d55a5a5281c4`; its exact-SHA remote CI remains pending independently.
 Phase 6 T6-00 through T6-09 are complete on `phase6-domain-reasoning`; final commit

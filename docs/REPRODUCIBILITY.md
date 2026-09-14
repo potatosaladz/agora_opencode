@@ -1,6 +1,6 @@
 # Reproducibility
 
-**Version:** 1.1 · **Status:** design; T13-03 replay-mode contracts and orchestration implemented
+**Version:** 1.2 · **Status:** design; T13-03 replay modes and T13-04 run manifests implemented
 **Requirements:** NFR-003, NFR-014, FR-905, FR-906 · **ADR:**
 [ADR-001](adr/ADR-001-postgres-source-of-truth.md),
 [ADR-019](adr/ADR-019-append-only-event-ledger.md)
@@ -40,6 +40,22 @@ Every session writes a manifest at creation and finalises it at termination:
 Anything that can influence an outcome and is not named here is a reproducibility hole. The list
 is closed by the port registry: every port adapter declares its own manifest fields
 ([PORTS.md](PORTS.md)), so adding an adapter cannot silently escape the manifest.
+
+T13-04 implements the version-1 document as `RunManifestDocument` and the two-state lifecycle as
+`RunManifestStatus.CREATED | FINALIZED`. Creation pins code and image identities, provider/model and
+prompt selections, and optional replay source lineage. Finalization adds the canonical document stored
+under its SHA-256 object key. The document pins schema/configuration identity, session protocol/budget,
+consensus strategy/parameters, immutable agent/prompt/inference configuration, retrieval/index pins,
+metric versions, symbolic solver/configuration/evidence, simulation engines/seeds, Phase 12 MARL bundle
+identity, content hashes and scoped randomness. Only categories actually used by a session are present;
+agents, metrics, content and replay steps are mandatory.
+
+`reproducibility_manifests` permits one row per `(workspace_id, session_id)`, supports optional
+same-workspace `source_session_id` for replay-derived runs, and is forced-RLS. A database trigger permits
+only one `CREATED → FINALIZED` transition and rejects all later updates/deletes. `PersistedReplaySource`
+resolves only the exact finalized manifest id/version/hash requested by T13-03, fetches digest-verified
+bytes from object storage, rejects noncanonical bytes, and exposes their pinned replay steps. There is no
+"latest" resolution.
 
 ## 3. Sources of nondeterminism
 

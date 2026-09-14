@@ -1,12 +1,18 @@
 # Active Context
 
-**Snapshot taken:** 2026-09-14 · **Phase:** 13 in progress · **Active task:** T13-01 through T13-03 complete; T13-04 next
+**Snapshot taken:** 2026-09-14 · **Phase:** 13 complete · **Active task:** T13-01 through T13-04 complete
 This is the "what is happening right now" file. Rewrite it at the end of every
 significant unit of work.
 
 ---
 
 ## 1. Focus of the current session
+
+Phase 13 T13-04 is complete. `app/domain/run_manifest.py` defines canonical typed pins and the
+`CREATED | FINALIZED` lifecycle; `app/application/run_manifest.py` stores exact canonical bytes by
+digest and supplies finalized manifests to T13-03; `app/db/run_manifest.py` and migration
+`20260914_0026` enforce one manifest/session, optional tenant-safe source lineage, forced RLS and a
+single immutable finalization transition. No HTTP was added.
 
 Phase 13 T13-03 is complete. `app/domain/replay.py` owns the closed three-mode contract and immutable
 manifest reference, historical replay, step, exact implementation, execution, structured diff, first
@@ -75,9 +81,9 @@ formalisation plus symbolic-evidence persistence tests, with strict static, trac
 
 ## 2. Currently active task
 
-Phase 13 T13-01 through T13-03 are closed (metric catalogue; audit persistence + the eight audit
-queries; STRICT/TOLERANT/LIVE replay modes). T13-04 (run manifests with pinning) is next and has not
-started. Phase 12 T12-01 through
+Phase 13 T13-01 through T13-04 are closed (metric catalogue; audit persistence + eight audit queries;
+STRICT/TOLERANT/LIVE replay; durable pinned run manifests). Phase 14 is next and has not started.
+Phase 12 T12-01 through
 T12-05 and Phase 11
 are closed. Phases 0–4 and 6–10 have exact-SHA
 remote evidence. Phase 5 remote evidence remains tracked

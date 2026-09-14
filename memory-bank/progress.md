@@ -1,7 +1,6 @@
 # Progress
 
-**Overall completion:** Phases 0–12 complete; Phase 13 T13-01 through T13-03 done (catalogue; audit
-persistence and eight queries; replay modes); Phase 5 remote
+**Overall completion:** Phases 0–13 complete; Phase 5 remote
 evidence remains separate. Phase-0 architecture baseline: **approved by the project owner (D-13)**.
 
 ---
@@ -23,7 +22,7 @@ evidence remains separate. Phase-0 architecture baseline: **approved by the proj
 | 10 | Reasoning graph & traceability | Not started | — |
 | 11 | Neuro-symbolic | **Complete** | T11-01…04 complete: immutable formalisation lifecycle, bounded Z3, exact-revision evidence, and conservative `UNKNOWN → DEFER` consensus policy |
 | 12 | MARL environment | **Complete** | T12-01…05: exact trajectory domain, reward/credit accounting, canonical export, hermetic replay, in-memory/PostgreSQL stores and migration 0024 |
-| 13 | Trustworthiness | **In progress** | T13-01 catalogue complete; T13-02 audit records + eight queries complete; T13-03 replay modes complete (11 focused tests); T13-04 run manifests open |
+| 13 | Trustworthiness | **Complete** | T13-01 catalogue; T13-02 audit records + eight queries; T13-03 replay modes; T13-04 canonical durable pinned run manifests |
 | 14 | Full UI | Not started | — |
 | 15 | MCP | Not started | — |
 | 16 | Research extensions | Not started | — |
@@ -32,6 +31,22 @@ evidence remains separate. Phase-0 architecture baseline: **approved by the proj
 ---
 
 ## Detailed log
+
+### 2026-09-14 — Phase 13 T13-04 run manifests with pinning
+
+- Added typed canonical version-1 run manifests covering only supported authoritative pins: code/images,
+  schema, configuration/protocol/budget/consensus, agents/prompts/inference, retrieval/index, metrics,
+  symbolic, simulation, MARL, content and scoped randomness.
+- Added `RunManifestService` creation/finalization and `PersistedReplaySource`; canonical JSON is stored
+  under its SHA-256 object key and T13-03 resolves only exact finalized manifest id/version/hash values.
+- Migration `20260914_0026` adds one forced-RLS manifest per tenant/session, optional source-session
+  lineage, tenant-safe FKs and a lifecycle trigger allowing only one `CREATED → FINALIZED` transition.
+- No API, experiment tables or metric-value tables were added.
+- Validation: 16 focused tests, 792 non-integration tests, 57 PostgreSQL integration tests with 8
+  unrelated service-gated skips, Ruff/format, strict mypy over 314 files, compileall, one Alembic head
+  `20260914_0026` with no drift, offline SQL, traceability, links and whitespace. The rebuilt Compose
+  stack reached healthy, migration exited 0 at `0026`, `/ready` and frontend returned 200, and deployed
+  manifest/STRICT replay integration passed.
 
 ### 2026-09-14 — Phase 13 T13-03 replay modes
 

@@ -1,7 +1,7 @@
 # Handoff
 
 **For:** whoever continues this work, probably with no memory of the session that produced it.
-**As of:** 2026-09-14 · **Phase:** 13 in progress · **Active task:** T13-01 through T13-03 complete; T13-04 next
+**As of:** 2026-09-14 · **Phase:** 13 complete · **Active task:** T13-01 through T13-04 complete
 
 ## Read these five, in this order
 
@@ -32,7 +32,7 @@ A change that breaks any of these is not a refactor. It is a different project.
 
 ## Immediate next action
 
-Phase 13 T13-01 through T13-03 are complete. T13-02 ships the Phase 13 audit substrate: migration
+Phase 13 T13-01 through T13-04 are complete. T13-02 ships the Phase 13 audit substrate: migration
 `20260912_0025` adds forced-RLS, caller-append-only `access_log` and `audit_anchors`, and
 `app/application/audit.py` answers the eight audit questions (Q1–Q8 in
 [AUDITABILITY.md](../docs/AUDITABILITY.md)) as typed services over `app/domain/audit.py`,
@@ -48,8 +48,11 @@ verification with exact versions and no external calls; TOLERANT is controlled r
 ordered structured diff and no false VERIFIED claim; LIVE is a source-linked new execution whose
 session/manifest/event/result identities must all be fresh. The service verifies ledger integrity and
 exact event history first and reuses Phase 12 MARL `verify_bundle()` without changing it. No HTTP or
-persistence was added: T13-04 owns durable run manifests and database-backed live lineage and is the
-next authoritative task; do not start it automatically.
+persistence was added in T13-03. T13-04 now adds canonical `RunManifestDocument` pins, content-addressed
+object bytes, and migration `20260914_0026` with one forced-RLS `reproducibility_manifests` row per
+session, optional tenant-safe source lineage, and exactly one immutable `CREATED → FINALIZED`
+transition. `PersistedReplaySource` resolves only exact finalized id/version/hash pins for T13-03. No
+HTTP endpoint was added. Phase 14 is next; do not start it automatically.
 
 Phase 11 is complete through T11-04. `SymbolicUnknownPolicy` keeps solver facts separate from
 application action: `SAT → PROCEED`, `UNSAT → BLOCK`, `UNKNOWN → DEFER`. The persisted evaluation remains

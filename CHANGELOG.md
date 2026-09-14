@@ -8,6 +8,14 @@ uses semantic versioning once it ships a release. Phase 0 is pre-release.
 
 ## [Unreleased]
 
+### Added — Phase 13 T13-04 (pinned run manifests)
+
+- Added canonical version-1 `RunManifestDocument` pins and deterministic manifest bytes/hash/identity.
+- Added creation and exactly-once finalization through content-addressed object storage, plus exact
+  finalized-manifest resolution for T13-03 strict replay with no latest fallback.
+- Added migration `20260914_0026` for one forced-RLS, tenant-safe manifest per session, optional
+  source-session lineage, and database-enforced immutable finalized state.
+
 ### Added — Phase 13 T13-03 (full-session replay modes)
 
 - Added closed, typed `REPLAY_STRICT`, `REPLAY_TOLERANT`, and `REPLAY_LIVE` contracts and exhaustive

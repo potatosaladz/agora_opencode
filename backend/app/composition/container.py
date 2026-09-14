@@ -43,6 +43,7 @@ from app.db.realtime import LedgerEventPublisher, RealtimeGateway
 from app.db.reasoning_artifacts import SqlAlchemyReasoningArtifactStore
 from app.db.reasoning_graph import SqlAlchemyReasoningGraphStore
 from app.db.reasoning_ledger import SqlAlchemyReasoningLedger
+from app.db.run_manifest import SqlAlchemyRunManifestRepository
 from app.db.session_lifecycle import SqlAlchemySessionLifecycleStore
 from app.db.source_impact import SqlAlchemySourceImpactRepository
 from app.db.symbolic_evaluation import SqlAlchemySymbolicEvaluationRepository
@@ -61,6 +62,7 @@ from app.domain.memory import MemoryProvider
 from app.domain.phase3_api import IdempotencyStore, Phase3ArtifactStore, Phase3SessionStore
 from app.domain.reasoning_graph import ReasoningGraphStore
 from app.domain.reasoning_ledger import AgentProposalLedger
+from app.domain.run_manifest import RunManifestRepository
 from app.domain.session_lifecycle import SessionLifecycleStore
 from app.domain.source_impact import SourceImpactRepository
 from app.domain.symbolic_evaluation import SymbolicEvaluationRepository
@@ -99,6 +101,7 @@ class ReasoningTransaction:
     access_logs: AccessLogRepository
     audit_anchors: AuditAnchorRepository
     session_participants: SessionParticipantReader
+    run_manifests: RunManifestRepository
 
 
 class StartupConfigurationError(ValueError):
@@ -153,6 +156,7 @@ class Container:
                     access_logs=SqlAlchemyAccessLogRepository(session),
                     audit_anchors=SqlAlchemyAuditAnchorRepository(session),
                     session_participants=SqlAlchemySessionParticipantReader(session),
+                    run_manifests=SqlAlchemyRunManifestRepository(session),
                 )
         except IntegrityError as exc:
             raise ValidationFailed("request conflicts with persisted tenant state") from exc

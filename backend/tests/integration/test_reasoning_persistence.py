@@ -268,7 +268,7 @@ _PHASE_11_TABLES = (
     "symbolic_evaluations",
 )
 _PHASE_12_TABLES = ("marl_episodes", "marl_trajectory_records")
-_PHASE_13_TABLES = ("access_log", "audit_anchors")
+_PHASE_13_TABLES = ("access_log", "audit_anchors", "reproducibility_manifests")
 _ALL_PHASE_3_TABLES = tuple(
     table for revision in _PHASE_3_REVISIONS for table in _PHASE_3_SCHEMA[revision]
 )

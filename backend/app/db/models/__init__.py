@@ -42,6 +42,7 @@ from app.db.models.reasoning import (
 from app.db.models.reasoning_graph import GraphEdgeRow, GraphNodeRow
 from app.db.models.reasoning_ledger import ReasoningEventRow, SessionLedgerHeadRow
 from app.db.models.retrieval import RetrievalAttemptRow
+from app.db.models.run_manifest import RunManifestRow
 from app.db.models.session_lifecycle import SessionLifecycleRow
 from app.db.models.simulation import SimulationResultRow, SimulationRunRow
 from app.db.models.source_impact import (
@@ -89,6 +90,7 @@ __all__ = [
     "ReasoningEventRow",
     "RecommendationRow",
     "RetrievalAttemptRow",
+    "RunManifestRow",
     "SemanticMemoryEntryRow",
     "SessionAgentInterventionRow",
     "SessionAgentRow",

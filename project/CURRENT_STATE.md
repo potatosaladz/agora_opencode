@@ -1,7 +1,22 @@
 # Current State
 
-**As of:** 2026-09-14 · **Phase:** 13 in progress · **Active task:** T13-01 through T13-03 complete; T13-04 next
+**As of:** 2026-09-14 · **Phase:** 13 complete · **Active task:** T13-01 through T13-04 complete
 **Track:** MVP · **Confidence:** Phases 0–4, 6–10 exact-SHA remote evidence; Phase 5 local gates green; Phase 13 local gates green
+
+Phase 13 T13-04 is complete locally. `RunManifestDocument` is the strict, canonical version-1 run
+identity. It pins code/images, migration/artifact schemas, configuration/protocol/budget/consensus,
+agent/prompt/inference, retrieval/index, metric, symbolic, simulation, Phase 12 MARL, content and scoped
+randomness identities. `RunManifestService` creates immutable creation pins and finalizes exactly once by
+writing canonical JSON to content-addressed object storage. Migration `20260914_0026` adds one
+`reproducibility_manifests` row per tenant/session, optional same-workspace source-session lineage,
+forced RLS, tenant-safe foreign keys and a trigger that allows only `CREATED → FINALIZED` and rejects
+all later mutation/deletion. `PersistedReplaySource` integrates T13-03 with exact finalized
+id/version/hash lookup, digest verification and canonical-byte validation; there is no latest fallback.
+No HTTP/API was added. NFR-003 and NFR-014 are implemented for the Phase 13 replay/manifest scope.
+Validation is green: 16 focused replay/manifest tests, 792 non-integration tests, 57 PostgreSQL
+integration tests with 8 unrelated service-gated skips, strict mypy over 314 files, one Alembic head
+`20260914_0026` with no drift, offline migration SQL, traceability, links, Compose build/readiness and
+deployed manifest/STRICT replay acceptance.
 
 Phase 13 T13-03 is complete locally. `backend/app/domain/replay.py` defines the closed
 `REPLAY_STRICT` / `REPLAY_TOLERANT` / `REPLAY_LIVE` modes and immutable manifest references,

@@ -432,7 +432,7 @@
   "NFR-003": {
     "last_verified": "local-phase13-2026-09-14",
     "phase": "13",
-    "status": "partial"
+    "status": "implemented"
   },
   "NFR-004": {
     "last_verified": "",
@@ -487,7 +487,7 @@
   "NFR-014": {
     "last_verified": "local-phase13-2026-09-14",
     "phase": "13",
-    "status": "partial"
+    "status": "implemented"
   },
   "NFR-015": {
     "status": "planned",
