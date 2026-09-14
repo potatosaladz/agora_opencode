@@ -297,6 +297,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/sessions/{session_id}/audit/query": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Ask one of the eight authoritative audit questions
+         * @description Delegates Q1 through Q8 to the existing Phase 13 audit services and records the successful audit read in the append-only access log. Completeness and integrity are independent result dimensions.
+         */
+        post: operations["querySessionAudit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/sessions/{session_id}/events/stream": {
         parameters: {
             query?: never;
@@ -1256,6 +1276,196 @@ export interface components {
                 [key: string]: components["schemas"]["ComponentHealth"];
             };
         };
+        /** @enum {string} */
+        AuditQuestion: "Q1" | "Q2" | "Q3" | "Q4" | "Q5" | "Q6" | "Q7" | "Q8";
+        /** @enum {string} */
+        AuditCompleteness: "COMPLETE" | "INCOMPLETE" | "NOT_APPLICABLE";
+        /** @enum {string} */
+        AuditIntegrity: "VERIFIED_UNALTERED" | "ALTERED" | "NOT_VERIFIABLE" | "NOT_APPLICABLE";
+        AuditQueryRequest: components["schemas"]["AuditQ1Request"] | components["schemas"]["AuditQ2Request"] | components["schemas"]["AuditQ3Request"] | components["schemas"]["AuditQ4Request"] | components["schemas"]["AuditQ5Request"] | components["schemas"]["AuditQ6Request"] | components["schemas"]["AuditQ7Request"] | components["schemas"]["AuditQ8Request"];
+        AuditQ1Request: {
+            /** @constant */
+            question: "Q1";
+            artifact_id: string;
+            /** @default 8 */
+            max_depth: number;
+            /** @default 50 */
+            limit: number;
+            cursor?: string | null;
+        };
+        AuditQ2Request: {
+            /** @constant */
+            question: "Q2";
+            artifact_id: string;
+        };
+        AuditQ3Request: {
+            /** @constant */
+            question: "Q3";
+            round: number;
+        };
+        AuditQ4Request: {
+            /** @constant */
+            question: "Q4";
+            round: number;
+        };
+        AuditQ5Request: {
+            /** @constant */
+            question: "Q5";
+        };
+        AuditQ6Request: {
+            /** @constant */
+            question: "Q6";
+            round: number;
+        };
+        AuditQ7Request: {
+            /** @constant */
+            question: "Q7";
+            recommendation_id: string;
+            /** @default 100 */
+            limit: number;
+            cursor?: string | null;
+        };
+        AuditQ8Request: {
+            /** @constant */
+            question: "Q8";
+        };
+        AuditState: {
+            completeness: components["schemas"]["AuditCompleteness"];
+            completeness_reasons: string[];
+            integrity: components["schemas"]["AuditIntegrity"];
+            integrity_reasons: string[];
+        };
+        AuditPagination: {
+            truncated: boolean;
+            next_cursor: string | null;
+        };
+        AuditData: {
+            question: components["schemas"]["AuditQuestion"];
+            question_text: string;
+            parameters: {
+                [key: string]: unknown;
+            };
+            answer: components["schemas"]["AuditQ1Answer"] | components["schemas"]["AuditQ2Answer"] | components["schemas"]["AuditQ3Answer"] | components["schemas"]["AuditQ4Answer"] | components["schemas"]["AuditQ5Answer"] | components["schemas"]["AuditQ6Answer"] | components["schemas"]["AuditQ7Answer"] | components["schemas"]["AuditQ8Answer"];
+            evidence: {
+                [key: string]: unknown;
+            }[];
+            state: components["schemas"]["AuditState"];
+            pagination: components["schemas"]["AuditPagination"];
+            links: {
+                [key: string]: string;
+            };
+        };
+        AuditQ1Answer: {
+            /** @constant */
+            kind: "ARTIFACT_RATIONALE";
+            artifact_id: string;
+            provenance: {
+                [key: string]: unknown;
+            } | null;
+            committed_by_event: {
+                [key: string]: unknown;
+            } | null;
+            originating_turn_event: {
+                [key: string]: unknown;
+            } | null;
+        } & {
+            [key: string]: unknown;
+        };
+        AuditQ2Answer: {
+            /** @constant */
+            kind: "ARTIFACT_REVISION_HISTORY";
+            artifact_id: string;
+            revisions: {
+                [key: string]: unknown;
+            }[];
+        } & {
+            [key: string]: unknown;
+        };
+        AuditQ3Answer: {
+            /** @constant */
+            kind: "ROUND_CONTEXT";
+            round: number;
+            participants: {
+                [key: string]: unknown;
+            }[];
+            turn_events: {
+                [key: string]: unknown;
+            }[];
+        } & {
+            [key: string]: unknown;
+        };
+        AuditQ4Answer: {
+            /** @constant */
+            kind: "DISSENT_SUPPRESSION_CHECK";
+            consensus_result_id: string | null;
+            outcome: string | null;
+            all_persisted_positions_included: boolean;
+            contributions: {
+                [key: string]: unknown;
+            }[];
+            minority_report: {
+                [key: string]: unknown;
+            }[];
+        } & {
+            [key: string]: unknown;
+        };
+        AuditQ5Answer: {
+            /** @constant */
+            kind: "SESSION_TERMINATION";
+            final_state: string | null;
+            final_round: number | null;
+            ended_at: string | null;
+            last_event: {
+                [key: string]: unknown;
+            } | null;
+        } & {
+            [key: string]: unknown;
+        };
+        AuditQ6Answer: {
+            /** @constant */
+            kind: "STRATEGY_USAGE";
+            strategy: string | null;
+        } & {
+            [key: string]: unknown;
+        };
+        AuditQ7Answer: {
+            /** @constant */
+            kind: "RECOMMENDATION_ACCESS";
+            recommendation_id: string;
+            recommendation_created_at: string;
+            /** @constant */
+            boundary: "STRICTLY_BEFORE_RECOMMENDATION_CREATED_AT";
+            entries: {
+                [key: string]: unknown;
+            }[];
+        } & {
+            [key: string]: unknown;
+        };
+        AuditQ8Answer: {
+            /** @constant */
+            kind: "CHAIN_VERIFICATION";
+            event_count: number;
+            ledger_valid: boolean;
+            ledger_reason: string | null;
+            ledger_head_hash: string;
+            chain_valid: boolean | null;
+            first_invalid_day: string | null;
+            anchors: {
+                [key: string]: unknown;
+            }[];
+        } & {
+            [key: string]: unknown;
+        };
+        AuditMeta: {
+            request_id: string;
+            /** @constant */
+            schema_version: 1;
+            workspace_id: components["schemas"]["WorkspaceId"];
+        };
+        AuditResponse: {
+            data: components["schemas"]["AuditData"];
+            meta: components["schemas"]["AuditMeta"];
+        };
         ReplayMeta: {
             request_id: string;
             /** @constant */
@@ -1841,6 +2051,36 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ReplayResponse"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["AuthenticationRequired"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    querySessionAudit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: components["parameters"]["SessionId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AuditQueryRequest"];
+            };
+        };
+        responses: {
+            /** @description Typed, deterministically ordered audit answer. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditResponse"];
                 };
             };
             400: components["responses"]["ValidationFailed"];

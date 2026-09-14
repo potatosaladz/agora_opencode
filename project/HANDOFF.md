@@ -1,7 +1,7 @@
 # Handoff
 
 **For:** whoever continues this work, probably with no memory of the session that produced it.
-**As of:** 2026-09-14 · **Phase:** 14 in progress · **Active task:** T14-05 Replay Controls complete
+**As of:** 2026-09-14 · **Phase:** 14 complete · **Active task:** Phase 14 exit complete
 
 ## Read these five, in this order
 
@@ -58,6 +58,12 @@ delegate to existing replay services. STRICT remains provider-free verification,
 MATCHED/DIFFERENT semantics, and LIVE requires write authorization plus confirmation and exposes fresh
 lineage or a typed unavailable result. The code-split UI is accessible and responsive; no migration or
 persistence was added. T14-06 Audit Search is next; do not start it automatically.
+
+T14-06 and Phase 14 are complete. Scoped authenticated Q1–Q8 Audit Search delegates to the existing audit
+services, records successful reads, and presents ordered evidence with independent completeness/integrity.
+The frozen usability script passes for visible minority and weakest-evidence discovery plus required
+navigation. No migration or replacement audit subsystem was added. Phase 15 is next; do not start it
+automatically.
 
 Phase 13 T13-01 through T13-04 are complete. T13-02 ships the Phase 13 audit substrate: migration
 `20260912_0025` adds forced-RLS, caller-append-only `access_log` and `audit_anchors`, and

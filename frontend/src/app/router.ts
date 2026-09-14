@@ -5,6 +5,7 @@ export type AppRoute =
   | "assumptions"
   | "explanation"
   | "replay"
+  | "audit"
   | "graph"
   | "observatory"
   | "architecture";
@@ -18,6 +19,7 @@ export function routeFromHash(hash: string): AppRoute {
   if (hash === "#/explanation" || hash.startsWith("#/explanation?"))
     return "explanation";
   if (hash === "#/replay" || hash.startsWith("#/replay?")) return "replay";
+  if (hash === "#/audit" || hash.startsWith("#/audit?")) return "audit";
   if (hash === "#/graph" || hash.startsWith("#/graph?")) return "graph";
   return "reasoning";
 }
@@ -30,6 +32,7 @@ export function hrefForRoute(route: AppRoute): string {
   if (route === "assumptions") return "#/assumptions";
   if (route === "explanation") return "#/explanation";
   if (route === "replay") return "#/replay";
+  if (route === "audit") return "#/audit";
   if (route === "graph") return "#/graph";
   return "#/";
 }

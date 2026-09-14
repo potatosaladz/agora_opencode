@@ -39,9 +39,11 @@ from app.domain.audit import (
     audit_anchor_hash,
 )
 from app.domain.consensus import ConsensusResultStore, ConsensusRunRecord
+from app.domain.dissent import DissentConsensusExplanationReader
 from app.domain.phase3_api import Phase3ArtifactStore
 from app.domain.reasoning_ledger import GENESIS_HASH, LedgerEvent, ReasoningLedger
 from app.domain.session_lifecycle import SessionLifecycleStore
+from app.ports.consensus import ConsensusExplanation
 
 __all__ = [
     "AccessAuditService",
@@ -71,11 +73,14 @@ class AccessAuditService:
         workspace_id: UUID,
         recommendation_id: UUID,
         *,
+        session_id: UUID | None = None,
         limit: int = 100,
         cursor: str | None = None,
     ) -> RecommendationAccessReport:
         """Q7: every read of the recommendation strictly before it was accepted."""
-        created_at = await self._access.recommendation_created_at(workspace_id, recommendation_id)
+        created_at = await self._access.recommendation_created_at(
+            workspace_id, recommendation_id, session_id=session_id
+        )
         before = created_at if created_at is not None else None
         entries, next_cursor = await self._access.list_for_resource(
             workspace_id,
@@ -93,8 +98,9 @@ class AccessAuditService:
             recommendation_id=recommendation_id,
             recommendation_known=known,
             recommendation_created_at=created_at,
+            session_id=session_id if known else None,
             entries=entries,
-            complete_timeline=known and not truncated,
+            complete_timeline=known and not truncated and cursor is None,
             why_incomplete=None if known else "recommendation is not recorded for this session",
             truncated=truncated,
             next_cursor=next_cursor,
@@ -190,6 +196,7 @@ class AuditQueryService:
         participants: SessionParticipantReader,
         provenance: ProvenanceService,
         ledger: ReasoningLedger,
+        explanations: DissentConsensusExplanationReader | None = None,
     ) -> None:
         self._artifacts = artifacts
         self._consensus = consensus
@@ -197,6 +204,7 @@ class AuditQueryService:
         self._participants = participants
         self._provenance = provenance
         self._ledger = ledger
+        self._explanations = explanations
 
     async def artifact_rationale(
         self,
@@ -281,6 +289,20 @@ class AuditQueryService:
         if round < 1:
             raise ValueError("round must be a positive number")
         return await self._consensus.get_round_result(workspace_id, session_id, round=round)
+
+    async def round_consensus_explanation(
+        self, workspace_id: UUID, session_id: UUID, *, round: int
+    ) -> tuple[ConsensusRunRecord, ConsensusExplanation | None] | None:
+        """Q4/Q6 support: exact persisted round result plus its explanation."""
+        record = await self.round_consensus_record(workspace_id, session_id, round=round)
+        if record is None:
+            return None
+        explanation = (
+            await self._explanations.get(workspace_id, record.id)
+            if self._explanations is not None
+            else await self._consensus.get_explanation(workspace_id, record.id)
+        )
+        return record, explanation
 
     async def session_termination(
         self, workspace_id: UUID, session_id: UUID

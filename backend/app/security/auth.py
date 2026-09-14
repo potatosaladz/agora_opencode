@@ -20,11 +20,13 @@ __all__ = [
     "current_principal",
     "public_route",
     "require_roles",
+    "require_scopes",
 ]
 
 _PUBLIC_ROUTES = frozenset({("GET", "/health"), ("GET", "/ready")})
 _PUBLIC_ATTRIBUTE = "__agora_public_route__"
 _POLICY_ATTRIBUTE = "__agora_workspace_roles__"
+_SCOPES_ATTRIBUTE = "__agora_required_scopes__"
 _Endpoint = TypeVar("_Endpoint", bound=Callable[..., object])
 
 
@@ -55,6 +57,19 @@ def require_roles(*roles: WorkspaceRole) -> Callable[[_Endpoint], _Endpoint]:
     return decorate
 
 
+def require_scopes(*scopes: str) -> Callable[[_Endpoint], _Endpoint]:
+    """Attach required trusted bearer scopes to one route."""
+    if not scopes or any(not scope.strip() for scope in scopes):
+        raise ValueError("a route scope policy requires nonblank scopes")
+    required = frozenset(scopes)
+
+    def decorate(endpoint: _Endpoint) -> _Endpoint:
+        setattr(endpoint, _SCOPES_ATTRIBUTE, required)
+        return endpoint
+
+    return decorate
+
+
 async def authorize_request(request: Request) -> None:
     """Authenticate every non-probe route, then enforce its explicit role policy."""
     route = request.scope.get("route")
@@ -79,6 +94,9 @@ async def authorize_request(request: Request) -> None:
     if not isinstance(allowed, frozenset):
         raise Forbidden("access denied")
     if principal.role not in cast(frozenset[WorkspaceRole], allowed):
+        raise Forbidden("access denied")
+    required_scopes: object = getattr(endpoint, _SCOPES_ATTRIBUTE, frozenset())
+    if not isinstance(required_scopes, frozenset) or not required_scopes.issubset(principal.scopes):
         raise Forbidden("access denied")
 
 

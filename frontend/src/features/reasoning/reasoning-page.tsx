@@ -954,9 +954,9 @@ export function ReasoningPage({ connection }: { connection?: LiveConnection }) {
               </p>
             ) : null}
           </section>
-          <button className="audit-link" type="button">
+          <a className="audit-link" href="#/audit">
             <Icon name="history" /> View audit trail
-          </button>
+          </a>
         </aside>
       </div>
     </main>

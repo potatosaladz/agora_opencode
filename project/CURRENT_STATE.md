@@ -1,7 +1,16 @@
 # Current State
 
-**As of:** 2026-09-14 · **Phase:** 14 in progress · **Active task:** T14-05 Replay Controls complete
+**As of:** 2026-09-14 · **Phase:** 14 complete · **Active task:** Phase 14 exit complete
 **Track:** MVP · **Confidence:** Phases 0–4, 6–10 exact-SHA remote evidence; Phase 5 local gates green; Phase 13 local gates green
+
+Phase 14 T14-06 Audit Search and the phase exit are complete. Scoped authenticated
+`POST /api/v1/sessions/{session_id}/audit/query` exposes all eight exact audit questions through the
+existing Phase 13 services, records successful reads through `access_log`, preserves Q7's strict persisted
+boundary and Q8's ledger/anchor verification, and keeps completeness separate from integrity. The code-split
+accessible UI renders query-specific controls, parameters, ordered evidence, pagination and cross-view
+links. The frozen scripted fixture identifies “Prefer the rail alternative” with `agt_equity`/`art_equity`
+and “Winter range degradation report” with visible DISPUTED/OPPOSES rationale from the initial UI; required
+navigation and UNKNOWN → DEFER pass. No migration was added; Alembic remains `20260914_0026`.
 
 Phase 14 T14-05 Replay Controls is complete. Authenticated
 `GET /api/v1/sessions/{session_id}/manifest` exposes the exact finalized public manifest identity and
@@ -56,10 +65,10 @@ fixture passes.
 
 Phase 14 task authority remains frozen in [PHASE14_ACCEPTANCE.md](../docs/PHASE14_ACCEPTANCE.md): T14-01 Graph
 View, T14-02 Dissent View, T14-03 Assumption Register, T14-04 Explanation Panel, T14-05 Replay Controls and
-T14-06 Audit Search, in that order. T14-01…05 are complete and T14-06 remains open. The contract preserves earlier-phase domain,
+T14-06 Audit Search, in that order. T14-01…06 and the phase exit are complete. The contract preserves earlier-phase domain,
 storage and requirement ownership: Phase 14 adds authenticated API exposure and accessible UI presentation,
 not replacement graph, consensus, symbolic, replay, manifest or audit infrastructure. The scripted phase
-fixture is defined but has not passed.
+fixture has passed.
 
 Phase 13 T13-04 is complete locally. `RunManifestDocument` is the strict, canonical version-1 run
 identity. It pins code/images, migration/artifact schemas, configuration/protocol/budget/consensus,

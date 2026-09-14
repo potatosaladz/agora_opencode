@@ -207,6 +207,7 @@ export const explanationFixture = {
       rationale:
         "verification=DISPUTED; lifecycle=ACTIVE; citations=present; relation=OPPOSES. This is the recorded weakest-evidence rationale.",
       id: "art_winter",
+      label: "Winter range degradation report",
       kind: "EVIDENCE",
       lifecycle: "ACTIVE",
       graph_node_id: "gnd_winter",

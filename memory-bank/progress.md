@@ -23,7 +23,7 @@ evidence remains separate. Phase-0 architecture baseline: **approved by the proj
 | 11 | Neuro-symbolic | **Complete** | T11-01…04 complete: immutable formalisation lifecycle, bounded Z3, exact-revision evidence, and conservative `UNKNOWN → DEFER` consensus policy |
 | 12 | MARL environment | **Complete** | T12-01…05: exact trajectory domain, reward/credit accounting, canonical export, hermetic replay, in-memory/PostgreSQL stores and migration 0024 |
 | 13 | Trustworthiness | **Complete** | T13-01 catalogue; T13-02 audit records + eight queries; T13-03 replay modes; T13-04 canonical durable pinned run manifests |
-| 14 | Full UI | In progress | T14-01…05 complete; T14-06 open; scripted usability fixture remains unpassed |
+| 14 | Full UI | **Complete** | T14-01…06 complete; frozen usability fixture identifies minority position and weakest evidence from initial UI; full local/Compose gates green |
 | 15 | MCP | Not started | — |
 | 16 | Research extensions | Not started | — |
 | 17 | Swarm & hardening | Not started | — |
@@ -31,6 +31,16 @@ evidence remains separate. Phase-0 architecture baseline: **approved by the proj
 ---
 
 ## Detailed log
+
+### 2026-09-14 — Phase 14 T14-06 Audit Search and phase exit
+
+- Added scoped authenticated Q1–Q8 exposure over existing audit services, append-only access logging,
+  deterministic public evidence, strict per-question inputs, Q7 pagination, and Q8 ledger/anchor integrity.
+- Added code-split responsive Audit Search with keyboard controls, explicit completeness/integrity/missing
+  states, ordered evidence and working links to all prior Phase 14 views.
+- The unchanged frozen usability script passes from the initial Explanation UI: the reviewer can identify the
+  minority position/author/warrant and weakest evidence/recorded reason without backend or developer tools.
+- No migration or replacement audit persistence was added; Alembic remains `20260914_0026`.
 
 ### 2026-09-14 — Phase 14 T14-05 Replay Controls
 

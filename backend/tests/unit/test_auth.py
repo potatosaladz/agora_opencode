@@ -17,7 +17,7 @@ from app.ports.auth import (
     VerifiedPrincipal,
     WorkspaceRole,
 )
-from app.security import current_principal, public_route, require_roles
+from app.security import current_principal, public_route, require_roles, require_scopes
 from tests.traceability import req
 
 
@@ -120,6 +120,40 @@ def test_route_policy_rejects_empty_or_noncanonical_roles() -> None:
         require_roles()
     with pytest.raises(ValueError, match="canonical workspace roles"):
         require_roles("ADMIN")  # type: ignore[arg-type]
+    with pytest.raises(ValueError, match="nonblank scopes"):
+        require_scopes("")
+
+
+@req("NFR-010")
+def test_route_scope_policy_is_enforced_after_role_policy() -> None:
+    app = create_app(_settings())
+    workspace_id = uuid4()
+    denied = _principal(WorkspaceRole.VIEWER, workspace_id=workspace_id)
+    allowed = VerifiedPrincipal(
+        denied.subject,
+        denied.user_id,
+        denied.workspace_id,
+        denied.role,
+        frozenset({"audit:read"}),
+    )
+
+    @app.get("/test/audit")
+    @require_roles(WorkspaceRole.VIEWER)
+    @require_scopes("audit:read")
+    async def audit() -> dict[str, bool]:
+        return {"ok": True}
+
+    with TestClient(app) as client:
+        _install_verifier(app, {"denied": denied, "allowed": allowed})
+        _assert_problem(
+            client.get("/test/audit", headers={"Authorization": "Bearer denied"}),
+            403,
+            "FORBIDDEN",
+        )
+        assert (
+            client.get("/test/audit", headers={"Authorization": "Bearer allowed"}).status_code
+            == 200
+        )
 
 
 @req("NFR-010")

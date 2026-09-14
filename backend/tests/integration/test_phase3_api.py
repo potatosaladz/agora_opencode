@@ -6,6 +6,7 @@ import asyncio
 import json
 import os
 from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from urllib.parse import quote_plus
 from uuid import UUID
@@ -17,11 +18,14 @@ from fastapi.testclient import TestClient
 from pydantic import SecretStr
 from sqlalchemy import text
 from sqlalchemy.engine import make_url
-from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from app.api import create_app
+from app.application.audit import ChainVerificationService
 from app.common.ids import parse_id, public_id, uuid7
 from app.config import Settings
+from app.db.audit import SqlAlchemyAuditAnchorRepository
+from app.db.reasoning_ledger import SqlAlchemyReasoningLedger
 from app.ports.auth import VerifiedPrincipal, WorkspaceRole
 from tests.traceability import req
 
@@ -107,7 +111,13 @@ async def _seed(url: str) -> tuple[VerifiedPrincipal, str]:
         )
     await engine.dispose()
     return (
-        VerifiedPrincipal("oidc|api", user_id, workspace_id, WorkspaceRole.RESEARCHER),
+        VerifiedPrincipal(
+            "oidc|api",
+            user_id,
+            workspace_id,
+            WorkspaceRole.RESEARCHER,
+            frozenset({"audit:read"}),
+        ),
         public_id("agent", agent_id),
     )
 
@@ -217,6 +227,98 @@ async def _seed_dissent(
         )
     await engine.dispose()
     return consensus_id
+
+
+async def _seed_audit(
+    url: str,
+    principal: VerifiedPrincipal,
+    session_id: UUID,
+    consensus_id: UUID,
+) -> UUID:
+    recommendation_id = uuid7()
+    engine = create_async_engine(url)
+    boundary = datetime(2026, 9, 14, 12, tzinfo=UTC)
+    async with engine.begin() as connection:
+        await connection.execute(
+            text("SELECT set_config('app.workspace_id', :workspace_id, true)"),
+            {"workspace_id": str(principal.workspace_id)},
+        )
+        await connection.execute(
+            text(
+                "INSERT INTO recommendations ("
+                "id, workspace_id, session_id, consensus_id, rank, title, statement, "
+                "conditions, risks, open_questions, created_at) VALUES ("
+                ":id, :workspace, :session, :consensus, 1, 'Audit fixture', "
+                "'Persisted recommendation', '[]'::jsonb, CAST(:risks AS uuid[]), "
+                "'[]'::jsonb, :created_at)"
+            ),
+            {
+                "id": recommendation_id,
+                "workspace": principal.workspace_id,
+                "session": session_id,
+                "consensus": consensus_id,
+                "risks": [],
+                "created_at": boundary,
+            },
+        )
+        await connection.execute(
+            text(
+                "INSERT INTO access_log (id, workspace_id, session_id, principal_class, "
+                "principal_id, resource_kind, resource_id, action, result, scope_ids, "
+                "trace_id, recorded_at) VALUES (:id, :workspace, :session, 'HUMAN', "
+                ":principal, 'RECOMMENDATION', :resource, 'READ', 'ALLOWED', "
+                "'[]'::jsonb, 'phase14-fixture', :recorded_at)"
+            ),
+            {
+                "id": uuid7(),
+                "workspace": principal.workspace_id,
+                "session": session_id,
+                "principal": principal.user_id,
+                "resource": recommendation_id,
+                "recorded_at": boundary - timedelta(minutes=1),
+            },
+        )
+    sessions = async_sessionmaker(engine, expire_on_commit=False)
+    async with sessions.begin() as session:
+        await ChainVerificationService(
+            SqlAlchemyAuditAnchorRepository(session),
+            SqlAlchemyReasoningLedger(session),
+        ).publish_daily_anchor(principal.workspace_id, session_id)
+    await engine.dispose()
+    return recommendation_id
+
+
+async def _tamper_ledger(url: str, session_id: UUID) -> None:
+    engine = create_async_engine(url)
+    async with engine.begin() as connection:
+        await connection.execute(text("ALTER TABLE reasoning_events DISABLE TRIGGER USER"))
+        await connection.execute(
+            text(
+                "UPDATE reasoning_events SET event_hash = :hash "
+                "WHERE session_id = :session_id AND ledger_seq = 1"
+            ),
+            {"hash": "sha256:" + "f" * 64, "session_id": session_id},
+        )
+        await connection.execute(text("ALTER TABLE reasoning_events ENABLE TRIGGER USER"))
+    await engine.dispose()
+
+
+async def _audit_read_count(url: str, workspace_id: UUID, session_id: UUID) -> int:
+    engine = create_async_engine(url)
+    async with engine.begin() as connection:
+        await connection.execute(
+            text("SELECT set_config('app.workspace_id', :workspace_id, true)"),
+            {"workspace_id": str(workspace_id)},
+        )
+        value = await connection.scalar(
+            text(
+                "SELECT count(*) FROM access_log WHERE session_id = :session_id "
+                "AND scope_ids @> '[\"audit:read\"]'::jsonb"
+            ),
+            {"session_id": session_id},
+        )
+    await engine.dispose()
+    return int(value or 0)
 
 
 def _settings(url: str) -> Settings:
@@ -425,6 +527,66 @@ def test_phase3_http_create_read_and_replay_are_atomic() -> None:
         assert explanation_data["why"]["formula"] == "persisted integration fixture"
         assert explanation_data["minority"][0]["position"] == "OPPOSE"
         assert explanation_data["provenance"]["href"].endswith("/provenance")
+
+        recommendation_id = asyncio.run(
+            _seed_audit(
+                _DATABASE_URL,
+                principal,
+                internal_session_id,
+                parse_id("consensus_result", explanation_data["decision"]["consensus_result_id"]),
+            )
+        )
+        audit_headers = {"Authorization": "Bearer integration"}
+        audit_inputs = {
+            "Q1": {"question": "Q1", "artifact_id": artifact_id},
+            "Q2": {"question": "Q2", "artifact_id": artifact_id},
+            "Q3": {"question": "Q3", "round": 1},
+            "Q4": {"question": "Q4", "round": 1},
+            "Q5": {"question": "Q5"},
+            "Q6": {"question": "Q6", "round": 1},
+            "Q7": {
+                "question": "Q7",
+                "recommendation_id": public_id("recommendation", recommendation_id),
+            },
+            "Q8": {"question": "Q8"},
+        }
+        audit_results = {
+            question: client.post(
+                f"/api/v1/sessions/{session_id}/audit/query",
+                headers=audit_headers,
+                json=body,
+            )
+            for question, body in audit_inputs.items()
+        }
+        for question, response in audit_results.items():
+            assert response.status_code == 200, f"{question}: {response.text}"
+        assert (
+            audit_results["Q4"].json()["data"]["answer"]["minority_report"][0]["position"]
+            == "OPPOSE"
+        )
+        assert (
+            audit_results["Q7"].json()["data"]["answer"]["entries"][0]["recorded_at"]
+            < audit_results["Q7"].json()["data"]["answer"]["recommendation_created_at"]
+        )
+        assert audit_results["Q8"].json()["data"]["state"]["integrity"] == ("VERIFIED_UNALTERED")
+        assert all(
+            str(internal_session_id) not in response.text for response in audit_results.values()
+        )
+        assert (
+            asyncio.run(
+                _audit_read_count(_DATABASE_URL, principal.workspace_id, internal_session_id)
+            )
+            == 8
+        )
+        asyncio.run(_tamper_ledger(_DATABASE_URL, internal_session_id))
+        altered = client.post(
+            f"/api/v1/sessions/{session_id}/audit/query",
+            headers=audit_headers,
+            json={"question": "Q8"},
+        )
+        assert altered.status_code == 200
+        assert altered.json()["data"]["state"]["integrity"] == "ALTERED"
+        assert altered.json()["data"]["answer"]["ledger_valid"] is False
 
         graph_nodes = asyncio.run(_graph_nodes(_DATABASE_URL, principal.workspace_id))
         assert len(graph_nodes) == 3

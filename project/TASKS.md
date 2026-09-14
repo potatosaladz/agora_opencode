@@ -65,7 +65,7 @@ Full breakdown in [PLAN.md](PLAN.md). Estimates are per phase, not per task, unt
 | 11 Neuro-symbolic | `[ ]` | L | an infeasible alternative is removed with its unsat core quoted |
 | 12 MARL environment | `[ ]` | M | trajectories replay deterministically; reward components map to metric ids |
 | 13 Trustworthiness | `[~]` | L | T13-01 complete; everything else open — a past session answers "why did it say that"; manifest replays in `TOLERANT` mode |
-| 14 Full UI | `[ ]` | XL | a naive reviewer finds the minority position and the weakest evidence from the UI alone |
+| 14 Full UI | `[x]` | XL | a naive reviewer finds the minority position and the weakest evidence from the UI alone |
 | 15 MCP gateway | `[ ]` | L | workers have no internet route; hostile tool output does not widen agent scope |
 | 16 Research extensions | `[ ]` | XL | three research strategies each beat or lose to `constraint_aware` on measured terms |
 | 17 Swarm + hardening | `[ ]` | L | restore drill succeeds; every threat has a control with a test id |
@@ -89,7 +89,7 @@ Full breakdown in [PLAN.md](PLAN.md). Estimates are per phase, not per task, unt
 | T13-03 | Replay modes `STRICT` / `TOLERANT` / `LIVE` | `[x]` | M | closed `ReplayMode` plus immutable request/source/step/execution/result/mismatch/diff contracts in `app/domain/replay.py`; `SessionReplayService` verifies manifest/session identity and the authoritative ledger before exhaustive mode dispatch; STRICT permits only recorded or exact-version deterministic local steps, integrates existing Phase 12 `verify_bundle`, stops at the first mismatch, and never invokes external implementations; TOLERANT re-executes only explicitly permitted steps and reports ordered implementation/provider/model/configuration/output/status/timing-sensitive differences without claiming VERIFIED; LIVE delegates creation, requires fresh linked session/manifest/event/result identities, and rejects historical identity reuse; no HTTP or persistence added because durable manifests/linkage are T13-04; 11 focused tests cover all mode and isolation invariants |
 | T13-04 | Run manifests with pinning | `[x]` | M | `RunManifestDocument` canonically pins code/images, migration/artifact schemas, configuration/protocol/budget/consensus, agent/prompt/inference, retrieval/index, metric, symbolic, simulation, MARL, content and scoped randomness identities; deterministic bytes/hash/id and required unique pins are enforced; migration `20260914_0026` adds one tenant-safe forced-RLS `reproducibility_manifests` row per session with optional same-workspace replay lineage and exactly one immutable `CREATED → FINALIZED` transition; canonical bytes are content-addressed in `ObjectStore`; `PersistedReplaySource` resolves only exact finalized id/version/hash pins for T13-03 with no latest fallback; focused unit and PostgreSQL tests cover hash identity, changed pins, required fields, exact finalization, immutability, RLS/FKs and strict replay resolution |
 
-## Phase 14 — Full UI · **T14-01…05 complete; T14-06 open**
+## Phase 14 — Full UI · **complete**
 
 Normative detail: [PHASE14_ACCEPTANCE.md](../docs/PHASE14_ACCEPTANCE.md). Requirement mappings verify
 UI/API exposure of earlier-phase capabilities and do not reassign their implementation ownership.
@@ -101,11 +101,12 @@ UI/API exposure of earlier-phase capabilities and do not reassign their implemen
 | T14-03 | Assumption Register | `[x]` | M | authenticated read composition exposes every assumption, constraint and uncertainty revision with lifecycle, attribution, evidence relations, dependents, critiques, provenance and graph links; exact constraint symbolic state preserves `SAT → PROCEED`, `UNSAT → BLOCK`, `UNKNOWN → DEFER`, and missing analysis explicitly; code-split accessible responsive UI passes with no migration or persistence |
 | T14-04 | Explanation Panel | `[x]` | L | authenticated read composition exposes the latest persisted decision/recommendation, drivers, inhibitors, absent evidence, alternatives, evidence relations, assumptions, dissent, critiques, risks, symbolic feasibility, conditions, authored counterfactuals, provenance and caveats with explicit empty reasons; the accessible code-split executive/expert/formal/machine-readable panel identifies the recorded weakest evidence without recomputation or generated prose |
 | T14-05 | Replay Controls | `[x]` | M | authenticated finalized-manifest read and replay request APIs delegate exact source/manifest-bound STRICT/TOLERANT/LIVE requests to existing services; STRICT has no external-call path, TOLERANT preserves MATCHED/DIFFERENT ordered diffs, LIVE requires write role/confirmation and exposes fresh lineage or typed unavailable state; code-split accessible responsive UI; no migration or persistence |
-| T14-06 | Audit Search | `[ ]` | L | authenticated UI/API exposes existing Q1–Q8 services with typed bounded inputs/results, tenant isolation, Q7-before-acceptance, Q8 chain verification and audit-read logging; no replacement audit subsystem, nightly anchor job, WORM store or export bundle |
+| T14-06 | Audit Search | `[x]` | L | scoped authenticated API/UI exposes existing Q1–Q8 services with strict typed inputs, deterministic public evidence, independent completeness/integrity, tenant isolation, audited reads, Q7-before-creation pagination and Q8 ledger/anchor verification; no migration or replacement audit subsystem |
 
-**Exit gate:** the frozen scripted fixture proves that a reviewer with no knowledge of the internals can
-identify the minority position and weakest evidence from the UI alone. The fixture is defined but has not
-passed because T14-06 remains open.
+**Exit gate satisfied:** the frozen scripted fixture proves that a reviewer with no knowledge of the
+internals can identify “Prefer the rail alternative” with its author/warrant and “Winter range degradation
+report” with its visible DISPUTED/OPPOSES weakest-evidence rationale from the UI alone. Required links,
+UNKNOWN → DEFER, replay/audit visibility, accessibility, responsive, contract and Compose gates pass.
 
 ## Phase 3 — detailed execution plan
 

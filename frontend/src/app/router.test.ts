@@ -16,6 +16,7 @@ describe("hash router", () => {
     expect(routeFromHash(hrefForRoute("explanation"))).toBe("explanation");
     expect(routeFromHash(hrefForRoute("replay"))).toBe("replay");
     expect(routeFromHash("#/replay?session=ses_public")).toBe("replay");
+    expect(routeFromHash(hrefForRoute("audit"))).toBe("audit");
     expect(routeFromHash(hrefForRoute("graph"))).toBe("graph");
     expect(routeFromHash("#/graph?root=gnd_public")).toBe("graph");
     expect(routeFromHash(hrefForRoute("reasoning"))).toBe("reasoning");

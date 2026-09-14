@@ -131,12 +131,18 @@ class SqlAlchemyAccessLogRepository:
         return entries, next_cursor
 
     async def recommendation_created_at(
-        self, workspace_id: UUID, recommendation_id: UUID
+        self,
+        workspace_id: UUID,
+        recommendation_id: UUID,
+        *,
+        session_id: UUID | None = None,
     ) -> datetime | None:
         statement = select(RecommendationRow.created_at).where(
             RecommendationRow.workspace_id == workspace_id,
             RecommendationRow.id == recommendation_id,
         )
+        if session_id is not None:
+            statement = statement.where(RecommendationRow.session_id == session_id)
         result: datetime | None = await self._session.scalar(statement)
         return result
 

@@ -117,6 +117,24 @@ delegates to the existing optional `LiveReplayLauncher`; when no authorized laun
 the typed `LIVE_LAUNCH_UNAVAILABLE` result rather than inventing a run. A successful launch returns fresh
 session, manifest, event and result ids plus source-session lineage. Historical source rows remain immutable.
 
+<!-- trace: FR-802, FR-807, NFR-006, NFR-010, NFR-019 -->
+### T14-06 audit search
+
+T14-06 adds authenticated `POST /api/v1/sessions/{id}/audit/query`. The request is a closed discriminated
+union for exactly Q1…Q8: Q1/Q2 require an artifact id, Q3/Q4/Q6 require a round, Q7 requires a
+recommendation id and bounded pagination, and Q5/Q8 require no additional selector. Q1 provenance is
+bounded by depth/page/cursor. Workspace scope comes only from the verified principal, `audit:read` is
+required in addition to the explicit workspace-role policy, and malformed/missing/cross-tenant resources
+fail closed.
+
+Each operation delegates to the Phase 13 `AuditQueryService`, `AccessAuditService`, or
+`ChainVerificationService` and records the successful audit read through the existing append-only
+`access_log`. The response retains deterministic evidence order and reports completeness independently from
+ledger/anchor integrity. Q7 remains strictly bounded before `recommendations.created_at`; Q8 reports ledger
+verification and every stored anchor rather than treating history-table presence as integrity. Public ids
+only are returned; no raw ledger payload, alternate audit calculation, trust score, migration or storage is
+introduced.
+
 `GET /api/v1/sessions/{id}` reads authoritative state from PostgreSQL's session lifecycle
 projection. Temporal execution descriptions are operational diagnostics only and never overwrite
 or replace that projection.

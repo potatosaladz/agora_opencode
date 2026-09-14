@@ -396,7 +396,11 @@ class AccessLogRepository(Protocol):
     ) -> tuple[tuple[AccessLogEntry, ...], str | None]: ...
 
     async def recommendation_created_at(
-        self, workspace_id: UUID, recommendation_id: UUID
+        self,
+        workspace_id: UUID,
+        recommendation_id: UUID,
+        *,
+        session_id: UUID | None = None,
     ) -> datetime | None: ...
 
 

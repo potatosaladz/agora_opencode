@@ -277,8 +277,13 @@ class FakeAccessLog:
         return tuple(page), next_cursor
 
     async def recommendation_created_at(
-        self, workspace_id: UUID, recommendation_id: UUID
+        self,
+        workspace_id: UUID,
+        recommendation_id: UUID,
+        *,
+        session_id: UUID | None = None,
     ) -> datetime | None:
+        del workspace_id, session_id
         return self.creation_times.get(recommendation_id)
 
 
@@ -343,6 +348,7 @@ class FakeConsensus:
 
     def __init__(self) -> None:
         self.records: list[ConsensusRunRecord] = []
+        self.explanations: dict[UUID, ConsensusExplanation] = {}
 
     async def add_result(self, record: ConsensusRunRecord) -> None:
         self.records.append(record)
@@ -378,7 +384,7 @@ class FakeConsensus:
     async def get_explanation(
         self, workspace_id: UUID, result_id: UUID
     ) -> ConsensusExplanation | None:
-        return None
+        return self.explanations.get(result_id)
 
 
 class FakeArtifacts:
@@ -691,6 +697,11 @@ async def test_recommendation_access_truncation_reports_cursor() -> None:
     assert len(report.entries) == 2
     assert report.complete_timeline is False
 
+    continued = await AccessAuditService(access).recommendation_access(
+        WS, recommendation_id, limit=2, cursor=report.next_cursor
+    )
+    assert continued.complete_timeline is False
+
 
 # ---------------------------------------------------------------------------
 # Q1..Q6 — audit query service
@@ -874,6 +885,27 @@ async def test_round_consensus_record_lookup() -> None:
     assert await service.round_consensus_record(WS, SESSION, round=4) is None
     with pytest.raises(ValueError, match="round must be a positive"):
         await service.round_consensus_record(WS, SESSION, round=0)
+
+
+@req("FR-807", "NFR-006")
+async def test_round_consensus_explanation_returns_exact_persisted_pair() -> None:
+    consensus = FakeConsensus()
+    record = _consensus_record(round=2)
+    explanation = ConsensusExplanation(
+        consensus_id=record.id,
+        outcome=record.outcome,
+        strategy=record.strategy,
+        strategy_version=record.strategy_version,
+        formula="persisted",
+        input_hash=record.input_hash,
+    )
+    await consensus.add_result(record)
+    consensus.explanations = {record.id: explanation}
+    service = _query_service(ledger=FakeLedger(), consensus=consensus)
+    assert await service.round_consensus_explanation(WS, SESSION, round=2) == (
+        record,
+        explanation,
+    )
 
 
 @req("FR-807", "NFR-006")

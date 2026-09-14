@@ -1,5 +1,6 @@
 """Route modules, one per resource family, mounted by `app.api.app`."""
 
+from app.api.routes.audit import router as audit_router
 from app.api.routes.formalizations import router as formalizations_router
 from app.api.routes.graph import router as graph_router
 from app.api.routes.health import router as health_router
@@ -9,6 +10,7 @@ from app.api.routes.realtime import router as realtime_router
 from app.api.routes.replay import router as replay_router
 
 __all__ = [
+    "audit_router",
     "formalizations_router",
     "graph_router",
     "health_router",

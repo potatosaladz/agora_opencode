@@ -11,6 +11,7 @@ from opentelemetry.sdk.trace.export import SpanExporter
 from app.api.errors import register_exception_handlers
 from app.api.middleware import CorrelationIdMiddleware, RequestMetricsMiddleware
 from app.api.routes import (
+    audit_router,
     formalizations_router,
     graph_router,
     health_router,
@@ -95,6 +96,7 @@ def create_app(
     app.state.metrics = metrics
     app.state.tracing = tracing
     app.include_router(health_router)
+    app.include_router(audit_router)
     app.include_router(phase3_router)
     app.include_router(formalizations_router)
     app.include_router(graph_router)

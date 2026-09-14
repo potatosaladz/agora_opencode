@@ -8,6 +8,15 @@ uses semantic versioning once it ships a release. Phase 0 is pre-release.
 
 ## [Unreleased]
 
+### Added — Phase 14 T14-06 (Audit Search and Phase Exit)
+
+- Added scoped, authenticated Q1–Q8 Audit Search over the existing Phase 13 audit query, access-log and
+  chain-verification services, with strict per-question inputs and public IDs.
+- Added code-split accessible Audit Search with ordered evidence, independent completeness/integrity states,
+  pagination, problem-detail handling and links to the existing Phase 14 views.
+- Passed the frozen Phase 14 usability fixture: the minority position and weakest evidence are identifiable
+  from visible UI facts without internal-system knowledge. No migration or audit persistence was added.
+
 ### Added — Phase 14 T14-05 (Replay Controls)
 
 - Added authenticated finalized-manifest reads and exact manifest-bound `STRICT`, `TOLERANT`, and `LIVE`

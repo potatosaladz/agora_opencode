@@ -6,6 +6,7 @@ from app.security.auth import (
     current_principal,
     public_route,
     require_roles,
+    require_scopes,
 )
 
 __all__ = [
@@ -14,4 +15,5 @@ __all__ = [
     "current_principal",
     "public_route",
     "require_roles",
+    "require_scopes",
 ]

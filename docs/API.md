@@ -80,6 +80,7 @@ omnibus token.
 | `GET` | `/sessions/{id}/explanation` | complete persisted decision explanation | authenticated; read-only, unfiltered, no recomputation; explicit unavailable states |
 | `GET` | `/sessions/{id}/manifest` | exact finalized replay-manifest identity | authenticated; public id/version/hash; tenant-hidden `404` |
 | `POST` | `/sessions/{id}/replay` | execute explicit `REPLAY_STRICT`, `REPLAY_TOLERANT`, or `REPLAY_LIVE` | exact manifest-bound; LIVE requires write role and confirmation |
+| `POST` | `/sessions/{id}/audit/query` | ask one authoritative Q1–Q8 audit question | authenticated `audit:read`; strict query-specific inputs; audited read; independent completeness/integrity |
 | `GET` | `/sessions/{id}/rounds/{n}` | full round detail | |
 | `POST` | `/sessions/{id}/human-input` | typed human directive | idempotent; workflow emits `HUMAN_DIRECTIVE` |
 | `POST` | `/sessions/{id}/pause` · `/resume` · `/cancel` | lifecycle | authenticated, idempotent Temporal signals; cancel is terminal and never deletes |

@@ -263,6 +263,53 @@ describe("ApiClient", () => {
     );
   });
 
+  // req: FR-802, FR-807, NFR-006, NFR-010
+  it("posts one typed authenticated audit question", async () => {
+    const response = {
+      data: {
+        question: "Q8" as const,
+        question_text: "Has anything been altered since it was written?",
+        parameters: { session_id: "ses_public" },
+        answer: { kind: "CHAIN_VERIFICATION", chain_valid: true },
+        evidence: [],
+        state: {
+          completeness: "COMPLETE" as const,
+          completeness_reasons: [],
+          integrity: "VERIFIED_UNALTERED" as const,
+          integrity_reasons: [],
+        },
+        pagination: { truncated: false, next_cursor: null },
+        links: { replay: "#/replay" },
+      },
+      meta: {
+        request_id: "request",
+        schema_version: 1 as const,
+        workspace_id: "ws_public",
+      },
+    };
+    const fetchImpl = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response(JSON.stringify(response), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+    const input = { question: "Q8" as const };
+    await expect(
+      new ApiClient({ fetchImpl }).querySessionAudit(
+        "ses_public",
+        input,
+        "audit-token",
+      ),
+    ).resolves.toEqual(response);
+    const [path, init] = fetchImpl.mock.calls[0] ?? [];
+    expect(path).toBe("/api/v1/sessions/ses_public/audit/query");
+    expect(init?.method).toBe("POST");
+    expect(init?.body).toBe(JSON.stringify(input));
+    expect((init?.headers as Record<string, string>).Authorization).toBe(
+      "Bearer audit-token",
+    );
+  });
+
   // req: FR-504, FR-505, FR-506, FR-609, FR-901, NFR-005, NFR-019
   it("reads authenticated session dissent", async () => {
     const response = {

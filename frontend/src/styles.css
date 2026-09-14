@@ -3756,6 +3756,215 @@ footer {
   margin: 30px;
   border: 1px dashed var(--console-line);
 }
+.audit-page {
+  min-height: 100%;
+  color: var(--console-text);
+}
+.audit-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 30px;
+  border-bottom: 1px solid var(--console-line);
+}
+.audit-header h1,
+.audit-result h2,
+.audit-result h3 {
+  margin: 5px 0 0;
+  font-weight: 400;
+}
+.audit-header p,
+.audit-result > header span {
+  margin: 0;
+  color: var(--console-muted);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.audit-workspace {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.7fr) minmax(0, 1.3fr);
+  gap: 1px;
+  background: var(--console-line);
+}
+.audit-query,
+.audit-result {
+  padding: 26px;
+  background: var(--console-bg);
+}
+.audit-query fieldset {
+  min-width: 0;
+  margin: 0 0 22px;
+  padding: 0;
+  border: 0;
+}
+.audit-query legend {
+  margin-bottom: 14px;
+  font-size: 12px;
+}
+.audit-question-list {
+  display: grid;
+  gap: 7px;
+}
+.audit-question-list label {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 11px;
+  padding: 12px;
+  border: 1px solid var(--console-line);
+  cursor: pointer;
+}
+.audit-question-list label:focus-within {
+  border-color: var(--acid);
+  outline: 2px solid transparent;
+}
+.audit-question-list input {
+  accent-color: var(--acid);
+}
+.audit-question-list span {
+  display: grid;
+  gap: 5px;
+  line-height: 1.45;
+}
+.audit-question-list strong {
+  color: var(--acid);
+}
+.audit-question-list small {
+  color: var(--console-muted);
+}
+.audit-query > label {
+  display: grid;
+  gap: 8px;
+  margin: 18px 0;
+}
+.audit-query > label input {
+  min-width: 0;
+  padding: 11px;
+  border: 1px solid var(--console-line);
+  color: var(--console-text);
+  background: var(--console-panel);
+  font: inherit;
+}
+.audit-query button {
+  padding: 12px 16px;
+  border: 1px solid var(--acid);
+  color: var(--paper);
+  background: var(--acid);
+  font: inherit;
+  cursor: pointer;
+}
+.audit-query button:disabled {
+  cursor: progress;
+  opacity: 0.5;
+}
+.audit-next {
+  margin: 16px 26px 26px;
+  padding: 10px 14px;
+  border: 1px solid var(--acid);
+  color: var(--acid);
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+.audit-state-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 22px;
+}
+.audit-state-grid section,
+.audit-answer,
+.audit-evidence,
+.audit-empty {
+  padding: 18px;
+  border: 1px solid var(--console-line);
+}
+.audit-state-grid strong {
+  display: block;
+  margin: 10px 0;
+  letter-spacing: 0.08em;
+}
+.audit-state-grid p,
+.audit-state-grid li,
+.audit-page-note {
+  color: var(--console-muted);
+  line-height: 1.6;
+}
+.audit-answer,
+.audit-evidence {
+  margin-top: 14px;
+}
+.audit-value-grid {
+  display: grid;
+  gap: 1px;
+  margin: 14px 0 0;
+  background: var(--console-line-soft);
+}
+.audit-value-grid > div {
+  display: grid;
+  grid-template-columns: minmax(120px, 0.35fr) minmax(0, 1fr);
+  gap: 12px;
+  padding: 10px;
+  background: var(--console-bg);
+}
+.audit-value-grid dt {
+  color: var(--console-muted);
+}
+.audit-value-grid dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.audit-nested-list,
+.audit-evidence > ol {
+  display: grid;
+  gap: 9px;
+  padding-left: 24px;
+}
+.audit-evidence > ol > li {
+  padding: 12px;
+  border: 1px solid var(--console-line-soft);
+}
+.audit-evidence > ol > li:focus-visible,
+.audit-links a:focus-visible,
+.audit-query input:focus-visible,
+.audit-query button:focus-visible {
+  outline: 2px solid var(--acid);
+  outline-offset: 3px;
+}
+.audit-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+.audit-links a {
+  padding: 8px 10px;
+  border: 1px solid var(--console-line);
+  color: var(--acid);
+}
+.audit-error,
+.audit-empty {
+  color: #efa2a7;
+  background: #1a1014;
+}
+@media (max-width: 800px) {
+  .audit-header {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 22px 16px;
+  }
+  .audit-workspace,
+  .audit-state-grid {
+    grid-template-columns: 1fr;
+  }
+  .audit-query,
+  .audit-result {
+    padding: 20px 16px;
+  }
+  .audit-value-grid > div {
+    grid-template-columns: 1fr;
+  }
+}
 @media (max-width: 800px) {
   .replay-header {
     align-items: flex-start;

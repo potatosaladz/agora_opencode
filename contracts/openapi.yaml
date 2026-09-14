@@ -368,6 +368,36 @@ paths:
         "401": { $ref: "#/components/responses/AuthenticationRequired" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
+  /api/v1/sessions/{session_id}/audit/query:
+    post:
+      operationId: querySessionAudit
+      summary: Ask one of the eight authoritative audit questions
+      description: >-
+        Delegates Q1 through Q8 to the existing Phase 13 audit services and records the
+        successful audit read in the append-only access log. Completeness and integrity
+        are independent result dimensions.
+      tags: [reasoning]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuditQueryRequest"
+      responses:
+        "200":
+          description: Typed, deterministically ordered audit answer.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuditResponse"
+        "400": { $ref: "#/components/responses/ValidationFailed" }
+        "401": { $ref: "#/components/responses/AuthenticationRequired" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
   /api/v1/sessions/{session_id}/events/stream:
     get:
       operationId: streamSessionEvents
@@ -2630,6 +2660,270 @@ components:
           type: object
           additionalProperties:
             $ref: "#/components/schemas/ComponentHealth"
+    AuditQuestion:
+      type: string
+      enum: [Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8]
+    AuditCompleteness:
+      type: string
+      enum: [COMPLETE, INCOMPLETE, NOT_APPLICABLE]
+    AuditIntegrity:
+      type: string
+      enum: [VERIFIED_UNALTERED, ALTERED, NOT_VERIFIABLE, NOT_APPLICABLE]
+    AuditQueryRequest:
+      oneOf:
+        - $ref: "#/components/schemas/AuditQ1Request"
+        - $ref: "#/components/schemas/AuditQ2Request"
+        - $ref: "#/components/schemas/AuditQ3Request"
+        - $ref: "#/components/schemas/AuditQ4Request"
+        - $ref: "#/components/schemas/AuditQ5Request"
+        - $ref: "#/components/schemas/AuditQ6Request"
+        - $ref: "#/components/schemas/AuditQ7Request"
+        - $ref: "#/components/schemas/AuditQ8Request"
+    AuditQ1Request:
+      type: object
+      additionalProperties: false
+      required: [question, artifact_id]
+      properties:
+        question: { type: string, const: Q1 }
+        artifact_id: { type: string, pattern: "^art_[0-9a-f]{32}$" }
+        max_depth: { type: integer, minimum: 0, maximum: 12, default: 8 }
+        limit: { type: integer, minimum: 1, maximum: 200, default: 50 }
+        cursor: { type: [string, "null"] }
+    AuditQ2Request:
+      type: object
+      additionalProperties: false
+      required: [question, artifact_id]
+      properties:
+        question: { type: string, const: Q2 }
+        artifact_id: { type: string, pattern: "^art_[0-9a-f]{32}$" }
+    AuditQ3Request:
+      type: object
+      additionalProperties: false
+      required: [question, round]
+      properties:
+        question: { type: string, const: Q3 }
+        round: { type: integer, minimum: 0 }
+    AuditQ4Request:
+      type: object
+      additionalProperties: false
+      required: [question, round]
+      properties:
+        question: { type: string, const: Q4 }
+        round: { type: integer, minimum: 1 }
+    AuditQ5Request:
+      type: object
+      additionalProperties: false
+      required: [question]
+      properties:
+        question: { type: string, const: Q5 }
+    AuditQ6Request:
+      type: object
+      additionalProperties: false
+      required: [question, round]
+      properties:
+        question: { type: string, const: Q6 }
+        round: { type: integer, minimum: 1 }
+    AuditQ7Request:
+      type: object
+      additionalProperties: false
+      required: [question, recommendation_id]
+      properties:
+        question: { type: string, const: Q7 }
+        recommendation_id: { type: string, pattern: "^rec_[0-9a-f]{32}$" }
+        limit: { type: integer, minimum: 1, maximum: 200, default: 100 }
+        cursor: { type: [string, "null"] }
+    AuditQ8Request:
+      type: object
+      additionalProperties: false
+      required: [question]
+      properties:
+        question: { type: string, const: Q8 }
+    AuditState:
+      type: object
+      additionalProperties: false
+      required:
+        [completeness, completeness_reasons, integrity, integrity_reasons]
+      properties:
+        completeness: { $ref: "#/components/schemas/AuditCompleteness" }
+        completeness_reasons:
+          type: array
+          items: { type: string }
+        integrity: { $ref: "#/components/schemas/AuditIntegrity" }
+        integrity_reasons:
+          type: array
+          items: { type: string }
+    AuditPagination:
+      type: object
+      additionalProperties: false
+      required: [truncated, next_cursor]
+      properties:
+        truncated: { type: boolean }
+        next_cursor: { type: [string, "null"] }
+    AuditData:
+      type: object
+      additionalProperties: false
+      required:
+        [
+          question,
+          question_text,
+          parameters,
+          answer,
+          evidence,
+          state,
+          pagination,
+          links,
+        ]
+      properties:
+        question: { $ref: "#/components/schemas/AuditQuestion" }
+        question_text: { type: string }
+        parameters: { type: object, additionalProperties: true }
+        answer:
+          oneOf:
+            - $ref: "#/components/schemas/AuditQ1Answer"
+            - $ref: "#/components/schemas/AuditQ2Answer"
+            - $ref: "#/components/schemas/AuditQ3Answer"
+            - $ref: "#/components/schemas/AuditQ4Answer"
+            - $ref: "#/components/schemas/AuditQ5Answer"
+            - $ref: "#/components/schemas/AuditQ6Answer"
+            - $ref: "#/components/schemas/AuditQ7Answer"
+            - $ref: "#/components/schemas/AuditQ8Answer"
+        evidence:
+          type: array
+          items: { type: object, additionalProperties: true }
+        state: { $ref: "#/components/schemas/AuditState" }
+        pagination: { $ref: "#/components/schemas/AuditPagination" }
+        links:
+          type: object
+          additionalProperties: { type: string }
+    AuditQ1Answer:
+      type: object
+      additionalProperties: true
+      required:
+        [
+          kind,
+          artifact_id,
+          provenance,
+          committed_by_event,
+          originating_turn_event,
+        ]
+      properties:
+        kind: { type: string, const: ARTIFACT_RATIONALE }
+        artifact_id: { type: string, pattern: "^art_[0-9a-f]{32}$" }
+        provenance: { type: [object, "null"], additionalProperties: true }
+        committed_by_event:
+          { type: [object, "null"], additionalProperties: true }
+        originating_turn_event:
+          { type: [object, "null"], additionalProperties: true }
+    AuditQ2Answer:
+      type: object
+      additionalProperties: true
+      required: [kind, artifact_id, revisions]
+      properties:
+        kind: { type: string, const: ARTIFACT_REVISION_HISTORY }
+        artifact_id: { type: string, pattern: "^art_[0-9a-f]{32}$" }
+        revisions:
+          { type: array, items: { type: object, additionalProperties: true } }
+    AuditQ3Answer:
+      type: object
+      additionalProperties: true
+      required: [kind, round, participants, turn_events]
+      properties:
+        kind: { type: string, const: ROUND_CONTEXT }
+        round: { type: integer, minimum: 0 }
+        participants:
+          { type: array, items: { type: object, additionalProperties: true } }
+        turn_events:
+          { type: array, items: { type: object, additionalProperties: true } }
+    AuditQ4Answer:
+      type: object
+      additionalProperties: true
+      required:
+        [
+          kind,
+          consensus_result_id,
+          outcome,
+          all_persisted_positions_included,
+          contributions,
+          minority_report,
+        ]
+      properties:
+        kind: { type: string, const: DISSENT_SUPPRESSION_CHECK }
+        consensus_result_id: { type: [string, "null"] }
+        outcome: { type: [string, "null"] }
+        all_persisted_positions_included: { type: boolean }
+        contributions:
+          { type: array, items: { type: object, additionalProperties: true } }
+        minority_report:
+          { type: array, items: { type: object, additionalProperties: true } }
+    AuditQ5Answer:
+      type: object
+      additionalProperties: true
+      required: [kind, final_state, final_round, ended_at, last_event]
+      properties:
+        kind: { type: string, const: SESSION_TERMINATION }
+        final_state: { type: [string, "null"] }
+        final_round: { type: [integer, "null"] }
+        ended_at: { type: [string, "null"] }
+        last_event: { type: [object, "null"], additionalProperties: true }
+    AuditQ6Answer:
+      type: object
+      additionalProperties: true
+      required: [kind, strategy]
+      properties:
+        kind: { type: string, const: STRATEGY_USAGE }
+        strategy: { type: [string, "null"] }
+    AuditQ7Answer:
+      type: object
+      additionalProperties: true
+      required:
+        [kind, recommendation_id, recommendation_created_at, boundary, entries]
+      properties:
+        kind: { type: string, const: RECOMMENDATION_ACCESS }
+        recommendation_id: { type: string }
+        recommendation_created_at: { type: string }
+        boundary:
+          { type: string, const: STRICTLY_BEFORE_RECOMMENDATION_CREATED_AT }
+        entries:
+          { type: array, items: { type: object, additionalProperties: true } }
+    AuditQ8Answer:
+      type: object
+      additionalProperties: true
+      required:
+        [
+          kind,
+          event_count,
+          ledger_valid,
+          ledger_reason,
+          ledger_head_hash,
+          chain_valid,
+          first_invalid_day,
+          anchors,
+        ]
+      properties:
+        kind: { type: string, const: CHAIN_VERIFICATION }
+        event_count: { type: integer, minimum: 0 }
+        ledger_valid: { type: boolean }
+        ledger_reason: { type: [string, "null"] }
+        ledger_head_hash: { type: string }
+        chain_valid: { type: [boolean, "null"] }
+        first_invalid_day: { type: [string, "null"] }
+        anchors:
+          { type: array, items: { type: object, additionalProperties: true } }
+    AuditMeta:
+      type: object
+      additionalProperties: false
+      required: [request_id, schema_version, workspace_id]
+      properties:
+        request_id: { type: string }
+        schema_version: { type: integer, const: 1 }
+        workspace_id: { $ref: "#/components/schemas/WorkspaceId" }
+    AuditResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data: { $ref: "#/components/schemas/AuditData" }
+        meta: { $ref: "#/components/schemas/AuditMeta" }
     ReplayMeta:
       type: object
       additionalProperties: false

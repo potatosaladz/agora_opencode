@@ -37,6 +37,7 @@ class VerifiedPrincipal:
     user_id: UUID
     workspace_id: UUID
     role: WorkspaceRole
+    scopes: frozenset[str] = frozenset()
 
 
 class AccessTokenVerificationError(ValueError):

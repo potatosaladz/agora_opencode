@@ -19,6 +19,7 @@ const ExplanationPage = lazy(
   () => import("../features/explanation/explanation-page"),
 );
 const ReplayPage = lazy(() => import("../features/replay/replay-page"));
+const AuditPage = lazy(() => import("../features/audit/audit-page"));
 
 const navigation = [
   {
@@ -35,6 +36,11 @@ const navigation = [
     route: "replay" as const,
     label: "Replay controls",
     icon: "activity" as const,
+  },
+  {
+    route: "audit" as const,
+    label: "Audit search",
+    icon: "archive" as const,
   },
   {
     route: "dissent" as const,
@@ -207,6 +213,19 @@ export function App() {
             }
           >
             <ReplayPage {...(liveSession ? { connection: liveSession } : {})} />
+          </Suspense>
+        ) : route === "audit" ? (
+          <Suspense
+            fallback={
+              <main
+                className="audit-page audit-page--loading"
+                id="main-content"
+              >
+                <p role="status">Loading audit search...</p>
+              </main>
+            }
+          >
+            <AuditPage {...(liveSession ? { connection: liveSession } : {})} />
           </Suspense>
         ) : route === "dissent" ? (
           <Suspense

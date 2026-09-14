@@ -1,6 +1,6 @@
 # Phase 14 Acceptance Contract
 
-**Version:** 1.4 · **Status:** T14-01…05 complete; T14-06 frozen and open · **Phase:** 14
+**Version:** 1.4 · **Status:** Phase 14 complete · **Phase:** 14
 **Baseline:** Phase 13 complete through T13-04
 **Requirements:** UI/exposure verification of existing FR-305, FR-504…FR-506, FR-605, FR-609,
 FR-705, FR-708, FR-802, FR-804, FR-805, FR-807, FR-808, FR-901, NFR-003, NFR-004, NFR-005,
@@ -23,7 +23,7 @@ The authoritative task order is:
 5. T14-05 — Replay Controls
 6. T14-06 — Audit Search
 
-T14-01…05 are complete; T14-06 remains open. Each task must preserve generated API type drift checks, deny-by-default
+T14-01…06 are complete. Each task preserves generated API type drift checks, deny-by-default
 authentication, tenant isolation, accessible non-visual equivalents and responsive desktop/mobile use.
 Earlier-phase requirements cited below are verification dependencies, not reassigned implementation
 ownership.
@@ -329,6 +329,16 @@ NFR-019 capabilities. Ownership remains Phases 10, 13 and 1/12.
 Frontend — Audit Search and cross-view navigation. Persistence — reuse `access_log`, `audit_anchors` and
 the ledger only. Migration — none.
 
+**Acceptance evidence:** authenticated `POST /api/v1/sessions/{session_id}/audit/query` accepts one of eight
+strict discriminated requests and delegates to the existing Phase 13 services. The caller must hold the
+trusted `audit:read` scope and an allowed workspace role; RLS and tenant-hidden lookup behavior remain in
+force. Successful reads append to the existing `access_log`; Q7 is bounded strictly before persisted
+recommendation creation and supports ordered cursor pages; Q8 exposes ledger verification and ordered
+anchor verification with separate COMPLETE/INCOMPLETE and VERIFIED_UNALTERED/ALTERED/NOT_VERIFIABLE states.
+The code-split Audit Search renders all eight authored questions, query-specific controls, ordered evidence,
+parameters, explicit empty/incomplete/integrity states, accessible navigation and responsive layouts. No
+migration or alternate audit store/query was added.
+
 ## 8. Scripted Phase 14 usability fixture
 
 The phase fixture is a completed, tenant-scoped session with:
@@ -358,7 +368,15 @@ planning reconciliation.
 
 ## 9. Phase exit
 
-Phase 14 exits only when all six tasks are complete and the scripted fixture proves that a reviewer with no
+Phase 14 exits with all six tasks complete and the scripted fixture proving that a reviewer with no
 knowledge of the internals can identify the minority position and weakest evidence from the UI alone.
 Backend/frontend quality, authored/generated contracts, tenant isolation, accessibility, responsive
 behavior, traceability, documentation links, Compose deployment and exact-SHA remote CI must also pass.
+
+**Exit evidence:** the frozen fixture's initial Explanation view exposes the minority position “Prefer the
+rail alternative”, agent `agt_equity` and warrant `art_equity`, plus “Winter range degradation report” as
+the weakest evidence with the visible recorded reason `verification=DISPUTED` and `relation=OPPOSES`.
+Neither section is collapsed. Its public Graph/provenance and Assumption links resolve in the integrated UI;
+`UNKNOWN` remains “not determined” with `DEFER`; Replay and Audit Search expose the recorded mode/result and
+Q8 chain state. The scripted UI test, focused/full frontend tests, deployed Q1…Q8 PostgreSQL HTTP fixture,
+tenant isolation, accessibility, responsive, contract, traceability, links and Compose gates pass.

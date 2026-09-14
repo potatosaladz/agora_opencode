@@ -31,6 +31,9 @@ export type ReplayMode = components["schemas"]["ReplayMode"];
 export type ReplayRequest = components["schemas"]["ReplayRequest"];
 export type ReplayResponse = components["schemas"]["ReplayResponse"];
 export type ManifestResponse = components["schemas"]["ManifestResponse"];
+export type AuditQuestion = components["schemas"]["AuditQuestion"];
+export type AuditQueryRequest = components["schemas"]["AuditQueryRequest"];
+export type AuditResponse = components["schemas"]["AuditResponse"];
 
 export type RealtimeEvent = {
   event_id: string;
@@ -161,6 +164,19 @@ export class ApiClient {
   ): Promise<ReplayResponse> {
     return this.sendJson<ReplayResponse>(
       `/api/v1/sessions/${encodeURIComponent(sessionId)}/replay`,
+      input,
+      { token, ...(signal === undefined ? {} : { signal }) },
+    );
+  }
+
+  querySessionAudit(
+    sessionId: string,
+    input: AuditQueryRequest,
+    token: string,
+    signal?: AbortSignal,
+  ): Promise<AuditResponse> {
+    return this.sendJson<AuditResponse>(
+      `/api/v1/sessions/${encodeURIComponent(sessionId)}/audit/query`,
       input,
       { token, ...(signal === undefined ? {} : { signal }) },
     );

@@ -1,12 +1,18 @@
 # Active Context
 
-**Snapshot taken:** 2026-09-14 · **Phase:** 14 in progress · **Active task:** T14-05 Replay Controls complete
+**Snapshot taken:** 2026-09-14 · **Phase:** 14 complete · **Active task:** Phase 14 exit complete
 This is the "what is happening right now" file. Rewrite it at the end of every
 significant unit of work.
 
 ---
 
 ## 1. Focus of the current session
+
+T14-06 Audit Search and Phase 14 are complete. Scoped authenticated Q1–Q8 requests delegate to existing
+audit services and append successful reads to `access_log`; the code-split UI keeps evidence order,
+completeness and integrity distinct. The frozen usability script identifies the minority position/author/
+warrant and weakest evidence/recorded reason directly from visible UI facts, with working Graph,
+provenance, Assumption, Replay and Audit navigation. No migration was added. Do not start Phase 15.
 
 T14-05 Replay Controls is complete. Authenticated finalized-manifest reads and replay requests bind the
 public source session to exact id/version/hash pins and delegate to existing replay services. STRICT remains
@@ -38,10 +44,8 @@ renders authoritative server pages with labelled edge semantics, keyboard select
 responsive states and explicit loading/error/empty/pagination/truncation disclosure. Focused and full local
 gates plus isolated Compose deployment pass.
 
-Phase 14 task authority remains frozen in `docs/PHASE14_ACCEPTANCE.md`. T14-01…05 are complete and T14-06
-Audit Search remains open.
-The contract preserves earlier-phase implementation ownership. The scripted usability fixture exists but
-has not passed.
+Phase 14 task authority remains frozen in `docs/PHASE14_ACCEPTANCE.md`. T14-01…06 and the scripted usability
+fixture are complete. Earlier-phase implementation ownership remains unchanged.
 
 Phase 13 T13-04 is complete. `app/domain/run_manifest.py` defines canonical typed pins and the
 `CREATED | FINALIZED` lifecycle; `app/application/run_manifest.py` stores exact canonical bytes by

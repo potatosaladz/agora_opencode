@@ -1,6 +1,6 @@
 # API & Contract Registry (memory bank)
 
-**Last updated:** 2026-09-14 · **Contract baseline:** `v1` (through Phase 14 T14-05)
+**Last updated:** 2026-09-14 · **Contract baseline:** `v1` (through Phase 14 T14-06)
 **Normative source:** [../docs/API_CONTRACTS.md](../docs/API_CONTRACTS.md) and
 [../docs/API.md](../docs/API.md); activity delivery semantics are in
 [../docs/ORCHESTRATION_POLICY.md](../docs/ORCHESTRATION_POLICY.md). This file is the quick-reference digest and the
@@ -79,6 +79,7 @@ in the same commit.
 | `Experiment`, `ExperimentRun` | 20 | 13, 16 |
 | `AuditRecord` | 21 | 13 |
 | `ReplayRequest`, `ReplayResult`, `ReplayManifestRef` | API_CONTRACTS T14-05 | 13–14 |
+| `AuditQueryRequest`, `AuditResponse`, Q1…Q8 answers | API_CONTRACTS T14-06 | 13–14 |
 | `ReproducibilityManifest` | 22 | 13 |
 | `LearningEvent`, `KnowledgePromotion` | 23 | 5, 16 |
 
