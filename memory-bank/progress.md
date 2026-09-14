@@ -23,7 +23,7 @@ evidence remains separate. Phase-0 architecture baseline: **approved by the proj
 | 11 | Neuro-symbolic | **Complete** | T11-01…04 complete: immutable formalisation lifecycle, bounded Z3, exact-revision evidence, and conservative `UNKNOWN → DEFER` consensus policy |
 | 12 | MARL environment | **Complete** | T12-01…05: exact trajectory domain, reward/credit accounting, canonical export, hermetic replay, in-memory/PostgreSQL stores and migration 0024 |
 | 13 | Trustworthiness | **Complete** | T13-01 catalogue; T13-02 audit records + eight queries; T13-03 replay modes; T13-04 canonical durable pinned run manifests |
-| 14 | Full UI | In progress | T14-01…04 complete; T14-05…06 open; scripted usability fixture remains unpassed |
+| 14 | Full UI | In progress | T14-01…05 complete; T14-06 open; scripted usability fixture remains unpassed |
 | 15 | MCP | Not started | — |
 | 16 | Research extensions | Not started | — |
 | 17 | Swarm & hardening | Not started | — |
@@ -31,6 +31,16 @@ evidence remains separate. Phase-0 architecture baseline: **approved by the proj
 ---
 
 ## Detailed log
+
+### 2026-09-14 — Phase 14 T14-05 Replay Controls
+
+- Added authenticated exact finalized-manifest reads and STRICT/TOLERANT/LIVE replay requests delegating to
+  the existing persisted replay source and session replay service, with public IDs, role policy, hidden
+  tenant scope and explicit LIVE confirmation.
+- Added code-split accessible responsive controls preserving STRICT verification/no-provider semantics,
+  TOLERANT MATCHED/DIFFERENT ordered diffs, and LIVE fresh-lineage or typed unavailable states.
+- Added no migration or persistence; Alembic remains `20260914_0026`. Focused API/service/PostgreSQL and
+  frontend tests plus contract, static, docs and Compose gates pass. T14-06 remains open.
 
 ### 2026-09-14 — Phase 14 T14-04 Explanation Panel
 

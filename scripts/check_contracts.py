@@ -51,7 +51,7 @@ def main() -> int:
         implemented_paths.update(
             prefix + path
             for path in re.findall(
-                r'@router\.(?:get|post|put|patch|delete)\("([^\"]+)"', route_source
+                r'@router\.(?:get|post|put|patch|delete)\("([^"]*)"', route_source
             )
         )
     if authored_paths != implemented_paths:

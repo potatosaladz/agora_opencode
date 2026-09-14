@@ -317,6 +317,57 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+  /api/v1/sessions/{session_id}/manifest:
+    get:
+      operationId: getReplayManifest
+      summary: Read the finalized replay manifest identity
+      description: Returns the exact tenant-scoped finalized manifest used by replay controls.
+      tags: [reasoning]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+      responses:
+        "200":
+          description: Finalized manifest identity and immutable pin summary.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ManifestResponse"
+        "401": { $ref: "#/components/responses/AuthenticationRequired" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /api/v1/sessions/{session_id}/replay:
+    post:
+      operationId: replaySession
+      summary: Execute an exact-manifest-bound replay
+      description: >-
+        Delegates REPLAY_STRICT, REPLAY_TOLERANT, or REPLAY_LIVE to the existing replay service.
+        STRICT is deterministic historical verification without external calls; TOLERANT returns
+        MATCHED or DIFFERENT structured differences and never VERIFIED; LIVE requires confirmation,
+        authorized execution roles, and reports a fresh linked execution only when one exists.
+      tags: [reasoning]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReplayRequest"
+      responses:
+        "200":
+          description: Typed replay result with source manifest, mismatch/differences, and lineage links.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplayResponse"
+        "400": { $ref: "#/components/responses/ValidationFailed" }
+        "401": { $ref: "#/components/responses/AuthenticationRequired" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
   /api/v1/sessions/{session_id}/events/stream:
     get:
       operationId: streamSessionEvents
@@ -2579,6 +2630,192 @@ components:
           type: object
           additionalProperties:
             $ref: "#/components/schemas/ComponentHealth"
+    ReplayMeta:
+      type: object
+      additionalProperties: false
+      required: [request_id, schema_version, workspace_id]
+      properties:
+        request_id: { type: string }
+        schema_version: { type: integer, const: 1 }
+        workspace_id: { $ref: "#/components/schemas/WorkspaceId" }
+    ReplayMode:
+      type: string
+      enum: [REPLAY_STRICT, REPLAY_TOLERANT, REPLAY_LIVE]
+    ReplayOutcome:
+      type: string
+      enum: [VERIFIED, MATCHED, DIFFERENT, LIVE_STARTED, FAILED]
+    ReplayManifestRef:
+      type: object
+      additionalProperties: false
+      required: [manifest_id, manifest_version, manifest_hash]
+      properties:
+        manifest_id: { type: string, pattern: "^man_[0-9a-f]{32}$" }
+        manifest_version: { type: integer, minimum: 1 }
+        manifest_hash: { type: string, pattern: "^sha256:[0-9a-f]{64}$" }
+    ReplayRequest:
+      type: object
+      additionalProperties: false
+      required: [manifest, mode]
+      properties:
+        manifest: { $ref: "#/components/schemas/ReplayManifestRef" }
+        mode: { $ref: "#/components/schemas/ReplayMode" }
+        confirm_live: { type: boolean, default: false }
+    ReplayMismatch:
+      type: object
+      additionalProperties: false
+      required: [reason, detail, order, step_id, expected_hash, actual_hash]
+      properties:
+        reason:
+          type: string
+          enum:
+            [
+              HISTORICAL_REPLAY_UNAVAILABLE,
+              MANIFEST_MISMATCH,
+              LEDGER_INTEGRITY,
+              LEDGER_MISMATCH,
+              UNKNOWN_IMPLEMENTATION,
+              NONDETERMINISTIC_IMPLEMENTATION,
+              OUTPUT_MISMATCH,
+              MARL_REPLAY_FAILED,
+              LIVE_LAUNCH_UNAVAILABLE,
+              INVALID_LIVE_IDENTITY,
+            ]
+        detail: { type: string }
+        order: { type: [integer, "null"], minimum: 1 }
+        step_id: { type: [string, "null"], pattern: "^rps_[0-9a-f]{32}$" }
+        expected_hash:
+          { type: [string, "null"], pattern: "^sha256:[0-9a-f]{64}$" }
+        actual_hash:
+          { type: [string, "null"], pattern: "^sha256:[0-9a-f]{64}$" }
+    ReplayDifference:
+      type: object
+      additionalProperties: false
+      required: [order, step_id, kind, difference, field, expected, actual]
+      properties:
+        order: { type: integer, minimum: 1 }
+        step_id: { type: string, pattern: "^rps_[0-9a-f]{32}$" }
+        kind:
+          type: string
+          enum:
+            [
+              ARTIFACT,
+              EVENT,
+              METRIC,
+              CONSENSUS,
+              SYMBOLIC,
+              SIMULATION,
+              RETRIEVAL,
+              LLM,
+            ]
+        difference:
+          type: string
+          enum:
+            [
+              IMPLEMENTATION,
+              PROVIDER,
+              MODEL,
+              CONFIGURATION,
+              OUTPUT,
+              STATUS,
+              TIMING_SENSITIVE,
+            ]
+        field: { type: string }
+        expected: { type: [string, "null"] }
+        actual: { type: [string, "null"] }
+    ReplayData:
+      type: object
+      additionalProperties: false
+      required:
+        [
+          mode,
+          outcome,
+          source_session_id,
+          source_manifest,
+          integrity_valid,
+          byte_identical,
+          checked_steps,
+          differences,
+          first_mismatch,
+          replay_session_id,
+          replay_manifest_id,
+          replay_event_ids,
+          replay_result_ids,
+          links,
+        ]
+      properties:
+        mode: { $ref: "#/components/schemas/ReplayMode" }
+        outcome: { $ref: "#/components/schemas/ReplayOutcome" }
+        source_session_id: { $ref: "#/components/schemas/SessionId" }
+        source_manifest: { $ref: "#/components/schemas/ReplayManifestRef" }
+        integrity_valid: { type: boolean }
+        byte_identical: { type: boolean }
+        checked_steps: { type: integer, minimum: 0 }
+        differences:
+          type: array
+          items: { $ref: "#/components/schemas/ReplayDifference" }
+        first_mismatch:
+          anyOf:
+            - $ref: "#/components/schemas/ReplayMismatch"
+            - type: "null"
+        replay_session_id:
+          anyOf:
+            - $ref: "#/components/schemas/SessionId"
+            - type: "null"
+        replay_manifest_id:
+          { type: [string, "null"], pattern: "^man_[0-9a-f]{32}$" }
+        replay_event_ids:
+          type: array
+          items: { type: string, pattern: "^evt_[0-9a-f]{32}$" }
+        replay_result_ids:
+          type: array
+          items: { type: string, pattern: "^rpr_[0-9a-f]{32}$" }
+        links:
+          type: object
+          additionalProperties: { type: string }
+    ReplayResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data: { $ref: "#/components/schemas/ReplayData" }
+        meta: { $ref: "#/components/schemas/ReplayMeta" }
+    ManifestData:
+      type: object
+      additionalProperties: false
+      required:
+        [
+          session_id,
+          manifest_id,
+          manifest_version,
+          manifest_hash,
+          status,
+          source_session_id,
+          finalized_at,
+          git_sha,
+          image_digests,
+        ]
+      properties:
+        session_id: { $ref: "#/components/schemas/SessionId" }
+        manifest_id: { type: string, pattern: "^man_[0-9a-f]{32}$" }
+        manifest_version: { type: integer, minimum: 1 }
+        manifest_hash: { type: string, pattern: "^sha256:[0-9a-f]{64}$" }
+        status: { type: string, enum: [FINALIZED] }
+        source_session_id:
+          anyOf:
+            - $ref: "#/components/schemas/SessionId"
+            - type: "null"
+        finalized_at: { type: [string, "null"], format: date-time }
+        git_sha: { type: string }
+        image_digests:
+          type: object
+          additionalProperties: { type: string }
+    ManifestResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data: { $ref: "#/components/schemas/ManifestData" }
+        meta: { $ref: "#/components/schemas/ReplayMeta" }
     ValidationIssue:
       type: object
       additionalProperties: false

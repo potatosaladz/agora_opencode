@@ -17,6 +17,7 @@ from app.api.routes import (
     metrics_router,
     phase3_router,
     realtime_router,
+    replay_router,
 )
 from app.composition import Container, build_container, build_metrics
 from app.config import Settings, get_settings
@@ -97,6 +98,7 @@ def create_app(
     app.include_router(phase3_router)
     app.include_router(formalizations_router)
     app.include_router(graph_router)
+    app.include_router(replay_router)
     app.include_router(realtime_router)
     if resolved_settings.metrics_enabled:
         app.include_router(metrics_router)

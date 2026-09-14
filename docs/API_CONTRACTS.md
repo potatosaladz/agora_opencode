@@ -99,6 +99,24 @@ selected deterministically only from persisted verification, lifecycle, citation
 relation, and recorded caveats, with the rationale returned. Missing evidence is explicitly unavailable.
 All identifiers are public and malformed, missing, or cross-tenant sessions use tenant-hidden `404`.
 
+<!-- trace: FR-808, NFR-003, NFR-010, NFR-014, NFR-019 -->
+### T14-05 replay controls
+
+T14-05 adds authenticated `GET /api/v1/sessions/{id}/manifest` and
+`POST /api/v1/sessions/{id}/replay`. Both derive workspace scope from the verified principal and expose
+public identifiers only. The replay request binds the path source session to the exact finalized manifest
+id, version and SHA-256 hash; malformed, missing and cross-tenant sessions use tenant-hidden `404`, and
+there is no current/latest implementation fallback or arbitrary manifest substitution.
+
+`REPLAY_STRICT` is read-only historical verification: it verifies the ledger, persisted manifest and MARL
+facts, permits recorded or exact deterministic local steps only, and never invokes an external provider.
+`REPLAY_TOLERANT` re-executes only explicitly allowed steps and returns `MATCHED`, `DIFFERENT`, or a typed
+failure with ordered implementation/provider/model/configuration/output/status/timing differences; it never
+returns `VERIFIED`. `REPLAY_LIVE` is restricted to ADMIN/RESEARCHER and requires explicit confirmation. It
+delegates to the existing optional `LiveReplayLauncher`; when no authorized launcher is composed it returns
+the typed `LIVE_LAUNCH_UNAVAILABLE` result rather than inventing a run. A successful launch returns fresh
+session, manifest, event and result ids plus source-session lineage. Historical source rows remain immutable.
+
 `GET /api/v1/sessions/{id}` reads authoritative state from PostgreSQL's session lifecycle
 projection. Temporal execution descriptions are operational diagnostics only and never overwrite
 or replace that projection.

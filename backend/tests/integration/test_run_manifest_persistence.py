@@ -5,6 +5,7 @@ trace: NFR-003, NFR-014
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import UTC, datetime, timedelta
 from uuid import UUID, uuid4
 
@@ -24,6 +25,8 @@ from app.db.reasoning_ledger import SqlAlchemyReasoningLedger
 from app.db.run_manifest import SqlAlchemyRunManifestRepository
 from app.domain.reasoning import content_hash
 from app.domain.replay import (
+    HistoricalReplay,
+    LiveReplayLaunch,
     ReplayExecution,
     ReplayImplementationIdentity,
     ReplayMode,
@@ -214,6 +217,105 @@ async def test_manifest_round_trip_finalization_and_strict_replay() -> None:
                 )
             )
             assert result.outcome is ReplayOutcome.VERIFIED
+
+
+@req("NFR-003", "NFR-014")
+async def test_persisted_tolerant_difference_and_live_fresh_lineage() -> None:
+    async with _migrated_database() as engine:
+        async with engine.begin() as connection:
+            fixture = await _insert_session_graph(connection, "manifest-tolerant-live")
+        sessions = async_sessionmaker(engine, expire_on_commit=False)
+        objects = InMemoryObjectStore()
+        document = _document(fixture)
+        async with sessions.begin() as session:
+            ledger = SqlAlchemyReasoningLedger(session)
+            await ledger.append(_ledger_append(fixture, uuid4(), "manifest-event"))
+            manifests = SqlAlchemyRunManifestRepository(session)
+            service = RunManifestService(manifests, objects, bucket="manifests")
+            await service.create(
+                workspace_id=fixture.workspace_id,
+                session_id=fixture.session_id,
+                source_session_id=None,
+                git_sha=document.code.git_sha,
+                image_digests=document.code.image_digests,
+                model_pins={},
+                prompt_hashes={str(fixture.agent_id): DIGEST_A},
+                seed=None,
+                created_at=NOW,
+            )
+            finalized = await service.finalize(
+                fixture.workspace_id,
+                fixture.session_id,
+                document,
+                finalized_at=NOW + timedelta(seconds=1),
+            )
+
+        changed = {"winner": "b"}
+
+        async def execute(input_value: object) -> ReplayExecution:
+            del input_value
+            return ReplayExecution(
+                implementation=_identity(),
+                output=changed,
+                output_hash=content_hash(changed),
+            )
+
+        class PersistedLiveLauncher:
+            async def launch(
+                self,
+                request: ReplayRequest,
+                historical: HistoricalReplay,
+                selections: Mapping[UUID, ReplayImplementationIdentity],
+            ) -> LiveReplayLaunch:
+                del request, selections
+                return LiveReplayLaunch(
+                    mode=ReplayMode.LIVE,
+                    source_session_id=historical.source_session_id,
+                    session_id=uuid4(),
+                    manifest_id=uuid4(),
+                    event_ids=(uuid4(),),
+                    result_ids=(uuid4(),),
+                )
+
+        async with sessions.begin() as session:
+            ledger = SqlAlchemyReasoningLedger(session)
+            replay = SessionReplayService(
+                PersistedReplaySource(SqlAlchemyRunManifestRepository(session), objects, ledger),
+                ledger,
+                ReplayImplementationRegistry(
+                    (
+                        ReplayImplementation(
+                            _identity(), execute, deterministic=True, external=False
+                        ),
+                    )
+                ),
+                live_launcher=PersistedLiveLauncher(),
+            )
+            source_before = tuple(await ledger.read(fixture.workspace_id, fixture.session_id))
+            tolerant = await replay.replay(
+                ReplayRequest(
+                    workspace_id=fixture.workspace_id,
+                    source_session_id=fixture.session_id,
+                    manifest=finalized.ref(),
+                    mode=ReplayMode.TOLERANT,
+                )
+            )
+            live = await replay.replay(
+                ReplayRequest(
+                    workspace_id=fixture.workspace_id,
+                    source_session_id=fixture.session_id,
+                    manifest=finalized.ref(),
+                    mode=ReplayMode.LIVE,
+                )
+            )
+            source_after = tuple(await ledger.read(fixture.workspace_id, fixture.session_id))
+
+        assert tolerant.outcome is ReplayOutcome.DIFFERENT
+        assert tolerant.differences[0].field == "output_hash"
+        assert live.outcome is ReplayOutcome.LIVE_STARTED
+        assert live.replay_session_id != fixture.session_id
+        assert live.source_session_id == fixture.session_id
+        assert source_after == source_before
 
 
 @req("NFR-003", "NFR-014")

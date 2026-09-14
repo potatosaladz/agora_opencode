@@ -257,6 +257,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/sessions/{session_id}/manifest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read the finalized replay manifest identity
+         * @description Returns the exact tenant-scoped finalized manifest used by replay controls.
+         */
+        get: operations["getReplayManifest"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sessions/{session_id}/replay": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Execute an exact-manifest-bound replay
+         * @description Delegates REPLAY_STRICT, REPLAY_TOLERANT, or REPLAY_LIVE to the existing replay service. STRICT is deterministic historical verification without external calls; TOLERANT returns MATCHED or DIFFERENT structured differences and never VERIFIED; LIVE requires confirmation, authorized execution roles, and reports a fresh linked execution only when one exists.
+         */
+        post: operations["replaySession"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/sessions/{session_id}/events/stream": {
         parameters: {
             query?: never;
@@ -1216,6 +1256,88 @@ export interface components {
                 [key: string]: components["schemas"]["ComponentHealth"];
             };
         };
+        ReplayMeta: {
+            request_id: string;
+            /** @constant */
+            schema_version: 1;
+            workspace_id: components["schemas"]["WorkspaceId"];
+        };
+        /** @enum {string} */
+        ReplayMode: "REPLAY_STRICT" | "REPLAY_TOLERANT" | "REPLAY_LIVE";
+        /** @enum {string} */
+        ReplayOutcome: "VERIFIED" | "MATCHED" | "DIFFERENT" | "LIVE_STARTED" | "FAILED";
+        ReplayManifestRef: {
+            manifest_id: string;
+            manifest_version: number;
+            manifest_hash: string;
+        };
+        ReplayRequest: {
+            manifest: components["schemas"]["ReplayManifestRef"];
+            mode: components["schemas"]["ReplayMode"];
+            /** @default false */
+            confirm_live: boolean;
+        };
+        ReplayMismatch: {
+            /** @enum {string} */
+            reason: "HISTORICAL_REPLAY_UNAVAILABLE" | "MANIFEST_MISMATCH" | "LEDGER_INTEGRITY" | "LEDGER_MISMATCH" | "UNKNOWN_IMPLEMENTATION" | "NONDETERMINISTIC_IMPLEMENTATION" | "OUTPUT_MISMATCH" | "MARL_REPLAY_FAILED" | "LIVE_LAUNCH_UNAVAILABLE" | "INVALID_LIVE_IDENTITY";
+            detail: string;
+            order: number | null;
+            step_id: string | null;
+            expected_hash: string | null;
+            actual_hash: string | null;
+        };
+        ReplayDifference: {
+            order: number;
+            step_id: string;
+            /** @enum {string} */
+            kind: "ARTIFACT" | "EVENT" | "METRIC" | "CONSENSUS" | "SYMBOLIC" | "SIMULATION" | "RETRIEVAL" | "LLM";
+            /** @enum {string} */
+            difference: "IMPLEMENTATION" | "PROVIDER" | "MODEL" | "CONFIGURATION" | "OUTPUT" | "STATUS" | "TIMING_SENSITIVE";
+            field: string;
+            expected: string | null;
+            actual: string | null;
+        };
+        ReplayData: {
+            mode: components["schemas"]["ReplayMode"];
+            outcome: components["schemas"]["ReplayOutcome"];
+            source_session_id: components["schemas"]["SessionId"];
+            source_manifest: components["schemas"]["ReplayManifestRef"];
+            integrity_valid: boolean;
+            byte_identical: boolean;
+            checked_steps: number;
+            differences: components["schemas"]["ReplayDifference"][];
+            first_mismatch: components["schemas"]["ReplayMismatch"] | null;
+            replay_session_id: components["schemas"]["SessionId"] | null;
+            replay_manifest_id: string | null;
+            replay_event_ids: string[];
+            replay_result_ids: string[];
+            links: {
+                [key: string]: string;
+            };
+        };
+        ReplayResponse: {
+            data: components["schemas"]["ReplayData"];
+            meta: components["schemas"]["ReplayMeta"];
+        };
+        ManifestData: {
+            session_id: components["schemas"]["SessionId"];
+            manifest_id: string;
+            manifest_version: number;
+            manifest_hash: string;
+            /** @enum {string} */
+            status: "FINALIZED";
+            source_session_id: components["schemas"]["SessionId"] | null;
+            /** Format: date-time */
+            finalized_at: string | null;
+            git_sha: string;
+            image_digests: {
+                [key: string]: string;
+            };
+        };
+        ManifestResponse: {
+            data: components["schemas"]["ManifestData"];
+            meta: components["schemas"]["ReplayMeta"];
+        };
         ValidationIssue: {
             pointer: string;
             message: string;
@@ -1667,6 +1789,61 @@ export interface operations {
                     "application/json": components["schemas"]["AssumptionRegisterResponse"];
                 };
             };
+            401: components["responses"]["AuthenticationRequired"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    getReplayManifest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: components["parameters"]["SessionId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Finalized manifest identity and immutable pin summary. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManifestResponse"];
+                };
+            };
+            401: components["responses"]["AuthenticationRequired"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    replaySession: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: components["parameters"]["SessionId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReplayRequest"];
+            };
+        };
+        responses: {
+            /** @description Typed replay result with source manifest, mismatch/differences, and lineage links. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReplayResponse"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
             401: components["responses"]["AuthenticationRequired"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];

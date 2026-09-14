@@ -27,6 +27,10 @@ export type GraphSubgraphRequest =
   components["schemas"]["GraphSubgraphRequest"];
 export type GraphSubgraphResponse =
   components["schemas"]["GraphSubgraphResponse"];
+export type ReplayMode = components["schemas"]["ReplayMode"];
+export type ReplayRequest = components["schemas"]["ReplayRequest"];
+export type ReplayResponse = components["schemas"]["ReplayResponse"];
+export type ManifestResponse = components["schemas"]["ManifestResponse"];
 
 export type RealtimeEvent = {
   event_id: string;
@@ -134,6 +138,31 @@ export class ApiClient {
       `/api/v1/sessions/${encodeURIComponent(sessionId)}/explanation`,
       signal,
       token,
+    );
+  }
+
+  getReplayManifest(
+    sessionId: string,
+    token: string,
+    signal?: AbortSignal,
+  ): Promise<ManifestResponse> {
+    return this.getJson<ManifestResponse>(
+      `/api/v1/sessions/${encodeURIComponent(sessionId)}/manifest`,
+      signal,
+      token,
+    );
+  }
+
+  replaySession(
+    sessionId: string,
+    input: ReplayRequest,
+    token: string,
+    signal?: AbortSignal,
+  ): Promise<ReplayResponse> {
+    return this.sendJson<ReplayResponse>(
+      `/api/v1/sessions/${encodeURIComponent(sessionId)}/replay`,
+      input,
+      { token, ...(signal === undefined ? {} : { signal }) },
     );
   }
 

@@ -1,6 +1,6 @@
 # Phase 14 Acceptance Contract
 
-**Version:** 1.4 · **Status:** T14-01…04 complete; T14-05…06 frozen and open · **Phase:** 14
+**Version:** 1.4 · **Status:** T14-01…05 complete; T14-06 frozen and open · **Phase:** 14
 **Baseline:** Phase 13 complete through T13-04
 **Requirements:** UI/exposure verification of existing FR-305, FR-504…FR-506, FR-605, FR-609,
 FR-705, FR-708, FR-802, FR-804, FR-805, FR-807, FR-808, FR-901, NFR-003, NFR-004, NFR-005,
@@ -23,7 +23,7 @@ The authoritative task order is:
 5. T14-05 — Replay Controls
 6. T14-06 — Audit Search
 
-T14-01…04 are complete; T14-05…06 remain open. Each task must preserve generated API type drift checks, deny-by-default
+T14-01…05 are complete; T14-06 remains open. Each task must preserve generated API type drift checks, deny-by-default
 authentication, tenant isolation, accessible non-visual equivalents and responsive desktop/mobile use.
 Earlier-phase requirements cited below are verification dependencies, not reassigned implementation
 ownership.
@@ -273,6 +273,17 @@ NFR-019 capabilities. Ownership remains Phases 13, 1/12 and 18 as recorded in `R
 **Ownership:** API — authenticated replay service exposure only. Frontend — Replay Controls and result
 presentation. Persistence — existing manifest/lineage persistence only; no new persistence by default.
 Migration — none by default.
+
+**Acceptance evidence:** authenticated `GET /api/v1/sessions/{session_id}/manifest` and
+`POST /api/v1/sessions/{session_id}/replay` bind public source-session identity to the exact finalized
+manifest id/version/hash and delegate to `PersistedReplaySource` plus `SessionReplayService`. STRICT exposes
+VERIFIED or the first structured mismatch and has no external-call path; TOLERANT retains MATCHED/DIFFERENT
+semantics and ordered structured differences; LIVE is write-role protected, requires confirmation, returns
+fresh lineage when a launcher is composed, and otherwise fails closed with `LIVE_LAUNCH_UNAVAILABLE`.
+Historical source state is unchanged. The code-split Replay Controls view provides keyboard, screen-reader
+and responsive mode selection, loading/error/success/mismatch/difference/unavailable states and source,
+manifest, explanation and derived-session navigation. Focused backend, PostgreSQL, frontend, contract and
+Compose gates pass; no migration, persistence, replay-engine redesign or provider fallback was added.
 
 ## 7. T14-06 — Audit Search
 

@@ -8,6 +8,15 @@ uses semantic versioning once it ships a release. Phase 0 is pre-release.
 
 ## [Unreleased]
 
+### Added — Phase 14 T14-05 (Replay Controls)
+
+- Added authenticated finalized-manifest reads and exact manifest-bound `STRICT`, `TOLERANT`, and `LIVE`
+  replay requests over the existing replay and persisted-manifest services.
+- Added a code-split accessible Replay Controls view preserving verification, comparative difference, typed
+  unavailable-dependency, explicit LIVE confirmation, fresh lineage, and source-history immutability states.
+- Added focused API, PostgreSQL and frontend tests. No migration, replay engine, background job, provider
+  fallback or new persistence was added; Alembic remains `20260914_0026`.
+
 ### Added — Phase 14 T14-04 (Explanation Panel)
 
 - Added authenticated complete session explanation reads composed only from existing persisted consensus,

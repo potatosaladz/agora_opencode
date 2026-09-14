@@ -46,6 +46,9 @@ ID_PREFIXES: dict[str, str] = {
     "formalization": "frm",
     "symbolic_evaluation": "sev",
     "run": "run",
+    "manifest": "man",
+    "replay_step": "rps",
+    "replay_result": "rpr",
 }
 
 
@@ -109,6 +112,6 @@ def parse_id(resource: str, value: str) -> uuid.UUID:
         parsed = uuid.UUID(hex=body)
     except ValueError as exc:
         raise ValueError(f"expected a canonical {prefix}_ identifier") from exc
-    if parsed.version != 7:
+    if resource not in {"manifest", "replay_step"} and parsed.version != 7:
         raise ValueError(f"expected a UUIDv7 {prefix}_ identifier")
     return parsed

@@ -185,6 +185,84 @@ describe("ApiClient", () => {
     );
   });
 
+  // req: FR-808, NFR-010, NFR-014
+  it("reads an exact manifest and posts an authenticated replay request", async () => {
+    const manifest = {
+      data: {
+        session_id: `ses_${"1".repeat(32)}`,
+        manifest_id: `man_${"2".repeat(32)}`,
+        manifest_version: 1,
+        manifest_hash: `sha256:${"a".repeat(64)}`,
+        status: "FINALIZED" as const,
+        source_session_id: null,
+        finalized_at: "2026-09-14T10:00:00Z",
+        git_sha: "abc",
+        image_digests: {},
+      },
+      meta: {
+        request_id: "request",
+        schema_version: 1 as const,
+        workspace_id: `ws_${"3".repeat(32)}`,
+      },
+    };
+    const replay = {
+      data: {
+        mode: "REPLAY_STRICT" as const,
+        outcome: "VERIFIED" as const,
+        source_session_id: manifest.data.session_id,
+        source_manifest: {
+          manifest_id: manifest.data.manifest_id,
+          manifest_version: 1,
+          manifest_hash: manifest.data.manifest_hash,
+        },
+        integrity_valid: true,
+        byte_identical: true,
+        checked_steps: 1,
+        differences: [],
+        first_mismatch: null,
+        replay_session_id: null,
+        replay_manifest_id: null,
+        replay_event_ids: [],
+        replay_result_ids: [],
+        links: {},
+      },
+      meta: manifest.meta,
+    };
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify(manifest), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify(replay), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+      );
+    const client = new ApiClient({ fetchImpl });
+    await expect(
+      client.getReplayManifest(manifest.data.session_id, "token"),
+    ).resolves.toEqual(manifest);
+    const input = {
+      manifest: replay.data.source_manifest,
+      mode: "REPLAY_STRICT" as const,
+      confirm_live: false,
+    };
+    await expect(
+      client.replaySession(manifest.data.session_id, input, "token"),
+    ).resolves.toEqual(replay);
+    const [url, init] = fetchImpl.mock.calls[1] ?? [];
+    expect(url).toBe(`/api/v1/sessions/${manifest.data.session_id}/replay`);
+    expect(init?.method).toBe("POST");
+    expect(init?.body).toBe(JSON.stringify(input));
+    expect((init?.headers as Record<string, string>).Authorization).toBe(
+      "Bearer token",
+    );
+  });
+
   // req: FR-504, FR-505, FR-506, FR-609, FR-901, NFR-005, NFR-019
   it("reads authenticated session dissent", async () => {
     const response = {

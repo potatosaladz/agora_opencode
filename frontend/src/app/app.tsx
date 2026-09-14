@@ -18,6 +18,7 @@ const AssumptionRegisterPage = lazy(
 const ExplanationPage = lazy(
   () => import("../features/explanation/explanation-page"),
 );
+const ReplayPage = lazy(() => import("../features/replay/replay-page"));
 
 const navigation = [
   {
@@ -29,6 +30,11 @@ const navigation = [
     route: "explanation" as const,
     label: "Explanation",
     icon: "book" as const,
+  },
+  {
+    route: "replay" as const,
+    label: "Replay controls",
+    icon: "activity" as const,
   },
   {
     route: "dissent" as const,
@@ -188,6 +194,19 @@ export function App() {
             <ExplanationPage
               {...(liveSession ? { connection: liveSession } : {})}
             />
+          </Suspense>
+        ) : route === "replay" ? (
+          <Suspense
+            fallback={
+              <main
+                className="replay-page replay-page--loading"
+                id="main-content"
+              >
+                <p role="status">Loading replay controls...</p>
+              </main>
+            }
+          >
+            <ReplayPage {...(liveSession ? { connection: liveSession } : {})} />
           </Suspense>
         ) : route === "dissent" ? (
           <Suspense

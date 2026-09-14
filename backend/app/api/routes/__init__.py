@@ -6,6 +6,7 @@ from app.api.routes.health import router as health_router
 from app.api.routes.metrics import router as metrics_router
 from app.api.routes.phase3 import router as phase3_router
 from app.api.routes.realtime import router as realtime_router
+from app.api.routes.replay import router as replay_router
 
 __all__ = [
     "formalizations_router",
@@ -14,4 +15,5 @@ __all__ = [
     "metrics_router",
     "phase3_router",
     "realtime_router",
+    "replay_router",
 ]
