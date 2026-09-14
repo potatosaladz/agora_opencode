@@ -268,6 +268,7 @@ _PHASE_11_TABLES = (
     "symbolic_evaluations",
 )
 _PHASE_12_TABLES = ("marl_episodes", "marl_trajectory_records")
+_PHASE_13_TABLES = ("access_log", "audit_anchors")
 _ALL_PHASE_3_TABLES = tuple(
     table for revision in _PHASE_3_REVISIONS for table in _PHASE_3_SCHEMA[revision]
 )
@@ -3105,6 +3106,7 @@ async def test_reasoning_revision_downgrades_reupgrades_and_has_no_drift() -> No
                 *_PHASE_10_TABLES,
                 *_PHASE_11_TABLES,
                 *_PHASE_12_TABLES,
+                *_PHASE_13_TABLES,
             }
         await asyncio.to_thread(command.check, config)
 
