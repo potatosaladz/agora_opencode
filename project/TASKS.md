@@ -64,7 +64,7 @@ Full breakdown in [PLAN.md](PLAN.md). Estimates are per phase, not per task, unt
 | 10 Graph + traceability | `[ ]` | L | one API call walks a recommendation to its primary sources |
 | 11 Neuro-symbolic | `[ ]` | L | an infeasible alternative is removed with its unsat core quoted |
 | 12 MARL environment | `[ ]` | M | trajectories replay deterministically; reward components map to metric ids |
-| 13 Trustworthiness | `[ ]` | L | a past session answers "why did it say that"; manifest replays in `TOLERANT` mode |
+| 13 Trustworthiness | `[~]` | L | T13-01 complete; everything else open — a past session answers "why did it say that"; manifest replays in `TOLERANT` mode |
 | 14 Full UI | `[ ]` | XL | a naive reviewer finds the minority position and the weakest evidence from the UI alone |
 | 15 MCP gateway | `[ ]` | L | workers have no internet route; hostile tool output does not widen agent scope |
 | 16 Research extensions | `[ ]` | XL | three research strategies each beat or lose to `constraint_aware` on measured terms |
@@ -79,6 +79,15 @@ Full breakdown in [PLAN.md](PLAN.md). Estimates are per phase, not per task, unt
 | T12-03 | Canonical export and hermetic offline verification | `[x]` | L | exact two-file JCS/LF bytes, hash graph, pinned registry, bounded untrusted input, and deterministic 14-code first failure pass |
 | T12-04 | PostgreSQL persistence and migration | `[x]` | L | revision 0024, tenant-safe FKs, forced RLS, append-only guards, caller-owned transaction and advisory-lock allocation implemented |
 | T12-05 | Acceptance, documentation and traceability | `[x]` | M | focused tests, migration/static/full checks, normative MARL/port docs, FR-906 Phase 12 ownership and generated traceability are reconciled |
+
+## Phase 13 — Trustworthiness · T13-01 complete
+
+| ID | Task | Status | Est | Acceptance |
+| --- | --- | --- | --- | --- |
+| T13-01 | Metric catalogue implemented ([METRICS.md](../docs/METRICS.md)) | `[x]` | M | 43 immutable shipped `MetricDefinition`s (EP-01…06, RR-01…07, DH-01…07, CQ-01…06, RB-01…05, CE-01…05, HO-01…04, CA-01…03) carry the six admission fields (profile/dimension, label, direction, range kind/bounds, unit, ID); `MetricCatalogue` orders deterministically and `get(metric_id, metric_version)` fails closed with no "latest"; 13 focused tests transcribe METRICS.md field-by-field and pin the Phase 12 reward metrics at version `"1"`; no metric engine, storage, API, UI, replay or migration added and no frontend/metrics runtime touched |
+| T13-02 | Audit record generation and the eight audit queries ([AUDITABILITY.md](../docs/AUDITABILITY.md)) | `[ ]` | L | not started; based on Phase 10 provenance |
+| T13-03 | Replay modes `STRICT` / `TOLERANT` / `LIVE` | `[ ]` | M | not started |
+| T13-04 | Run manifests with pinning | `[ ]` | M | not started |
 
 ## Phase 3 — detailed execution plan
 

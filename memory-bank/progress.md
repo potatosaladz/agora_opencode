@@ -1,7 +1,7 @@
 # Progress
 
-**Overall completion:** Phases 0–4 and 6–10 complete; Phase 5 remote evidence remains separate.
-Phase-0 architecture baseline: **approved by the project owner (D-13)**.
+**Overall completion:** Phases 0–12 complete; Phase 13 T13-01 done (catalogue only); Phase 5 remote
+evidence remains separate. Phase-0 architecture baseline: **approved by the project owner (D-13)**.
 
 ---
 
@@ -22,7 +22,7 @@ Phase-0 architecture baseline: **approved by the project owner (D-13)**.
 | 10 | Reasoning graph & traceability | Not started | — |
 | 11 | Neuro-symbolic | **Complete** | T11-01…04 complete: immutable formalisation lifecycle, bounded Z3, exact-revision evidence, and conservative `UNKNOWN → DEFER` consensus policy |
 | 12 | MARL environment | **Complete** | T12-01…05: exact trajectory domain, reward/credit accounting, canonical export, hermetic replay, in-memory/PostgreSQL stores and migration 0024 |
-| 13 | Trustworthiness | Not started | — |
+| 13 | Trustworthiness | **In progress** | T13-01 catalogue complete (43 immutable `MetricDefinition`s, 13 tests); T13-02 audit records + eight queries, T13-03 replay modes, T13-04 run manifests open |
 | 14 | Full UI | Not started | — |
 | 15 | MCP | Not started | — |
 | 16 | Research extensions | Not started | — |
@@ -31,6 +31,35 @@ Phase-0 architecture baseline: **approved by the project owner (D-13)**.
 ---
 
 ## Detailed log
+
+### 2026-09-14 — Phase 13 T13-01 metric catalogue + Compose isolation
+
+- Added `backend/app/ports/metrics.py`: `_Frozen` value objects, `MetricDimension`/`MetricDirection`/
+  `MetricSubjectKind`/`MetricRangeKind`/`MetricRange`/`MetricInputSpec`, the six-admission-field
+  `MetricDefinition` (profile/dimension, label, direction, range kind/bounds, unit, ID) with
+  retirement-with-successor rules, `MetricValueStatus`/`MetricValue` (M-2/M-4 metadata, no
+  `NOT_APPLICABLE → 0`), and the `@runtime_checkable` `MetricPlugin` port.
+- Added `backend/app/domain/metrics.py`: immutable `MetricCatalogue` rejecting duplicates/empties,
+  deterministic ordering, and exact `get(metric_id, metric_version)` with no "latest" fallback.
+- Added `backend/app/application/metrics.py`: all 43 shipped definitions transcribed from METRICS.md
+  (EP-01…06, RR-01…07, DH-01…07, CQ-01…06, RB-01…05, CE-01…05, HO-01…04, CA-01…03).
+- Added 13 tests in `backend/tests/unit/test_metric_catalogue.py` (FR-901/FR-902/NFR-019) covering the
+  full transcription gate, deterministic order, FR-901 profile/no-composite rule, fail-closed exact
+  lookup, details from the Phase 12 reward pins (`ep-02`, `dh-03`, `dh-02`, `cq-03`, `ce-03` at "1").
+- Traceability: FR-901 partial, FR-902 implemented (`local-phase13-2026-09-14`), NFR-019 partial;
+  METRICS.md §1/§2 annotated; generated TRACEABILITY.csv = 104 rows, no drift.
+- Validation: ruff/mypy/compileall clean; 13 focused tests and full non-integration suite
+  `755 passed, 56 deselected` (fresh `--basetemp`; see ERRORS.md environment note on the Windows
+  pytest-current junction teardown).
+- Compose isolation: project `agora_opencode`, env-parameterized loopback host ports (POSTGRES 15432,
+  REDIS 16379, MINIO 19000/19001, NATS 14222/18222, TEMPORAL 17233/18080/15433, BACKEND 18000,
+  FRONTEND 13000), dedicated volumes/networks, `agora_opencode/`-prefixed images, `scripts/run-integration.ps1`
+  TEST_* ports, frontend vite proxy env, `.env.example`/README/DEPLOYMENT updates.
+- Integration gate: `docker compose up -d --build --wait` on the isolated stack, `/ready` all six
+  components ok, frontend 200, `scripts/run-integration.ps1` green `56 passed` (755 deselected). The
+  gate surfaced two pre-existing Phase 12 alembic-chain defects, fixed and recorded as E-21 (ORM
+  metadata omitted `ck_marl_episodes_status_shape`) and E-22 (head acceptance kept the Phase 10 literal
+  and table census); ORM + acceptance now align to head `20260912_0024` with no new migration.
 
 ### 2026-09-10 — Phase 9 consensus engine (T9-01…T9-06)
 

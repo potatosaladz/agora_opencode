@@ -1,6 +1,6 @@
 # Active Context
 
-**Snapshot taken:** 2026-09-13 · **Phase:** 12 complete · **Active task:** T12-05 complete
+**Snapshot taken:** 2026-09-14 · **Phase:** 13 in progress · **Active task:** T13-01 complete; T13-02 next
 This is the "what is happening right now" file. Rewrite it at the end of every
 significant unit of work.
 
@@ -8,7 +8,19 @@ significant unit of work.
 
 ## 1. Focus of the current session
 
-Phase 12 is complete through T12-05. Deterministic MARL observations, advisory actions, coordinator decisions,
+Phase 13 T13-01 is complete. The METRICS.md catalogue is shipped as 43 immutable `MetricDefinition`s
+(EP-01…06, RR-01…07, DH-01…07, CQ-01…06, RB-01…05, CE-01…05, HO-01…04, CA-01…03) behind the new
+`MetricPlugin` port in `app/ports/metrics.py`, a deterministic exact-lookup `MetricCatalogue` in
+`app/domain/metrics.py`, and an application catalogue in `app/application/metrics.py`. Thirteen focused
+tests transcribe METRICS.md field-by-field, cover the FR-901 profile rule and pin the Phase 12 reward
+metrics (`ep-02`, `dh-03`, `dh-02`, `cq-03`, `ce-03`) at version "1". Traceability moves FR-901 and
+NFR-019 to partial and FR-902 to implemented (`last_verified: local-phase13-2026-09-14`); the generated
+CSV holds 104 rows with no drift. No metric engine, `metric_values` storage, API, UI, replay or
+migration was added; Alembic head stays `20260912_0024`. The Compose stack is isolated under project
+name `agora_opencode` (env-parameterized loopback ports, dedicated volumes/networks, renamed images)
+so it cannot collide with the old `agora` stack.
+
+Phase 12 T12-01 through T12-05 are complete. Deterministic MARL observations, advisory actions, coordinator decisions,
 five exact metric-linked reward components, conserved provenance credit, lifecycle persistence, canonical
 two-file export, and hermetic bounded replay verification are implemented. PostgreSQL revision
 `20260912_0024` is append-only and forced-RLS; the in-memory adapter has matching behavior. No training,
@@ -37,14 +49,24 @@ formalisation plus symbolic-evidence persistence tests, with strict static, trac
 
 ## 2. Currently active task
 
-T11-01 through T11-04 and Phase 11 are closed. Phase 12 T12-01 through T12-05 is closed. Phase 13 is next and
-has not started. Phases 0–4 and 6–10 have exact-SHA
+Phase 13 T13-01 is closed (metric catalogue). T13-02 (audit record generation and the eight audit
+queries per AUDITABILITY.md) is next and has not started. Phase 12 T12-01 through T12-05 and Phase 11
+are closed. Phases 0–4 and 6–10 have exact-SHA
 remote evidence. Phase 5 remote evidence remains tracked
 independently. T7-08 and Phase 7 are complete at exact SHA
 `25914b48e1c5140279720d1a4dfb66483cf744a3`; GitHub Actions run `34667037521` passed all six jobs.
 
 ## 3. Completed in this session so far
 
+- `T13-01` Metric catalogue implemented: `app/ports/metrics.py` (`MetricPlugin` + value objects),
+  `app/domain/metrics.py` (`MetricCatalogue`), `app/application/metrics.py` (43 shipped definitions),
+  and `tests/unit/test_metric_catalogue.py` (13 green tests). Traceability: FR-901 partial,
+  FR-902 implemented, NFR-019 partial; generated TRACEABILITY.csv at 104 rows with no drift. Also
+  isolated the Compose stack under `agora_opencode` (parametrized loopback ports, dedicated
+  volumes/networks, prefixed images). Full gate green: non-integration 755 passed and integration
+  56 passed on the isolated stack, which surfaced and fixed two pre-existing Phase 12 alembic-chain
+  defects (E-21: missing `ck_marl_episodes_status_shape` in ORM metadata; E-22: stale head literal).
+  Alembic head stays `20260912_0024` with no new migration.
 - `T0-01` Repository scaffold + Git initialization.
 - `T0-02` `README.md`, `CHANGELOG.md`, `.gitignore`.
 - `T0-03` Memory bank: `projectbrief.md`, `architecture.md`, `techContext.md`.
@@ -388,22 +410,13 @@ widened graph matrix plus commit/rollback, exact retry, forced RLS and append-on
 
 ## 9. Next recommended action
 
-T10-01 graph traversals, T10-02 `provenance_of(artifact)`, and T10-03 generated traceability are complete on
-`phase10-reasoning-graph`. Provenance reuses bounded, cycle-safe backward traversal and joins EVIDENCE
-nodes to canonical citation snapshots and current source status without adding source graph nodes. Five
-focused provenance tests pass. The citation persistence test passed 1 test in 2.98 seconds against an
-isolated disposable `pgvector/pgvector:pg16` database with a subprocess-scoped `TEST_DATABASE_URL`; the
-container was removed. The implementation SHA tested was
-`e86e9ca24c06b8139a35d510a3c36b372f3499be`. T10-03 covers 104 requirements with 74 documentation,
-46 source, and 511 test annotations. Its semantic audit retained 77 sole-`NFR-016` tests, reassigned
-149, and narrowed broad simulation/consensus citations. The latest run passes 677 offline tests with 52
-service-dependent tests deselected. Strict mypy over 267 files and frontend/trace/link gates pass;
-repo-wide Ruff remains red only on inherited Phase 8/9 debt. T10-04 is now implemented locally with
-durable exact-version source-impact snapshots, explicit completeness, and atomic workspace outbox
-publication without downstream artifact mutation. Two live PostgreSQL tests prove clean migration and
-drift, forced RLS, append-only rows, rollback atomicity, report round-trip, and outbox publication. T7-08 is
-closed with exact-SHA run `34667037521`. Keep Phase 5 commit
-`45253c8b91c103e9632554de8b31d55a5a5281c4` remote evidence tracked independently.
+Phase 13 T13-01 is complete: the METRICS.md catalogue ships as 43 immutable `MetricDefinition`s with an
+exact-lookup `MetricCatalogue` and 13 green tests; FR-902 is implemented and FR-901/NFR-019 partial in
+the generated 104-row traceability. T13-02 (audit record generation and the eight audit queries per
+[AUDITABILITY.md](../docs/AUDITABILITY.md)) is next and must be verified from
+[project/TASKS.md](../project/TASKS.md) before starting; do not begin it automatically. The Compose stack
+is isolated under `agora_opencode`; run frontend format and the integration gate before committing.
+Keep Phase 5 commit `45253c8b91c103e9632554de8b31d55a5a5281c4` remote evidence tracked independently.
 
 ## 10. How to resume this project cold
 

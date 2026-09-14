@@ -1,7 +1,7 @@
 # Handoff
 
 **For:** whoever continues this work, probably with no memory of the session that produced it.
-**As of:** 2026-09-13 · **Phase:** 12 complete · **Active task:** T12-05 complete
+**As of:** 2026-09-14 · **Phase:** 13 in progress · **Active task:** T13-01 complete; T13-02 next
 
 ## Read these five, in this order
 
@@ -32,10 +32,14 @@ A change that breaks any of these is not a refactor. It is a different project.
 
 ## Immediate next action
 
-Phase 12 is complete through T12-05. The repository now contains strict exact MARL trajectory contracts,
-the in-memory and PostgreSQL stores, canonical two-file export, and hermetic bounded offline replay. FR-906
-is owned and automatically verified in Phase 12. The feature remains research-isolated: no training and no
-production coordinator wiring. Phase 13 is the next authoritative phase; do not start it automatically.
+Phase 13 T13-01 is complete. The [METRICS.md](../docs/METRICS.md) catalogue is shipped as 43 immutable
+`MetricDefinition`s across `app/ports/metrics.py`, `app/domain/metrics.py` and
+`app/application/metrics.py`, with an exact-lookup `MetricCatalogue` and 13 focused tests transcribing
+the document field-by-field and pinning the Phase 12 reward metrics at version "1". Still absent by
+design: a metric engine, `metric_values` storage, replay, UI, or API — Alembic stays at
+`20260912_0024`. T13-02 (audit record generation and the eight audit queries per
+[AUDITABILITY.md](../docs/AUDITABILITY.md), built on Phase 10 provenance) is the next authoritative
+task; do not start it automatically.
 
 Phase 11 is complete through T11-04. `SymbolicUnknownPolicy` keeps solver facts separate from
 application action: `SAT → PROCEED`, `UNSAT → BLOCK`, `UNKNOWN → DEFER`. The persisted evaluation remains

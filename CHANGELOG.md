@@ -8,6 +8,32 @@ uses semantic versioning once it ships a release. Phase 0 is pre-release.
 
 ## [Unreleased]
 
+### Added — Phase 13 T13-01 (metric catalogue)
+
+- Added the `MetricPlugin` port, immutable six-field `MetricDefinition` value objects, the
+  deterministic domain `MetricCatalogue` and an application catalogue of all 43 METRICS.md metrics
+  (`EP-01…06`, `RR-01…07`, `DH-01…07`, `CQ-01…06`, `RB-01…05`, `CE-01…05`, `HO-01…04`, `CA-01…03`).
+- Added exact `get(metric_id, metric_version)` lookup with no "latest" fallback, retirement-with-
+  successor rules, and 13 catalogue tests that transcribe METRICS.md field-by-field and pin the Phase 12
+  reward metrics (FR-901, FR-902, NFR-019). No metric engine, storage, API, UI, replay or migration was
+  introduced; Alembic head stays `20260912_0024`.
+
+### Added — isolated Compose stack under `agora_opencode`
+
+- Relabelled the Compose project `agora_opencode`, parameterised every host-facing port in `.env`
+  (loopback-bound, non-conflicting defaults), and introduced dedicated volumes, networks and
+  `agora_opencode/`-prefixed images so the dev stack cannot collide with an existing `agora` deployment.
+
+### Fixed — Phase 12 ORM/alembic-chain acceptance drift (surfaced by the integration gate)
+
+- Declared the `ck_marl_episodes_status_shape` CHECK constraint on `MarlEpisodeRow`, which migration
+  `20260912_0024` creates but the ORM metadata had omitted, so `alembic check` no longer flags it for
+  removal (E-21). No migration file changed; head stays `20260912_0024`.
+- Replaced the stale hardcoded head literal `20260911_0021` with the runtime-resolved Alembic head in
+  `test_reasoning_revision_downgrades_reupgrades_and_has_no_drift` and extended its head-tables census
+  with the Phase 11 (`formalizations`, `formalization_validations`, `formalization_decisions`,
+  `symbolic_evaluations`) and Phase 12 (`marl_episodes`, `marl_trajectory_records`) tables (E-22).
+
 ### Added — Phase 12 deterministic MARL trajectories
 
 - Added strict frozen observation, action, coordinator, five-component exact reward, provenance-credit,

@@ -1,7 +1,32 @@
 # Current State
 
-**As of:** 2026-09-13 · **Phase:** 12 complete · **Active task:** T12-05 complete; stop before Phase 13
+**As of:** 2026-09-14 · **Phase:** 13 in progress · **Active task:** T13-01 complete; T13-02 next
 **Track:** MVP · **Confidence:** Phases 0–4, 6–10 exact-SHA remote evidence; Phase 5 local gates green
+
+Phase 13 T13-01 is complete locally. The [METRICS.md](../docs/METRICS.md) catalogue is now shipped as 43
+immutable `MetricDefinition` value objects behind the new `MetricPlugin` port
+(`backend/app/ports/metrics.py`), a deterministic domain `MetricCatalogue`
+(`backend/app/domain/metrics.py`) and a 43-entry application catalogue
+(`backend/app/application/metrics.py`): EP-01…06, RR-01…07, DH-01…07, CQ-01…06, RB-01…05, CE-01…05,
+HO-01…04, CA-01…03. Every definition carries the six admission fields (profile/dimension, label,
+direction, interval/enum range, unit, ID) from METRICS.md and its authored `inputs`/
+`interpretation`, which the document now declares as the executable authority. `MetricCatalogue`
+rejects duplicates/empties, orders deterministically, and `get(metric_id, metric_version)` fails
+closed with no "latest" fallback. Thirteen focused tests transcribe METRICS.md field-by-field, verify
+the FR-901 no-single-score profile rule, and pin the Phase 12 reward metrics (`ep-02`, `dh-03`,
+`dh-02`, `cq-03`, `ce-03`) at version `"1"`. Traceability now records FR-901 and NFR-019 as partial
+and FR-902 as implemented (`last_verified: local-phase13-2026-09-14`); the generated
+[TRACEABILITY.csv](TRACEABILITY.csv) rose to 104 rows with no drift. No metric engine,
+`metric_values` storage, API, UI, replay or migration was added; Alembic head remains
+`20260912_0024` and MARL reward computation is unchanged. The Compose stack was also isolated under
+project name `agora_opencode` with env-parameterized loopback host ports (`POSTGRES 15432`, `REDIS
+16379`, `MINIO 19000/19001`, `NATS 14222/18222`, `TEMPORAL 17233/18080/15433`, `BACKEND 18000`,
+`FRONTEND 13000`) and dedicated volumes/networks so it cannot collide with an existing `agora`
+deployment. Validation is green end-to-end on this stack: the non-integration suite runs
+`755 passed, 56 deselected` and the integration suite inside the isolated stack runs `56 passed`; the gate
+surfaced and fixed two pre-existing Phase 12 alembic-chain defects (E-21: ORM metadata omitted
+`ck_marl_episodes_status_shape`; E-22: head acceptance held a Phase 10 literal), with head
+`20260912_0024` unchanged and no new migration.
 
 Phase 12 T12-01 through T12-05 are complete locally. Strict infrastructure-neutral contracts model source
 snapshots, observations/features, proposals/executions, coordinator decisions, a fixed five-component exact
