@@ -1,6 +1,6 @@
 # Tasks (project register)
 
-**Last updated:** 2026-09-10 · **Companion:** [../memory-bank/tasks.md](../memory-bank/tasks.md) (live
+**Last updated:** 2026-09-14 · **Companion:** [../memory-bank/tasks.md](../memory-bank/tasks.md) (live
 view) · [PLAN.md](PLAN.md) (phase contracts)
 
 Legend: `[x]` done · `[~]` in progress · `[ ]` open · `[!]` blocked · `[-]` dropped
@@ -88,6 +88,24 @@ Full breakdown in [PLAN.md](PLAN.md). Estimates are per phase, not per task, unt
 | T13-02 | Audit record generation and the eight audit queries ([AUDITABILITY.md](../docs/AUDITABILITY.md)) | `[x]` | L | migration `20260912_0025` adds forced-RLS append-only `access_log` + `audit_anchors` (`TRIGGER` rejects UPDATE/DELETE, sqlstate 27000); `app/domain/audit.py` typed contracts incl. `AuditAnchor.publish` and shared `_anchor_facts`; `app/db/audit.py` adapters (`SqlAlchemyAccessLogRepository`, `SqlAlchemyAuditAnchorRepository`, `SqlAlchemySessionParticipantReader`); `app/db/consensus.py` gains `ConsensusResultStore.get_round_result`; `app/application/audit.py` answer Q1-Q8 as typed services (`AuditQueryService`, `AccessAuditService`, `ChainVerificationService`) with pure determinism (`_anchor_facts`, ledger `chain_integrity`, `_originating_turn`), Q7 bounded strictly before `recommendations.created_at`; 21 unit + 7 PostgreSQL integration tests incl. tamper detection, RLS 42501 isolation, FK 23503, same-day anchor conflict, two-day chain verification; docs AUDITABILITY.md 1.4 + DATA_MODEL.md 11.1; FR-807/NFR-006 flipped to implemented |
 | T13-03 | Replay modes `STRICT` / `TOLERANT` / `LIVE` | `[x]` | M | closed `ReplayMode` plus immutable request/source/step/execution/result/mismatch/diff contracts in `app/domain/replay.py`; `SessionReplayService` verifies manifest/session identity and the authoritative ledger before exhaustive mode dispatch; STRICT permits only recorded or exact-version deterministic local steps, integrates existing Phase 12 `verify_bundle`, stops at the first mismatch, and never invokes external implementations; TOLERANT re-executes only explicitly permitted steps and reports ordered implementation/provider/model/configuration/output/status/timing-sensitive differences without claiming VERIFIED; LIVE delegates creation, requires fresh linked session/manifest/event/result identities, and rejects historical identity reuse; no HTTP or persistence added because durable manifests/linkage are T13-04; 11 focused tests cover all mode and isolation invariants |
 | T13-04 | Run manifests with pinning | `[x]` | M | `RunManifestDocument` canonically pins code/images, migration/artifact schemas, configuration/protocol/budget/consensus, agent/prompt/inference, retrieval/index, metric, symbolic, simulation, MARL, content and scoped randomness identities; deterministic bytes/hash/id and required unique pins are enforced; migration `20260914_0026` adds one tenant-safe forced-RLS `reproducibility_manifests` row per session with optional same-workspace replay lineage and exactly one immutable `CREATED → FINALIZED` transition; canonical bytes are content-addressed in `ObjectStore`; `PersistedReplaySource` resolves only exact finalized id/version/hash pins for T13-03 with no latest fallback; focused unit and PostgreSQL tests cover hash identity, changed pins, required fields, exact finalization, immutability, RLS/FKs and strict replay resolution |
+
+## Phase 14 — Full UI · **contract frozen; implementation not started**
+
+Normative detail: [PHASE14_ACCEPTANCE.md](../docs/PHASE14_ACCEPTANCE.md). Requirement mappings verify
+UI/API exposure of earlier-phase capabilities and do not reassign their implementation ownership.
+
+| ID | Task | Status | Est | Acceptance |
+| --- | --- | --- | --- | --- |
+| T14-01 | Graph View | `[ ]` | L | existing `ReasoningGraphStore.subgraph()` is exposed through authenticated `POST /api/v1/graph/subgraph` with tenant/session scope, deterministic public ordering, bounded radius/filter/page/cursor validation and independent truncation/pagination signals; a code-split responsive Graph View renders server authority with textual equivalence, keyboard selection, visible edge semantics and explicit loading/error/empty states; no migration or new persistence |
+| T14-02 | Dissent View | `[ ]` | M | every minority position, opposing warrant and unresolved/open/disputed critique is visible inline, deterministically ordered and navigable to existing artifact/graph views; omission/suppression controls and Graph View reimplementation are absent |
+| T14-03 | Assumption Register | `[ ]` | M | session assumptions and constraints expose lifecycle, attribution, dependents, critiques, provenance and symbolic state with exact `UNKNOWN → DEFER` presentation and navigation; no mutation, solver or graph reimplementation |
+| T14-04 | Explanation Panel | `[ ]` | L | one accessible "why" panel presents consensus/recommendation drivers, inhibitors, conditions, counterfactuals, absent evidence, dissent, critiques, provenance and caveats with explicit empty reasons; the fixture's weakest evidence is discoverable without generated explanation authority or recomputation |
+| T14-05 | Replay Controls | `[ ]` | M | authenticated UI/API delegates exact manifest-bound STRICT/TOLERANT/LIVE requests to existing replay services; mode claims remain distinct, history immutable and LIVE freshly linked; no replay-engine redesign or new persistence by default |
+| T14-06 | Audit Search | `[ ]` | L | authenticated UI/API exposes existing Q1–Q8 services with typed bounded inputs/results, tenant isolation, Q7-before-acceptance, Q8 chain verification and audit-read logging; no replacement audit subsystem, nightly anchor job, WORM store or export bundle |
+
+**Exit gate:** the frozen scripted fixture proves that a reviewer with no knowledge of the internals can
+identify the minority position and weakest evidence from the UI alone. The fixture is defined but has not
+passed because T14-01…06 remain open.
 
 ## Phase 3 — detailed execution plan
 

@@ -222,7 +222,7 @@ deferrable · `R` research track, explicitly outside MVP.
 | 11 | FR-705 … FR-708 |
 | 12 | FR-906, NFR-010 |
 | 13 | FR-807, FR-808, FR-901, FR-902, NFR-003, NFR-006, NFR-019 |
-| 14 | — |
+| 14 | UI/API exposure verification only; see [PHASE14_ACCEPTANCE.md](PHASE14_ACCEPTANCE.md). Earlier-phase requirement ownership is unchanged. |
 | 15 | FR-1001 … FR-1004 |
 | 16 | FR-903, FR-904, FR-905, FR-907 |
 | 17 | NFR-002, NFR-007, NFR-008 |
@@ -233,6 +233,5 @@ deferrable · `R` research track, explicitly outside MVP.
 Any `P0` requirement that cannot be met is a **stop condition** for the phase, recorded in
 [../project/ERRORS.md](../project/ERRORS.md) with a proposed scope or design change — never
 silently dropped.
-
 
 

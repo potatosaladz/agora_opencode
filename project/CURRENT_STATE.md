@@ -1,7 +1,14 @@
 # Current State
 
-**As of:** 2026-09-14 · **Phase:** 13 complete · **Active task:** T13-01 through T13-04 complete
+**As of:** 2026-09-14 · **Phase:** 14 contract frozen · **Active task:** T14-01 Graph View open
 **Track:** MVP · **Confidence:** Phases 0–4, 6–10 exact-SHA remote evidence; Phase 5 local gates green; Phase 13 local gates green
+
+Phase 14 task authority is frozen in [PHASE14_ACCEPTANCE.md](../docs/PHASE14_ACCEPTANCE.md): T14-01 Graph
+View, T14-02 Dissent View, T14-03 Assumption Register, T14-04 Explanation Panel, T14-05 Replay Controls and
+T14-06 Audit Search, in that order. All six tasks remain open. The contract preserves earlier-phase domain,
+storage and requirement ownership: Phase 14 adds authenticated API exposure and accessible UI presentation,
+not replacement graph, consensus, symbolic, replay, manifest or audit infrastructure. The scripted phase
+fixture is defined but has not passed. T14-01 is next and must not start automatically.
 
 Phase 13 T13-04 is complete locally. `RunManifestDocument` is the strict, canonical version-1 run
 identity. It pins code/images, migration/artifact schemas, configuration/protocol/budget/consensus,

@@ -8,6 +8,14 @@ uses semantic versioning once it ships a release. Phase 0 is pre-release.
 
 ## [Unreleased]
 
+### Added — Phase 14 acceptance contract
+
+- Froze the ordered T14-01…T14-06 Graph, Dissent, Assumption, Explanation, Replay and Audit UI task
+  boundaries, requirement references and ownership in `docs/PHASE14_ACCEPTANCE.md`.
+- Defined the scripted Phase 14 usability fixture without claiming implementation or passing evidence.
+- Preserved all existing graph, consensus, symbolic, replay, manifest and audit infrastructure; no runtime
+  code, API route, frontend component, persistence or migration changed.
+
 ### Added — Phase 13 T13-04 (pinned run manifests)
 
 - Added canonical version-1 `RunManifestDocument` pins and deterministic manifest bytes/hash/identity.

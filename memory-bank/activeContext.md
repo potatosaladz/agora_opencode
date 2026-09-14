@@ -1,12 +1,19 @@
 # Active Context
 
-**Snapshot taken:** 2026-09-14 · **Phase:** 13 complete · **Active task:** T13-01 through T13-04 complete
+**Snapshot taken:** 2026-09-14 · **Phase:** 14 contract frozen · **Active task:** T14-01 Graph View open
 This is the "what is happening right now" file. Rewrite it at the end of every
 significant unit of work.
 
 ---
 
 ## 1. Focus of the current session
+
+Phase 14 task authority is frozen in `docs/PHASE14_ACCEPTANCE.md`. The ordered open tasks are T14-01 Graph
+View, T14-02 Dissent View, T14-03 Assumption Register, T14-04 Explanation Panel, T14-05 Replay Controls and
+T14-06 Audit Search. The contract preserves earlier-phase implementation ownership and defines Phase 14 as
+authenticated API exposure plus accessible, responsive frontend presentation. The scripted usability
+fixture exists but has not passed. No runtime code, API route, frontend component, migration or persistence
+changed. T14-01 is next and must not start automatically.
 
 Phase 13 T13-04 is complete. `app/domain/run_manifest.py` defines canonical typed pins and the
 `CREATED | FINALIZED` lifecycle; `app/application/run_manifest.py` stores exact canonical bytes by
@@ -82,7 +89,8 @@ formalisation plus symbolic-evidence persistence tests, with strict static, trac
 ## 2. Currently active task
 
 Phase 13 T13-01 through T13-04 are closed (metric catalogue; audit persistence + eight audit queries;
-STRICT/TOLERANT/LIVE replay; durable pinned run manifests). Phase 14 is next and has not started.
+STRICT/TOLERANT/LIVE replay; durable pinned run manifests). Phase 14's contract is frozen and all six
+implementation tasks remain open; T14-01 Graph View is next.
 Phase 12 T12-01 through
 T12-05 and Phase 11
 are closed. Phases 0–4 and 6–10 have exact-SHA

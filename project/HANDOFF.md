@@ -1,7 +1,7 @@
 # Handoff
 
 **For:** whoever continues this work, probably with no memory of the session that produced it.
-**As of:** 2026-09-14 · **Phase:** 13 complete · **Active task:** T13-01 through T13-04 complete
+**As of:** 2026-09-14 · **Phase:** 14 contract frozen · **Active task:** T14-01 Graph View open
 
 ## Read these five, in this order
 
@@ -32,6 +32,14 @@ A change that breaks any of these is not a refactor. It is a different project.
 
 ## Immediate next action
 
+Read [PHASE14_ACCEPTANCE.md](../docs/PHASE14_ACCEPTANCE.md) before Phase 14 implementation. The authorized
+order is T14-01 Graph View, T14-02 Dissent View, T14-03 Assumption Register, T14-04 Explanation Panel,
+T14-05 Replay Controls and T14-06 Audit Search. All are open. T14-01 owns only a thin authenticated
+`POST /api/v1/graph/subgraph` boundary over existing `ReasoningTransaction.graph` and a code-split,
+accessible, responsive server-authoritative Graph View; it owns no persistence or migration. Do not absorb
+dissent, assumptions, explanation, replay, audit or metric UI into T14-01. The Phase 14 usability fixture is
+frozen but has not passed. Do not start T14-01 automatically.
+
 Phase 13 T13-01 through T13-04 are complete. T13-02 ships the Phase 13 audit substrate: migration
 `20260912_0025` adds forced-RLS, caller-append-only `access_log` and `audit_anchors`, and
 `app/application/audit.py` answers the eight audit questions (Q1–Q8 in
@@ -52,7 +60,7 @@ persistence was added in T13-03. T13-04 now adds canonical `RunManifestDocument`
 object bytes, and migration `20260914_0026` with one forced-RLS `reproducibility_manifests` row per
 session, optional tenant-safe source lineage, and exactly one immutable `CREATED → FINALIZED`
 transition. `PersistedReplaySource` resolves only exact finalized id/version/hash pins for T13-03. No
-HTTP endpoint was added. Phase 14 is next; do not start it automatically.
+HTTP endpoint was added. Phase 14 task authority is now frozen; implementation has not started.
 
 Phase 11 is complete through T11-04. `SymbolicUnknownPolicy` keeps solver facts separate from
 application action: `SAT → PROCEED`, `UNSAT → BLOCK`, `UNKNOWN → DEFER`. The persisted evaluation remains

@@ -215,7 +215,11 @@ rendered; the manifest of a completed run reproduces it in `TOLERANT` mode.
 
 ## Phase 14 — Full UI
 
-Graph view, dissent view, assumption register, explanation panel, replay controls, audit search.
+T14-01 Graph View · T14-02 Dissent View · T14-03 Assumption Register · T14-04 Explanation Panel ·
+T14-05 Replay Controls · T14-06 Audit Search. The tasks expose and render existing graph, consensus,
+provenance, symbolic, replay, manifest and audit authority; they do not rebuild those capabilities.
+Normative scope, acceptance, requirement-reference boundaries and the scripted usability fixture are frozen
+in [PHASE14_ACCEPTANCE.md](../docs/PHASE14_ACCEPTANCE.md).
 **Exit gate:** a reviewer with no knowledge of the internals can identify the minority position and the
 weakest evidence in a session from the UI alone (a scripted usability test, not an opinion).
 

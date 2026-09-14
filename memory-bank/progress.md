@@ -23,7 +23,7 @@ evidence remains separate. Phase-0 architecture baseline: **approved by the proj
 | 11 | Neuro-symbolic | **Complete** | T11-01…04 complete: immutable formalisation lifecycle, bounded Z3, exact-revision evidence, and conservative `UNKNOWN → DEFER` consensus policy |
 | 12 | MARL environment | **Complete** | T12-01…05: exact trajectory domain, reward/credit accounting, canonical export, hermetic replay, in-memory/PostgreSQL stores and migration 0024 |
 | 13 | Trustworthiness | **Complete** | T13-01 catalogue; T13-02 audit records + eight queries; T13-03 replay modes; T13-04 canonical durable pinned run manifests |
-| 14 | Full UI | Not started | — |
+| 14 | Full UI | Contract frozen; implementation not started | T14-01…06 ordered acceptance and scripted usability fixture frozen; all tasks open |
 | 15 | MCP | Not started | — |
 | 16 | Research extensions | Not started | — |
 | 17 | Swarm & hardening | Not started | — |
@@ -31,6 +31,15 @@ evidence remains separate. Phase-0 architecture baseline: **approved by the proj
 ---
 
 ## Detailed log
+
+### 2026-09-14 — Phase 14 acceptance contract
+
+- Froze T14-01 Graph View, T14-02 Dissent View, T14-03 Assumption Register, T14-04 Explanation Panel,
+  T14-05 Replay Controls and T14-06 Audit Search in the existing deliverable order.
+- Preserved earlier-phase requirement and persistence ownership; Phase 14 owns authenticated exposure and
+  accessible UI presentation only. No runtime code, API route, frontend component or migration changed.
+- Defined the scripted usability fixture for identifying minority position and weakest evidence; it remains
+  unpassed until the implementation tasks complete.
 
 ### 2026-09-14 — Phase 13 T13-04 run manifests with pinning
 
@@ -765,7 +774,7 @@ Phase 0 by design and become applicable in Phase 1.
 | M11 Z3 rejects infeasible alternative | Phase 11 | **Complete** — T11-01…04 complete; UNSAT alternatives are blocked and UNKNOWN remains unresolved |
 | M12 Trajectories recorded | Phase 12 | not started |
 | M13 Manifest + replay modes | Phase 13 | not started |
-| M14 Full UI | Phase 14 | not started |
+| M14 Full UI | Phase 14 | contract frozen; T14-01…06 open |
 | M15 MCP gateway enforced | Phase 15 | not started |
 | M16 Research extensions demonstrated | Phase 16 | not started |
 | M17 Swarm stack hardened | Phase 17 | not started |
