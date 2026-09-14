@@ -6,8 +6,8 @@ info:
     Authored public contract for the implemented Phase 1 API. Runtime OpenAPI routes
     remain disabled so this reviewed document is the only public API description.
 servers:
-  - url: http://127.0.0.1:8000
-    description: Local development
+  - url: http://127.0.0.1:18000
+    description: Local development (BACKEND_HOST_PORT)
 tags:
   - name: health
     description: Unauthenticated liveness and readiness probes.
@@ -859,7 +859,8 @@ components:
       required: [kind, value]
       properties:
         kind: { type: string, const: real }
-        value: { type: string, pattern: "^(?:0|-?[1-9][0-9]*)(?:\\.[0-9]*[1-9])?$" }
+        value:
+          { type: string, pattern: "^(?:0|-?[1-9][0-9]*)(?:\\.[0-9]*[1-9])?$" }
     FormalSymbol:
       type: object
       additionalProperties: false
@@ -882,7 +883,16 @@ components:
     FormalizationCreate:
       type: object
       additionalProperties: false
-      required: [source_artifact_id, ast, symbols, canonical_rendering, premise_artifact_ids, limitations, fidelity_notes]
+      required:
+        [
+          source_artifact_id,
+          ast,
+          symbols,
+          canonical_rendering,
+          premise_artifact_ids,
+          limitations,
+          fidelity_notes,
+        ]
       properties:
         source_artifact_id: { $ref: "#/components/schemas/ArtifactId" }
         ast: { $ref: "#/components/schemas/FormalAST" }
@@ -911,7 +921,16 @@ components:
       properties:
         data:
           type: object
-          required: [id, revision_id, revision, ast, ast_hash, validation_status, enforceable]
+          required:
+            [
+              id,
+              revision_id,
+              revision,
+              ast,
+              ast_hash,
+              validation_status,
+              enforceable,
+            ]
           properties:
             id: { $ref: "#/components/schemas/FormalizationId" }
             revision_id: { $ref: "#/components/schemas/FormalizationId" }

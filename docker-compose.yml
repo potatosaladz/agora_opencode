@@ -1,4 +1,4 @@
-name: agora
+name: agora_opencode
 
 x-backend-environment: &backend-environment
   ENVIRONMENT: dev
@@ -35,7 +35,7 @@ services:
       POSTGRES_USER: agora
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
     ports:
-      - "127.0.0.1:5432:5432"
+      - "127.0.0.1:${POSTGRES_HOST_PORT:-15432}:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
@@ -50,7 +50,7 @@ services:
     restart: unless-stopped
     command: ["redis-server", "--appendonly", "no", "--save", ""]
     ports:
-      - "127.0.0.1:6379:6379"
+      - "127.0.0.1:${REDIS_HOST_PORT:-16379}:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -66,8 +66,8 @@ services:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:?set MINIO_ROOT_USER in .env}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?set MINIO_ROOT_PASSWORD in .env}
     ports:
-      - "127.0.0.1:9000:9000"
-      - "127.0.0.1:9001:9001"
+      - "127.0.0.1:${MINIO_API_HOST_PORT:-19000}:9000"
+      - "127.0.0.1:${MINIO_CONSOLE_HOST_PORT:-19001}:9001"
     volumes:
       - minio-data:/data
     healthcheck:
@@ -97,8 +97,8 @@ services:
     restart: unless-stopped
     command: ["--jetstream", "--store_dir", "/data", "--http_port", "8222"]
     ports:
-      - "127.0.0.1:4222:4222"
-      - "127.0.0.1:8222:8222"
+      - "127.0.0.1:${NATS_HOST_PORT:-14222}:4222"
+      - "127.0.0.1:${NATS_MONITOR_HOST_PORT:-18222}:8222"
     volumes:
       - nats-data:/data
     healthcheck:
@@ -115,7 +115,7 @@ services:
       POSTGRES_USER: temporal
       POSTGRES_PASSWORD: ${TEMPORAL_POSTGRES_PASSWORD:?set TEMPORAL_POSTGRES_PASSWORD in .env}
     ports:
-      - "127.0.0.1:5433:5432"
+      - "127.0.0.1:${TEMPORAL_POSTGRES_HOST_PORT:-15433}:5432"
     volumes:
       - temporal-postgres-data:/var/lib/postgresql/data
     healthcheck:
@@ -138,7 +138,7 @@ services:
       DEFAULT_NAMESPACE_RETENTION: 24h
       TEMPORAL_ADDRESS: temporal:7233
     ports:
-      - "127.0.0.1:7233:7233"
+      - "127.0.0.1:${TEMPORAL_HOST_PORT:-17233}:7233"
     depends_on:
       temporal-postgres:
         condition: service_healthy
@@ -156,9 +156,9 @@ services:
     restart: unless-stopped
     environment:
       TEMPORAL_ADDRESS: temporal:7233
-      TEMPORAL_CORS_ORIGINS: http://localhost:3000
+      TEMPORAL_CORS_ORIGINS: http://localhost:${FRONTEND_HOST_PORT:-13000}
     ports:
-      - "127.0.0.1:8080:8080"
+      - "127.0.0.1:${TEMPORAL_UI_HOST_PORT:-18080}:8080"
     depends_on:
       temporal:
         condition: service_healthy
@@ -170,7 +170,7 @@ services:
       start_period: 5s
 
   migrate:
-    image: agora/backend:dev
+    image: agora_opencode/backend:dev
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -182,14 +182,14 @@ services:
         condition: service_healthy
 
   backend:
-    image: agora/backend:dev
+    image: agora_opencode/backend:dev
     build:
       context: ./backend
       dockerfile: Dockerfile
     restart: unless-stopped
     environment: *backend-environment
     ports:
-      - "127.0.0.1:8000:8000"
+      - "127.0.0.1:${BACKEND_HOST_PORT:-18000}:8000"
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -215,7 +215,7 @@ services:
       start_period: 10s
 
   workflow-worker:
-    image: agora/backend:dev
+    image: agora_opencode/backend:dev
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -231,13 +231,13 @@ services:
         condition: service_healthy
 
   frontend:
-    image: agora/frontend:dev
+    image: agora_opencode/frontend:dev
     build:
       context: ./frontend
       dockerfile: Dockerfile
     restart: unless-stopped
     ports:
-      - "127.0.0.1:3000:8080"
+      - "127.0.0.1:${FRONTEND_HOST_PORT:-13000}:8080"
     depends_on:
       backend:
         condition: service_healthy

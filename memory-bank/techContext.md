@@ -77,8 +77,11 @@ commands that later phases must use.
 
 ```bash
 # full Phase 1 development stack (copy .env.example to .env and fill values first)
+# Compose project name is `agora_opencode`; host ports default to the 1xxxx range
+# (POSTGRES_HOST_PORT=15432, BACKEND_HOST_PORT=18000, FRONTEND_HOST_PORT=13000, ...)
+# so this stack can run side-by-side with the original `agora` development stack.
 docker compose up --build --wait
-curl http://127.0.0.1:8000/ready
+curl http://127.0.0.1:18000/ready
 
 # backend on the host
 cd backend

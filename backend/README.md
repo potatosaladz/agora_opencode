@@ -54,7 +54,8 @@ construction, so the composition root is the only place that knows a class exist
 
 From the repository root, `docker compose up --build --wait` builds the locked image, runs Alembic and
 bucket initialization, and waits for Postgres, Redis, MinIO, NATS, Temporal, and `/ready` to become
-healthy. Temporal UI is available at `http://127.0.0.1:8080`. The `workflow-worker` service registers
+healthy. Temporal UI is available at `http://127.0.0.1:18080` (configurable via
+`TEMPORAL_UI_HOST_PORT`). The `workflow-worker` service registers
 the deterministic T4-02 session bootstrap workflow and its PostgreSQL lifecycle activity on the
 `session-bootstrap` task queue.
 

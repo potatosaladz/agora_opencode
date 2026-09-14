@@ -56,13 +56,19 @@ gating CI exist; GitHub Actions run `33923240340` provides remote Phase 1 accept
 ```bash
 cp .env.example .env        # fill all three local-only values
 docker compose up --build --wait
-curl http://localhost:8000/ready
-# UI: http://localhost:3000
+curl http://localhost:18000/ready
+# UI: http://localhost:13000
 docker compose down         # add -v only when intentionally deleting local data
 ```
 
 Published ports bind to `127.0.0.1` only. PostgreSQL migrations and MinIO bucket creation run as
 idempotent one-shot jobs before the backend starts. Never commit `.env`.
+
+The Compose project name is `agora_opencode`. Every published host port is configurable: the
+defaults (see `.env.example`) use the `1xxxx` range — e.g. backend on `18000`, frontend on
+`13000`, PostgreSQL on `15432` — so this stack can run alongside the original `agora`
+development stack on the same machine without touching its published ports. Container-internal
+ports and service hostnames (e.g. `http://backend:8000`) are unchanged.
 
 ---
 

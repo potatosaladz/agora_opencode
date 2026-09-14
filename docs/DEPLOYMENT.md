@@ -26,7 +26,7 @@ cp .env.example .env                 # non-secret config only
 make up            # compose: infra + services with the mock provider
 make seed          # fixture workspace, sources, agents, one completed session
 make test          # unit + integration against the compose stack
-make e2e           # playwright against http://localhost:3000
+make e2e           # playwright against http://localhost:13000 (frontend host port)
 make down -v
 ```
 

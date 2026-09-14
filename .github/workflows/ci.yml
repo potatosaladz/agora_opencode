@@ -96,14 +96,14 @@ jobs:
       TEMPORAL_POSTGRES_PASSWORD: ci-temporal-postgres-only
       MINIO_ROOT_USER: agora-ci
       MINIO_ROOT_PASSWORD: ci-minio-only
-      TEST_DATABASE_URL: postgresql+asyncpg://agora:ci-postgres-only@127.0.0.1:5432/agora
-      TEST_REDIS_URL: redis://127.0.0.1:6379/0
-      TEST_MINIO_ENDPOINT: 127.0.0.1:9000
+      TEST_DATABASE_URL: postgresql+asyncpg://agora:ci-postgres-only@127.0.0.1:15432/agora
+      TEST_REDIS_URL: redis://127.0.0.1:16379/0
+      TEST_MINIO_ENDPOINT: 127.0.0.1:19000
       TEST_MINIO_ACCESS_KEY: agora-ci
       TEST_MINIO_SECRET_KEY: ci-minio-only
-      TEST_NATS_URL: nats://127.0.0.1:4222
+      TEST_NATS_URL: nats://127.0.0.1:14222
       TEST_NATS_STREAM: AGORA
-      TEST_TEMPORAL_ADDRESS: 127.0.0.1:7233
+      TEST_TEMPORAL_ADDRESS: 127.0.0.1:17233
       TEST_TEMPORAL_NAMESPACE: default
     defaults:
       run:
@@ -123,8 +123,8 @@ jobs:
         working-directory: .
       - name: Assert API and frontend are reachable
         run: |
-          curl --fail --silent --show-error http://127.0.0.1:8000/ready
-          curl --fail --silent --show-error http://127.0.0.1:3000/
+          curl --fail --silent --show-error http://127.0.0.1:18000/ready
+          curl --fail --silent --show-error http://127.0.0.1:13000/
         working-directory: .
       - name: Run every live adapter acceptance, including API to database tracing
         run: uv run pytest -m integration --no-header -q
