@@ -14,6 +14,7 @@ export type AssumptionRegisterRelation =
   components["schemas"]["AssumptionRegisterRelation"];
 export type AssumptionRegisterCritique =
   components["schemas"]["AssumptionRegisterCritique"];
+export type ExplanationResponse = components["schemas"]["ExplanationResponse"];
 export type SessionControlCreate =
   components["schemas"]["SessionControlCreate"];
 export type HumanInputCreate = components["schemas"]["HumanInputCreate"];
@@ -119,6 +120,18 @@ export class ApiClient {
   ): Promise<AssumptionRegisterResponse> {
     return this.getJson<AssumptionRegisterResponse>(
       `/api/v1/sessions/${encodeURIComponent(sessionId)}/assumptions`,
+      signal,
+      token,
+    );
+  }
+
+  getSessionExplanation(
+    sessionId: string,
+    token: string,
+    signal?: AbortSignal,
+  ): Promise<ExplanationResponse> {
+    return this.getJson<ExplanationResponse>(
+      `/api/v1/sessions/${encodeURIComponent(sessionId)}/explanation`,
       signal,
       token,
     );

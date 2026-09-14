@@ -38,6 +38,7 @@ from app.db.coordinator_policy import SqlAlchemyCoordinatorPolicyStore
 from app.db.critique_handoff import SqlAlchemyCritiqueExplanationHandoffReader
 from app.db.critique_response import SqlAlchemyCritiqueResponseStore
 from app.db.dissent import SqlAlchemyDissentConsensusExplanationReader
+from app.db.explanation import SqlAlchemyDecisionExplanationReader
 from app.db.formalization import SqlAlchemyFormalizationRepository
 from app.db.memory import SqlAlchemyMemoryProvider
 from app.db.phase3_api import SqlAlchemyIdempotencyStore, SqlAlchemyPhase3SessionStore
@@ -61,6 +62,7 @@ from app.domain.coordinator_policy import CoordinatorPolicyStore
 from app.domain.critique import CritiqueResponseStore
 from app.domain.critique_handoff import CritiqueExplanationHandoffReader
 from app.domain.dissent import DissentConsensusExplanationReader
+from app.domain.explanation import DecisionExplanationReader
 from app.domain.formalization import FormalizationRepository, FormalizationRevision
 from app.domain.memory import MemoryProvider
 from app.domain.phase3_api import IdempotencyStore, Phase3ArtifactStore, Phase3SessionStore
@@ -102,6 +104,7 @@ class ReasoningTransaction:
     source_impacts: SourceImpactRepository
     consensus_results: ConsensusResultStore
     dissent_explanations: DissentConsensusExplanationReader
+    decision_explanations: DecisionExplanationReader
     formalizations: FormalizationRepository
     symbolic_evaluations: SymbolicEvaluationRepository
     access_logs: AccessLogRepository
@@ -159,6 +162,7 @@ class Container:
                     ),
                     consensus_results=SqlAlchemyConsensusResultStore(session),
                     dissent_explanations=SqlAlchemyDissentConsensusExplanationReader(session),
+                    decision_explanations=SqlAlchemyDecisionExplanationReader(session),
                     formalizations=SqlAlchemyFormalizationRepository(session),
                     symbolic_evaluations=SqlAlchemySymbolicEvaluationRepository(session),
                     access_logs=SqlAlchemyAccessLogRepository(session),

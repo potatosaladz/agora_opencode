@@ -263,6 +263,33 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+  /api/v1/sessions/{session_id}/explanation:
+    get:
+      operationId: getSessionExplanation
+      summary: Read the complete persisted decision explanation
+      description: >-
+        Composes the latest consensus result by (round,id), its exact persisted explanation,
+        recommendations, all alternatives, evidence provenance, assumptions and constraints,
+        complete Critique handoff, risks, uncertainties, symbolic feasibility, conditions and
+        counterfactuals. This read has no omission filters and performs no recomputation.
+      tags: [reasoning]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+      responses:
+        "200":
+          description: Complete persisted explanation or an explicit unavailable state.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExplanationResponse"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
   /api/v1/sessions/{session_id}/assumptions:
     get:
       operationId: getSessionAssumptions
@@ -2031,6 +2058,80 @@ components:
             request_id: { type: string }
             schema_version: { type: integer, const: 1 }
             workspace_id: { $ref: "#/components/schemas/WorkspaceId" }
+    ExplanationResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/ExplanationData"
+        meta:
+          type: object
+          additionalProperties: false
+          required: [request_id, schema_version, workspace_id]
+          properties:
+            request_id: { type: string }
+            schema_version: { type: integer, const: 1 }
+            workspace_id: { $ref: "#/components/schemas/WorkspaceId" }
+    ExplanationData:
+      type: object
+      additionalProperties: false
+      required:
+        [
+          session_id,
+          status,
+          empty_reason,
+          decision,
+          recommendation,
+          why,
+          alternatives,
+          evidence,
+          assumptions_constraints,
+          minority,
+          critiques,
+          risks_uncertainties,
+          symbolic_feasibility,
+          conditions_counterfactuals,
+          weakest_evidence,
+          provenance,
+          links,
+        ]
+      properties:
+        session_id: { $ref: "#/components/schemas/SessionId" }
+        status:
+          {
+            type: string,
+            enum: [AVAILABLE, NO_CONSENSUS_RESULT, EXPLANATION_UNAVAILABLE],
+          }
+        empty_reason:
+          type: [string, "null"]
+          enum: [NO_CONSENSUS_RESULT, EXPLANATION_UNAVAILABLE, null]
+        decision: { type: object, additionalProperties: true }
+        recommendation: { type: object, additionalProperties: true }
+        why: { type: object, additionalProperties: true }
+        alternatives:
+          type: array
+          items: { type: object, additionalProperties: true }
+        evidence: { type: object, additionalProperties: true }
+        assumptions_constraints: { type: object, additionalProperties: true }
+        minority:
+          type: array
+          items: { type: object, additionalProperties: true }
+        critiques: { type: object, additionalProperties: true }
+        risks_uncertainties: { type: object, additionalProperties: true }
+        symbolic_feasibility: { type: object, additionalProperties: true }
+        conditions_counterfactuals: { type: object, additionalProperties: true }
+        weakest_evidence: { type: object, additionalProperties: true }
+        provenance: { type: object, additionalProperties: true }
+        links:
+          type: object
+          additionalProperties: false
+          required: [graph, dissent, assumptions, provenance]
+          properties:
+            graph: { type: string }
+            dissent: { type: string }
+            assumptions: { type: string }
+            provenance: { type: string }
     GraphSubgraphRequest:
       type: object
       additionalProperties: false

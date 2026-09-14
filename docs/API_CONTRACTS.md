@@ -84,6 +84,21 @@ formalization. `UNKNOWN` maps to `DEFER`; `SAT` to `PROCEED`; `UNSAT` to `BLOCK`
 evaluation is explicit and maps to `DEFER`. Malformed, missing, and cross-tenant sessions use tenant-hidden
 `404`; internal UUIDs are never returned.
 
+T14-04 adds authenticated `GET /api/v1/sessions/{id}/explanation` for every workspace role. It is a
+read-only, unfiltered composition over the latest persisted consensus result by `(round,id)`, its exact
+persisted `ConsensusExplanation`, recommendations in rank/id order, all persisted alternatives, the
+authoritative assumption register, complete Critique handoff, and selected-alternative provenance. It
+never runs consensus, inference, scoring, or symbolic evaluation. `NO_CONSENSUS_RESULT` and
+`EXPLANATION_UNAVAILABLE` are successful explicit states whose required sections remain present.
+
+The response separates supporting, opposing, and qualifying `EvidencePayload` records; includes persisted
+minority, risks, uncertainties, symbolic `SAT`/`UNSAT`/`UNKNOWN` actions, conditions, and counterfactuals;
+and reports provenance completeness/truncation. Numeric values are objects containing `value`, `kind`,
+`version`, and `caveat`; support is never described as confidence or probability. Weakest evidence is
+selected deterministically only from persisted verification, lifecycle, citation presence, opposing
+relation, and recorded caveats, with the rationale returned. Missing evidence is explicitly unavailable.
+All identifiers are public and malformed, missing, or cross-tenant sessions use tenant-hidden `404`.
+
 `GET /api/v1/sessions/{id}` reads authoritative state from PostgreSQL's session lifecycle
 projection. Temporal execution descriptions are operational diagnostics only and never overwrite
 or replace that projection.

@@ -77,6 +77,7 @@ omnibus token.
 | `GET` | `/sessions/{id}` | state, config, budget, phase | |
 | `GET` | `/sessions/{id}/dissent` | latest persisted minority report and unresolved critique census | authenticated; complete, unfiltered, explicit evaluation/empty state |
 | `GET` | `/sessions/{id}/assumptions` | all assumption, constraint and uncertainty revisions | authenticated; complete, unfiltered; exact symbolic and missing-analysis state |
+| `GET` | `/sessions/{id}/explanation` | complete persisted decision explanation | authenticated; read-only, unfiltered, no recomputation; explicit unavailable states |
 | `GET` | `/sessions/{id}/rounds/{n}` | full round detail | |
 | `POST` | `/sessions/{id}/human-input` | typed human directive | idempotent; workflow emits `HUMAN_DIRECTIVE` |
 | `POST` | `/sessions/{id}/pause` · `/resume` · `/cancel` | lifecycle | authenticated, idempotent Temporal signals; cancel is terminal and never deletes |
@@ -145,6 +146,7 @@ credentials, raw provider errors or unauthorized namespace existence.
 | `GET` | `/sessions/{id}/consensus` | all results including strategy comparisons | never averaged (S-3) |
 | `GET` | `/consensus/{id}/explain` | structured explanation + minority report | FR-609 |
 | `GET` | `/sessions/{id}/dissent` | latest consensus context, minority warrants and open critique handoff | public IDs only; no support/dissent scores |
+| `GET` | `/sessions/{id}/explanation` | latest decision, recommendation, why, alternatives and assurance context | persisted values only; all numbers carry kind/version/caveat |
 | `GET` | `/sessions/{id}/recommendation` | recommendation with dissent, gaps, caveats | FR-505; the minority report is not optional |
 | `POST` | `/recommendation/override` | human override | emits `OVERRIDE`, original preserved (FR-803) |
 

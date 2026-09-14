@@ -1,7 +1,18 @@
 # Current State
 
-**As of:** 2026-09-14 · **Phase:** 14 in progress · **Active task:** T14-03 Assumption Register complete
+**As of:** 2026-09-14 · **Phase:** 14 in progress · **Active task:** T14-04 Explanation Panel complete
 **Track:** MVP · **Confidence:** Phases 0–4, 6–10 exact-SHA remote evidence; Phase 5 local gates green; Phase 13 local gates green
+
+Phase 14 T14-04 Explanation Panel is complete. Authenticated
+`GET /api/v1/sessions/{session_id}/explanation` composes the latest persisted consensus result and exact
+explanation with recommendations, alternatives, evidence/citations, Assumption Register, complete Critique
+handoff, risks/uncertainties, symbolic feasibility, conditions, authored counterfactuals and provenance. It
+does not recompute consensus or generate prose. Required drivers, inhibitors and absent-data sections carry
+explicit empty reasons; persisted numbers carry kind/unit/version/caveat; weakest evidence is selected only
+from recorded verification/lifecycle/citation/relation facts. The code-split panel exposes executive, expert,
+formal and exact machine-readable views with keyboard, screen-reader and responsive behavior. No migration
+or persistence was added; Alembic remains `20260914_0026`. Focused, live PostgreSQL, full local,
+contract/docs and isolated Compose gates pass. T14-05 Replay Controls is next and has not started.
 
 Phase 14 T14-03 Assumption Register is complete. Authenticated
 `GET /api/v1/sessions/{session_id}/assumptions` composes every persisted ASSUMPTION, CONSTRAINT and
@@ -36,7 +47,7 @@ fixture passes.
 
 Phase 14 task authority remains frozen in [PHASE14_ACCEPTANCE.md](../docs/PHASE14_ACCEPTANCE.md): T14-01 Graph
 View, T14-02 Dissent View, T14-03 Assumption Register, T14-04 Explanation Panel, T14-05 Replay Controls and
-T14-06 Audit Search, in that order. T14-01…03 are complete and T14-04…06 remain open. The contract preserves earlier-phase domain,
+T14-06 Audit Search, in that order. T14-01…04 are complete and T14-05…06 remain open. The contract preserves earlier-phase domain,
 storage and requirement ownership: Phase 14 adds authenticated API exposure and accessible UI presentation,
 not replacement graph, consensus, symbolic, replay, manifest or audit infrastructure. The scripted phase
 fixture is defined but has not passed.

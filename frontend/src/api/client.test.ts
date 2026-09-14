@@ -257,6 +257,35 @@ describe("ApiClient", () => {
     );
   });
 
+  // req: FR-504, FR-505, FR-605, FR-609, FR-804, FR-805, FR-901, NFR-005, NFR-019
+  it("reads the authenticated authoritative explanation", async () => {
+    const response = {
+      data: { session_id: "ses_public", availability: "NO_CONSENSUS" },
+      meta: {},
+    };
+    const fetchImpl = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response(JSON.stringify(response), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+    await expect(
+      new ApiClient({ fetchImpl }).getSessionExplanation(
+        "ses_public",
+        "explanation-token",
+      ),
+    ).resolves.toEqual(response);
+    expect(fetchImpl).toHaveBeenCalledWith(
+      "/api/v1/sessions/ses_public/explanation",
+      expect.objectContaining({
+        headers: {
+          Accept: "application/json",
+          Authorization: "Bearer explanation-token",
+        },
+      }),
+    );
+  });
+
   // req: FR-805, NFR-004, NFR-010
   it("posts an authenticated graph read without idempotency", async () => {
     const response = {

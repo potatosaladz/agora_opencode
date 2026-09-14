@@ -1,6 +1,6 @@
 # Phase 14 Acceptance Contract
 
-**Version:** 1.3 · **Status:** T14-01…03 complete; T14-04…06 frozen and open · **Phase:** 14
+**Version:** 1.4 · **Status:** T14-01…04 complete; T14-05…06 frozen and open · **Phase:** 14
 **Baseline:** Phase 13 complete through T13-04
 **Requirements:** UI/exposure verification of existing FR-305, FR-504…FR-506, FR-605, FR-609,
 FR-705, FR-708, FR-802, FR-804, FR-805, FR-807, FR-808, FR-901, NFR-003, NFR-004, NFR-005,
@@ -23,7 +23,7 @@ The authoritative task order is:
 5. T14-05 — Replay Controls
 6. T14-06 — Audit Search
 
-T14-01…03 are complete; T14-04…06 remain open. Each task must preserve generated API type drift checks, deny-by-default
+T14-01…04 are complete; T14-05…06 remain open. Each task must preserve generated API type drift checks, deny-by-default
 authentication, tenant isolation, accessible non-visual equivalents and responsive desktop/mobile use.
 Earlier-phase requirements cited below are verification dependencies, not reassigned implementation
 ownership.
@@ -225,6 +225,15 @@ FR-805, FR-901, NFR-005 and NFR-019 capabilities. Ownership remains Phases 7, 9,
 
 **Ownership:** API — read-only consensus/recommendation explanation composition if required. Frontend — the
 reusable Explanation Panel and recursive "why" navigation. Persistence — none. Migration — none.
+
+**Acceptance evidence:** authenticated `GET /api/v1/sessions/{session_id}/explanation` composes only the
+latest persisted consensus result/explanation, rank-ordered recommendations, artifacts, provenance,
+Assumption Register and complete Critique handoff. All required sections carry values or explicit empty
+reasons; evidence retains support/opposition/qualification, verification, lifecycle and citation facts;
+minority and unresolved critiques remain inline; symbolic facts preserve `UNKNOWN → DEFER`; persisted
+numbers carry kind/unit/version/caveat. The code-split panel provides executive, expert, formal and exact
+machine-readable views plus keyboard and responsive navigation. Focused, live PostgreSQL, full local,
+contract and Compose gates pass; no recomputation, generated prose, migration or persistence was added.
 
 ## 6. T14-05 — Replay Controls
 

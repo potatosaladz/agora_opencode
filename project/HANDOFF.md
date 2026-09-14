@@ -1,7 +1,7 @@
 # Handoff
 
 **For:** whoever continues this work, probably with no memory of the session that produced it.
-**As of:** 2026-09-14 · **Phase:** 14 in progress · **Active task:** T14-03 Assumption Register complete
+**As of:** 2026-09-14 · **Phase:** 14 in progress · **Active task:** T14-04 Explanation Panel complete
 
 ## Read these five, in this order
 
@@ -46,7 +46,12 @@ No migration or persistence was added.
 T14-03 is complete. The authenticated register composes existing assumptions, constraints, uncertainties,
 evidence, graph dependencies, Critique handoff, recommendations and exact symbolic facts without new state.
 The code-split UI preserves lifecycle and `UNKNOWN → DEFER`, and links to Graph, provenance and Dissent
-views. T14-04 Explanation Panel is next; do not start it automatically.
+views.
+
+T14-04 is complete. Its authenticated read composes persisted consensus/recommendation explanations,
+evidence/provenance, T14-02 dissent, T14-03 assumptions, Critique handoff, risk/uncertainty and symbolic
+facts without recomputation or generated prose. The code-split panel provides executive, expert, formal and
+machine-readable views. T14-05 Replay Controls is next; do not start it automatically.
 
 Phase 13 T13-01 through T13-04 are complete. T13-02 ships the Phase 13 audit substrate: migration
 `20260912_0025` adds forced-RLS, caller-append-only `access_log` and `audit_anchors`, and

@@ -217,6 +217,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/sessions/{session_id}/explanation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read the complete persisted decision explanation
+         * @description Composes the latest consensus result by (round,id), its exact persisted explanation, recommendations, all alternatives, evidence provenance, assumptions and constraints, complete Critique handoff, risks, uncertainties, symbolic feasibility, conditions and counterfactuals. This read has no omission filters and performs no recomputation.
+         */
+        get: operations["getSessionExplanation"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/sessions/{session_id}/assumptions": {
         parameters: {
             query?: never;
@@ -971,6 +991,67 @@ export interface components {
                 workspace_id: components["schemas"]["WorkspaceId"];
             };
         };
+        ExplanationResponse: {
+            data: components["schemas"]["ExplanationData"];
+            meta: {
+                request_id: string;
+                /** @constant */
+                schema_version: 1;
+                workspace_id: components["schemas"]["WorkspaceId"];
+            };
+        };
+        ExplanationData: {
+            session_id: components["schemas"]["SessionId"];
+            /** @enum {string} */
+            status: "AVAILABLE" | "NO_CONSENSUS_RESULT" | "EXPLANATION_UNAVAILABLE";
+            /** @enum {string|null} */
+            empty_reason: "NO_CONSENSUS_RESULT" | "EXPLANATION_UNAVAILABLE" | null;
+            decision: {
+                [key: string]: unknown;
+            };
+            recommendation: {
+                [key: string]: unknown;
+            };
+            why: {
+                [key: string]: unknown;
+            };
+            alternatives: {
+                [key: string]: unknown;
+            }[];
+            evidence: {
+                [key: string]: unknown;
+            };
+            assumptions_constraints: {
+                [key: string]: unknown;
+            };
+            minority: {
+                [key: string]: unknown;
+            }[];
+            critiques: {
+                [key: string]: unknown;
+            };
+            risks_uncertainties: {
+                [key: string]: unknown;
+            };
+            symbolic_feasibility: {
+                [key: string]: unknown;
+            };
+            conditions_counterfactuals: {
+                [key: string]: unknown;
+            };
+            weakest_evidence: {
+                [key: string]: unknown;
+            };
+            provenance: {
+                [key: string]: unknown;
+            };
+            links: {
+                graph: string;
+                dissent: string;
+                assumptions: string;
+                provenance: string;
+            };
+        };
         GraphSubgraphRequest: {
             session_id: components["schemas"]["SessionId"];
             root_ids: string[];
@@ -1534,6 +1615,31 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DissentResponse"];
+                };
+            };
+            401: components["responses"]["AuthenticationRequired"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    getSessionExplanation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: components["parameters"]["SessionId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Complete persisted explanation or an explicit unavailable state. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExplanationResponse"];
                 };
             };
             401: components["responses"]["AuthenticationRequired"];

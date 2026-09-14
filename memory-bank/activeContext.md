@@ -1,6 +1,6 @@
 # Active Context
 
-**Snapshot taken:** 2026-09-14 · **Phase:** 14 in progress · **Active task:** T14-03 Assumption Register complete
+**Snapshot taken:** 2026-09-14 · **Phase:** 14 in progress · **Active task:** T14-04 Explanation Panel complete
 This is the "what is happening right now" file. Rewrite it at the end of every
 significant unit of work.
 
@@ -8,11 +8,17 @@ significant unit of work.
 
 ## 1. Focus of the current session
 
+T14-04 Explanation Panel is complete. The authenticated read composes only persisted consensus,
+recommendation, evidence/provenance, dissent, assumption, Critique, risk/uncertainty and symbolic facts. All
+required sections include values or explicit empty reasons, and weakest evidence uses recorded facts only.
+The code-split UI provides executive, expert, formal and machine-readable views with accessible responsive
+navigation. No persistence or migration changed. T14-05 Replay Controls is next and has not started.
+
 T14-03 Assumption Register is complete. The authenticated read composes all assumption, constraint and
 uncertainty revisions with lifecycle, attribution, evidence, dependents, critiques, provenance, graph and
 exact symbolic facts. The code-split UI distinguishes those concepts and renders missing analysis plus
 `UNKNOWN → DEFER` explicitly with accessible responsive navigation. No persistence or migration changed.
-T14-04 Explanation Panel is next and has not started.
+T14-04 Explanation Panel is complete.
 
 T14-02 Dissent View is complete. A new authenticated read-only endpoint composes the latest persisted
 consensus explanation, selected alternative, supporting/opposing/qualifying evidence, complete Critique
@@ -26,8 +32,8 @@ renders authoritative server pages with labelled edge semantics, keyboard select
 responsive states and explicit loading/error/empty/pagination/truncation disclosure. Focused and full local
 gates plus isolated Compose deployment pass.
 
-Phase 14 task authority remains frozen in `docs/PHASE14_ACCEPTANCE.md`. T14-04 Explanation Panel, T14-05
-Replay Controls and T14-06 Audit Search remain open.
+Phase 14 task authority remains frozen in `docs/PHASE14_ACCEPTANCE.md`. T14-05 Replay Controls and T14-06
+Audit Search remain open.
 The contract preserves earlier-phase implementation ownership. The scripted usability fixture exists but
 has not passed.
 

@@ -8,6 +8,15 @@ uses semantic versioning once it ships a release. Phase 0 is pre-release.
 
 ## [Unreleased]
 
+### Added — Phase 14 T14-04 (Explanation Panel)
+
+- Added authenticated complete session explanation reads composed only from existing persisted consensus,
+  recommendation, evidence/provenance, dissent, assumption, Critique, risk and symbolic facts.
+- Added code-split executive, expert, formal and machine-readable views with explicit empty reasons,
+  cross-view navigation and recorded weakest-evidence rationale.
+- Added focused API, PostgreSQL and frontend tests. No migration, persistence, consensus recomputation,
+  generated prose or composite score was added.
+
 ### Added — Phase 14 T14-03 (Assumption Register)
 
 - Added authenticated session assumption-register reads composed from existing artifacts, graph,

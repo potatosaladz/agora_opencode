@@ -14,6 +14,7 @@ from starlette.responses import JSONResponse
 from app.api.assumption_contracts import AssumptionRegisterResponse
 from app.api.dissent_contracts import DissentEmptyReason, DissentResponse
 from app.api.errors import not_found
+from app.api.explanation_contracts import ExplanationResponse
 from app.api.phase3_contracts import (
     ArtifactCreate,
     ArtifactRevisionCreate,
@@ -28,6 +29,7 @@ from app.api.phase3_contracts import (
 )
 from app.application.artifact_commit import ArtifactCommitService, ArtifactEventContext
 from app.application.assumption_register import AssumptionRegisterService
+from app.application.explanation import DecisionExplanationService
 from app.application.provenance import ProvenanceService
 from app.application.session_commit import SessionArtifactCommit, SessionCommitService
 from app.application.session_control import SessionControlService, validate_control_request
@@ -624,6 +626,35 @@ async def get_session_dissent(request: Request, session_id: str) -> JSONResponse
                 _request_id(request),
             )
         )
+
+
+@router.get("/sessions/{session_id}/explanation")
+@require_roles(*_READ)
+async def get_session_explanation(request: Request, session_id: str) -> JSONResponse:
+    principal = current_principal(request)
+    try:
+        internal_id = parse_id("session", session_id)
+    except ValueError as exc:
+        raise not_found("session") from exc
+    async with request.app.state.container.reasoning_transaction(principal.workspace_id) as tx:
+        if await tx.sessions.get(principal.workspace_id, internal_id) is None:
+            raise not_found("session")
+        result = ExplanationResponse.model_validate(
+            await DecisionExplanationService(
+                tx.decision_explanations,
+                tx.dissent_explanations,
+                tx.artifacts,
+                tx.graph,
+                tx.citations,
+                tx.assumption_register,
+                tx.critique_handoffs,
+            ).read(
+                principal.workspace_id,
+                internal_id,
+                request_id=_request_id(request),
+            )
+        )
+        return JSONResponse(result.model_dump(mode="json"))
 
 
 @router.get("/sessions/{session_id}/assumptions")

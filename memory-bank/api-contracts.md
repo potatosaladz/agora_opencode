@@ -142,6 +142,7 @@ Phase 3 writes:  POST sessions; POST artifacts; POST artifact revisions/withdraw
 Phase 4 start:   POST /api/v1/sessions/{id}/start -> 202 (T4-02; separate from 201 create)
 T14 dissent:     GET /api/v1/sessions/{id}/dissent (complete latest persisted minority + open critique view)
 T14 register:    GET /api/v1/sessions/{id}/assumptions (complete assumption/constraint/uncertainty history)
+T14 explanation: GET /api/v1/sessions/{id}/explanation (complete persisted decision explanation; no recompute)
 SSE:             GET /api/v1/sessions/{id}/events/stream   (Last-Event-ID supported)
 WS:              /api/v1/ws/sessions/{id}   (bidirectional control only where required)
 ```
@@ -162,6 +163,13 @@ It composes direct graph evidence/dependents, recommendations and unresolved Cri
 constraint formalizations and latest persisted symbolic evaluations are public; `SAT`/`UNSAT`/`UNKNOWN`
 map to `PROCEED`/`BLOCK`/`DEFER`, while missing formalization/evaluation is explicit `DEFER`. All identifiers
 are public and missing or cross-tenant sessions are hidden as `404`.
+
+The T14 decision-explanation read has no filter/omission parameters. It composes the latest persisted
+consensus by `(round,id)`, exact JSON-aware explanation, rank/id-ordered recommendations, all alternatives,
+authoritative register and Critique handoff data, and selected-alternative provenance. Required sections
+remain present for `NO_CONSENSUS_RESULT` and `EXPLANATION_UNAVAILABLE`. Numeric values carry explicit
+kind/version/caveat metadata, weakest-evidence rationale uses recorded facts only, and public IDs plus
+tenant-hidden `404` are mandatory.
 
 T11-01 formalisation writes require `Idempotency-Key`; all current-head lifecycle writes additionally
 require `If-Match`. Reads expose derived `validation_status` and `enforceable`. Only an exact revision with

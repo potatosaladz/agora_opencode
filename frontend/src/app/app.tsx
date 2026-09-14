@@ -15,12 +15,20 @@ const DissentPage = lazy(() => import("../features/dissent/dissent-page"));
 const AssumptionRegisterPage = lazy(
   () => import("../features/assumptions/assumption-register-page"),
 );
+const ExplanationPage = lazy(
+  () => import("../features/explanation/explanation-page"),
+);
 
 const navigation = [
   {
     route: "reasoning" as const,
     label: "Live reasoning",
     icon: "activity" as const,
+  },
+  {
+    route: "explanation" as const,
+    label: "Explanation",
+    icon: "book" as const,
   },
   {
     route: "dissent" as const,
@@ -166,6 +174,21 @@ export function App() {
               window.location.hash = hrefForRoute("reasoning");
             }}
           />
+        ) : route === "explanation" ? (
+          <Suspense
+            fallback={
+              <main
+                className="explanation-page explanation-page--loading"
+                id="main-content"
+              >
+                <p role="status">Loading explanation panel...</p>
+              </main>
+            }
+          >
+            <ExplanationPage
+              {...(liveSession ? { connection: liveSession } : {})}
+            />
+          </Suspense>
         ) : route === "dissent" ? (
           <Suspense
             fallback={

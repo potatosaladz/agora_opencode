@@ -38,6 +38,7 @@ from app.domain.critique_handoff import (
     CritiqueExplanationHandoff,
     CritiqueHandoffEmptyReason,
 )
+from app.domain.explanation import DecisionExplanationSnapshot, PersistedRecommendation
 from app.domain.phase3_api import IdempotencyRecord
 from app.domain.reasoning import (
     ActorClass,
@@ -232,6 +233,7 @@ class Tx:
     critique_handoffs: Any = None
     dissent_explanations: Any = None
     assumption_register: Any = None
+    decision_explanations: Any = None
 
 
 class _TestContainer:
@@ -473,6 +475,7 @@ def test_phase3_routes_declare_frozen_role_matrix() -> None:
     }
     assert policies["/api/v1/sessions/{session_id}"] == frozenset(WorkspaceRole)
     assert policies["/api/v1/sessions/{session_id}/dissent"] == frozenset(WorkspaceRole)
+    assert policies["/api/v1/sessions/{session_id}/explanation"] == frozenset(WorkspaceRole)
     assert policies["/api/v1/artifacts/{artifact_id}"] == frozenset(WorkspaceRole)
     assert policies["/api/v1/artifacts/{artifact_id}/provenance"] == frozenset(WorkspaceRole)
     assert policies["/api/v1/impact-reports/{report_id}"] == frozenset(WorkspaceRole)
@@ -632,6 +635,16 @@ class DissentConsensus:
 
     async def get(self, workspace_id: UUID, result_id: UUID) -> ConsensusExplanation | None:
         return await self.get_explanation(workspace_id, result_id)
+
+
+@dataclass(slots=True)
+class ExplanationReader:
+    snapshot: DecisionExplanationSnapshot
+
+    async def read(self, workspace_id: UUID, session_id: UUID) -> DecisionExplanationSnapshot:
+        assert workspace_id == U[1]
+        assert session_id == U[2]
+        return self.snapshot
 
 
 @dataclass(slots=True)
@@ -969,6 +982,151 @@ def test_dissent_route_reports_evaluated_no_dissent_and_hides_unknown_session() 
     assert response.json()["data"]["evaluated"] is True
     assert response.json()["data"]["empty_reason"] == "EVALUATED_NO_DISSENT"
     assert hidden.status_code == 404
+
+
+@req("FR-504", "FR-505", "FR-605", "FR-609", "FR-804", "FR-805", "FR-901", "NFR-005", "NFR-019")
+@pytest.mark.parametrize("role", list(WorkspaceRole))
+def test_explanation_route_composes_persisted_decision_for_every_role(role: WorkspaceRole) -> None:
+    selected_values = claim().model_dump(mode="python")
+    selected_values.update(
+        id=U[6],
+        logical_id=U[6],
+        kind=ArtifactKind.ALTERNATIVE,
+        payload=AlternativePayload(
+            name="Selected",
+            summary="Selected persisted option",
+            components=("one",),
+            origin="fixture",
+            feasibility_status="SAT",
+        ),
+    )
+    selected_values["content_hash"] = artifact_content_hash(selected_values)
+    selected = validate_artifact(selected_values)
+    latest = _consensus(U[8], 2)
+    explanation = ConsensusExplanation(
+        consensus_id=latest.id,
+        outcome=latest.outcome,
+        strategy=latest.strategy,
+        strategy_version=latest.strategy_version,
+        formula="sum(weight * position)",
+        caveats=("Support is not confidence or probability.",),
+        minority_report=(MinorityEntry(agent_id=U[4], position="OPPOSE"),),
+        input_hash=latest.input_hash,
+    )
+    handoff = CritiqueExplanationHandoff(
+        workspace_id=U[1],
+        session_id=U[2],
+        entries=(),
+        empty_reason=CritiqueHandoffEmptyReason.NO_COMPLETED_CRITIC_RUN,
+    )
+    recommendation = PersistedRecommendation(
+        id=U[7],
+        alternative_id=selected.id,
+        rank=1,
+        title="Adopt selected",
+        statement="Proceed",
+        conditions=(),
+        risk_ids=(),
+        open_questions=(),
+        is_override=False,
+        override_by=None,
+        override_reason=None,
+    )
+    tx = Tx(
+        DissentArtifacts((selected,)),
+        Idempotency(),
+        sessions=DissentSessions(),
+        graph=DissentGraph(
+            (
+                GraphNode(
+                    id=U[5],
+                    workspace_id=U[1],
+                    session_id=U[2],
+                    kind=selected.kind,
+                    ref_id=selected.id,
+                    label="Selected",
+                ),
+            )
+        ),
+        citations=ProvenanceCitations(),
+        dissent_explanations=DissentConsensus((), {latest.id: explanation}),
+        critique_handoffs=DissentHandoffs(handoff),
+        assumption_register=EmptyAssumptionRegister(),
+        decision_explanations=ExplanationReader(
+            DecisionExplanationSnapshot(latest, (recommendation,), (selected,), ())
+        ),
+    )
+    client, _ = _client_for(VerifiedPrincipal("oidc|u", U[4], U[1], role), tx)
+    path = f"/api/v1/sessions/{public_id('session', U[2])}/explanation"
+    with client:
+        assert client.get(path).status_code == 401
+        response = client.get(path, headers={"Authorization": "Bearer valid"})
+    assert response.status_code == 200, response.text
+    data = response.json()["data"]
+    assert data["status"] == "AVAILABLE"
+    assert data["decision"]["round"]["kind"] == "consensus_round"
+    assert data["recommendation"]["items"][0]["id"] == public_id("recommendation", U[7])
+    assert data["why"]["formula"] == "sum(weight * position)"
+    assert data["why"]["drivers"]["empty_reason"] == "NO_PERSISTED_SUPPORTING_DRIVERS"
+    assert data["why"]["inhibitors"]["empty_reason"] == "NO_PERSISTED_INHIBITORS"
+    assert data["why"]["absent"]["empty_reason"] == (
+        "NO_PERSISTED_ABSENT_EVIDENCE_OR_OPEN_QUESTIONS"
+    )
+    assert data["minority"][0]["position"] == "OPPOSE"
+    assert data["weakest_evidence"]["available"] is False
+    assert data["links"]["dissent"] == "#/dissent"
+    assert data["links"]["assumptions"] == "#/assumptions"
+
+
+@req("FR-605", "NFR-005", "NFR-019")
+@pytest.mark.parametrize(
+    ("latest", "explanations", "reason"),
+    [(None, {}, "NO_CONSENSUS_RESULT"), (_consensus(U[8], 2), {}, "EXPLANATION_UNAVAILABLE")],
+)
+def test_explanation_route_returns_explicit_unavailable_states(
+    latest: Any, explanations: Any, reason: str
+) -> None:
+    handoff = CritiqueExplanationHandoff(
+        workspace_id=U[1],
+        session_id=U[2],
+        entries=(),
+        empty_reason=CritiqueHandoffEmptyReason.NO_COMPLETED_CRITIC_RUN,
+    )
+    tx = Tx(
+        DissentArtifacts(),
+        Idempotency(),
+        sessions=DissentSessions(),
+        graph=DissentGraph(),
+        citations=ProvenanceCitations(),
+        dissent_explanations=DissentConsensus((), explanations),
+        critique_handoffs=DissentHandoffs(handoff),
+        assumption_register=EmptyAssumptionRegister(),
+        decision_explanations=ExplanationReader(DecisionExplanationSnapshot(latest, (), (), ())),
+    )
+    client, _ = _client_for(VerifiedPrincipal("oidc|u", U[4], U[1], WorkspaceRole.VIEWER), tx)
+    with client:
+        response = client.get(
+            f"/api/v1/sessions/{public_id('session', U[2])}/explanation",
+            headers={"Authorization": "Bearer valid"},
+        )
+    assert response.status_code == 200
+    assert response.json()["data"]["empty_reason"] == reason
+    assert set(response.json()["data"]) >= {
+        "decision",
+        "recommendation",
+        "why",
+        "alternatives",
+        "evidence",
+        "assumptions_constraints",
+        "minority",
+        "critiques",
+        "risks_uncertainties",
+        "symbolic_feasibility",
+        "conditions_counterfactuals",
+        "weakest_evidence",
+        "provenance",
+        "links",
+    }
 
 
 @req("FR-305")

@@ -318,6 +318,13 @@ def test_phase3_http_create_read_and_replay_are_atomic() -> None:
         )
         assert register.status_code == 200, register.text
         assert register.json()["data"] == {"session_id": session_id, "items": []}
+        explanation = client.get(
+            f"/api/v1/sessions/{session_id}/explanation",
+            headers={"Authorization": "Bearer integration"},
+        )
+        assert explanation.status_code == 200, explanation.text
+        assert explanation.json()["data"]["empty_reason"] == "NO_CONSENSUS_RESULT"
+        assert explanation.json()["data"]["decision"]["empty_reason"] == ("NO_CONSENSUS_RESULT")
         hidden = client.get(
             f"/api/v1/sessions/{public_id('session', uuid7())}/assumptions",
             headers={"Authorization": "Bearer integration"},
@@ -407,6 +414,17 @@ def test_phase3_http_create_read_and_replay_are_atomic() -> None:
         assert (
             persisted_dissent.json()["data"]["majority"]["selected_alternative_id"] == artifact_id
         )
+        persisted_explanation = client.get(
+            f"/api/v1/sessions/{session_id}/explanation",
+            headers={"Authorization": "Bearer integration"},
+        )
+        assert persisted_explanation.status_code == 200, persisted_explanation.text
+        explanation_data = persisted_explanation.json()["data"]
+        assert explanation_data["status"] == "AVAILABLE"
+        assert explanation_data["decision"]["selected_alternative_id"] == artifact_id
+        assert explanation_data["why"]["formula"] == "persisted integration fixture"
+        assert explanation_data["minority"][0]["position"] == "OPPOSE"
+        assert explanation_data["provenance"]["href"].endswith("/provenance")
 
         graph_nodes = asyncio.run(_graph_nodes(_DATABASE_URL, principal.workspace_id))
         assert len(graph_nodes) == 3
