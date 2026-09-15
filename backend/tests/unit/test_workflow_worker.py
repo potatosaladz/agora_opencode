@@ -129,6 +129,7 @@ async def test_production_composition_registers_bootstrap_definitions(
         "commit_transition",
         "run_turn",
         "ingest_source",
+        "invoke",
     ]
     await runtime.close()
     assert captured["worker_closed"] is True

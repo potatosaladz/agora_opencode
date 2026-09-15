@@ -16,6 +16,7 @@ commands that later phases must use.
 | ORM | SQLAlchemy | 2.x | async engine, typed ORM style |
 | Migrations | Alembic | latest | reversible migrations only |
 | HTTP client | httpx | latest | used by OpenAI-compatible adapter |
+| MCP | Official Python SDK | 1.30.0 / protocol 2025-06-18 | Streamable HTTP through the outbound-only gateway |
 | Durable workflow | Temporal | Python SDK 1.32.x / server 1.29.1 | via `WorkflowEngine` port; exact versions locked in `backend/uv.lock` and Compose |
 | Event bus | NATS JetStream | 2.10+ | via `EventBus` port |
 | RDBMS | PostgreSQL | 16+ | system-of-record |

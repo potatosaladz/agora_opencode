@@ -87,6 +87,19 @@ class Settings(BaseSettings):
     temporal_task_queue: str = Field(default="session-bootstrap", min_length=1)
     workflow_service_actor_id: UUID = UUID("018f0000-0000-7000-8000-000000000000")
 
+    # -- mcp -----------------------------------------------------------------------
+    mcp_gateway_port: int = Field(default=8010, ge=1, le=65535)
+    mcp_fixture_port: int = Field(default=8020, ge=1, le=65535)
+    mcp_fixture_endpoint: str = "http://mcp-fixture:8020/mcp"
+    mcp_gateway_endpoint: str = "http://mcp-gateway:8010/mcp"
+    mcp_fixture_server_id: str = "fixture"
+    mcp_fixture_manifest_hash: str = "sha256:" + "0" * 64
+    mcp_timeout_s: float = Field(default=30.0, gt=0, le=30.0)
+    mcp_workload_issuer: str = "https://identity.agora.test"
+    mcp_workload_audience: str = "mcp-gateway"
+    mcp_workload_subject: str = "reasoning-worker"
+    mcp_workload_secret: SecretStr = SecretStr("")
+
     # -- redis ---------------------------------------------------------------------
     redis_url: str = "redis://redis:6379/0"
 

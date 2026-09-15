@@ -36,6 +36,8 @@ dependencies = [
     "openpyxl>=3.1,<4",
     "beautifulsoup4>=4.13,<5",
     "z3-solver>=4.12,<5",
+    "mcp==1.30.0",
+    "pyjwt>=2.8,<3",
 ]
 
 [project.optional-dependencies]
@@ -87,6 +89,8 @@ files = ["app", "tests"]
 # Third-party SDKs without shipped stubs. tests/test_layering.py proves these names can
 # only ever appear under app/adapters/, so the looseness cannot reach the domain.
 module = [
+    "mcp.*",
+    "jwt.*",
     "nats.*",
     "minio.*",
     "asyncpg.*",

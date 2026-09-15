@@ -61,7 +61,7 @@ _ALLOWED_APP_IMPORTS: dict[str, frozenset[str]] = {
 # Provider/infrastructure SDKs must never appear outside `app/adapters/`. This list is the
 # executable half of the mypy overrides table in pyproject.toml: add a name to both places.
 _SDK_MODULES = frozenset(
-    {"asyncpg", "minio", "nats", "pgvector", "prometheus_client", "temporalio", "z3"}
+    {"asyncpg", "jwt", "mcp", "minio", "nats", "pgvector", "prometheus_client", "temporalio", "z3"}
 )
 
 

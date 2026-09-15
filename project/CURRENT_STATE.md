@@ -1,13 +1,10 @@
 # Current State
 
-**As of:** 2026-09-15 · **Phase:** 15 contract frozen · **Active task:** T15-00 complete
-**Track:** MVP · **Confidence:** Phases 0–4, 6–10 exact-SHA remote evidence; Phase 5 local gates green; Phase 13 local gates green
+**As of:** 2026-09-15 · **Phase:** 15 open after T15-01 · **Active task:** T15-02 next
+**Track:** MVP · **Confidence:** T15-01 deployed acceptance green; repository-wide format has three proven pre-existing unrelated failures
 
-Phase 15 T15-00 is complete. [PHASE15_ACCEPTANCE.md](../docs/PHASE15_ACCEPTANCE.md) freezes outbound-only
-MCP protocol `2025-06-18` over Streamable HTTP, workload identity and trusted call context, typed domain/port
-results, ToolClass → ToolPermission mapping, operation retry/cancellation, gateway-only MCP egress, secret
-references and non-overlapping T15-01…04 ownership. ADR-021 records the trust-boundary/transport decision.
-No runtime code, dependency, migration or service was added. T15-01 is next and remains open.
+Phase 15 T15-01 is complete. The stateless MCP gateway and SDK-free contracts use protocol `2025-06-18` over Streamable HTTP, authenticate the reasoning-worker workload JWT, validate trusted workspace/session/exact-agent context, reconstruct capabilities after restart, and expose only the deterministic `fixture.read_echo` tool. Deployed acceptance proved authorized discovery/invocation, sanitized authentication/context/argument/tool/upstream/timeout failures, worker cancellation as `CANCELLED`, gateway restart and reinitialize, worker-to-fixture DNS isolation, gateway-to-fixture access, and unchanged authoritative counts (`reasoning_events=0`, `sessions=2`, `session_agents=2`, `agent_definitions=2`, `llm_call_records=0`) before/after invocation. Results remain `TOOL_UNTRUSTED` and content-hashed; gateway code has no artifact or ledger writer. No migration was added; Alembic remains `20260914_0026` and `alembic check` is green in the deployed backend environment. T15-02, T15-03, T15-04 and Phase 15 remain open.
+
 
 Phase 14 T14-06 Audit Search and the phase exit are complete. Scoped authenticated
 `POST /api/v1/sessions/{session_id}/audit/query` exposes all eight exact audit questions through the

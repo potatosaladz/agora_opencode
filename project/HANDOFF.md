@@ -1,7 +1,7 @@
 # Handoff
 
 **For:** whoever continues this work, probably with no memory of the session that produced it.
-**As of:** 2026-09-15 · **Phase:** 15 contract frozen · **Active task:** T15-00 complete
+**As of:** 2026-09-15 · **Phase:** 15 open after T15-01 · **Active task:** T15-02 next
 
 ## Read these five, in this order
 
@@ -32,11 +32,7 @@ A change that breaks any of these is not a refactor. It is a different project.
 
 ## Immediate next action
 
-Read [PHASE15_ACCEPTANCE.md](../docs/PHASE15_ACCEPTANCE.md) and ADR-021. T15-00 is complete; implement only
-T15-01 Gateway as Sole Tool Egress when authorized. It owns the stateless Streamable HTTP gateway, frozen
-typed port, deterministic read-only fixture tool, lifecycle/error/cancel/restart behavior and network bypass
-proof. It does not own registry persistence, production allowlists, approvals/limits/audit, quarantine or
-SSRF controls. T15-02…04 remain open. Do not start T15-02 or Phase 16.
+T15-01 is complete. Its deployed evidence includes protocol `2025-06-18` initialize/discovery/invocation, workload JWT and trusted-context failures, typed timeout/cancellation/upstream envelopes, restart/reinitialize, gateway-only fixture access, unchanged artifact/ledger/domain counts, and clean logs. Continue only with T15-02 Versioned Server Registry and Explicit Allowlist; T15-03, T15-04 and Phase 15 remain open. Do not redesign T15-01 or start later tasks early.
 
 Read [PHASE14_ACCEPTANCE.md](../docs/PHASE14_ACCEPTANCE.md) before continuing Phase 14. T14-01 is complete.
 `POST /api/v1/graph/subgraph` delegates to the existing graph store with public-ID,

@@ -6,6 +6,7 @@ import asyncio
 from contextlib import suppress
 from dataclasses import dataclass
 
+from app.adapters.auth_workload import JWTWorkloadTokenIssuer
 from app.adapters.ingestion import parse_document
 from app.adapters.inmemory.object_store import InMemoryObjectStore
 from app.adapters.llm.mock import MockLLMProvider
@@ -14,6 +15,7 @@ from app.adapters.minio.object_store import MinioObjectStore
 from app.adapters.secrets.providers import EnvSecretProvider, SwarmSecretProvider
 from app.adapters.temporal.agent_activity import AgentActivities
 from app.adapters.temporal.ingestion_activity import IngestionActivities
+from app.adapters.temporal.mcp_activity import MCPToolActivities
 from app.adapters.temporal.session_bootstrap import (
     SessionBootstrapActivities,
     SessionBootstrapWorkflow,
@@ -87,6 +89,14 @@ async def build_workflow_worker(settings: Settings) -> WorkflowWorkerRuntime:
             bucket=settings.minio_bucket,
         )
     )
+    mcp_activities = MCPToolActivities(
+        settings.mcp_gateway_endpoint,
+        JWTWorkloadTokenIssuer(
+            secret=settings.mcp_workload_secret.get_secret_value(),
+            issuer=settings.mcp_workload_issuer,
+            audience=settings.mcp_workload_audience,
+        ),
+    )
     try:
         worker = await TemporalWorkflowWorker.connect(
             settings.temporal_address,
@@ -98,6 +108,7 @@ async def build_workflow_worker(settings: Settings) -> WorkflowWorkerRuntime:
                 control_activities.commit_transition,
                 agent_activities.run_turn,
                 ingestion_activities.ingest_source,
+                mcp_activities.invoke,
             ),
         )
     except Exception:
